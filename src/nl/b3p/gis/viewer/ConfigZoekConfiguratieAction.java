@@ -1,0 +1,107 @@
+/*
+ * B3P Gisviewer is an extension to Flamingo MapComponents making
+ * it a complete webbased GIS viewer and configuration tool that
+ * works in cooperation with B3P Kaartenbalie.
+ *
+ * Copyright 2006, 2007, 2008 B3Partners BV
+ *
+ * This file is part of B3P Gisviewer.
+ *
+ * B3P Gisviewer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * B3P Gisviewer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with B3P Gisviewer.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package nl.b3p.gis.viewer;
+
+import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import nl.b3p.commons.services.FormUtils;
+import nl.b3p.gis.viewer.ViewerCrudAction;
+import nl.b3p.gis.viewer.db.Connecties;
+import nl.b3p.gis.viewer.services.HibernateUtil;
+import nl.b3p.gis.viewer.zoekconfiguratie.ZoekConfiguratieListUtil;
+import nl.b3p.zoeker.configuratie.ZoekConfiguratie;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.validator.DynaValidatorForm;
+import org.hibernate.Session;
+
+/**
+ *
+ * @author Roy Braam
+ */
+public class ConfigZoekConfiguratieAction extends ViewerCrudAction {
+
+    private static final Log log = LogFactory.getLog(ConfigZoekConfiguratieAction.class);
+
+    public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        List zoekConfiguraties=sess.createQuery("from ZoekConfiguratie").list();
+        request.setAttribute("zoekConfiguraties", zoekConfiguraties);
+        return super.unspecified(mapping, dynaForm, request, response);
+    }
+
+    public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        ZoekConfiguratie z= getZoekConfiguratie(request, false);
+        if (z!=null){
+            populateForm(z,dynaForm);
+        }
+        createLists(mapping,request,z);
+        return super.edit(mapping,dynaForm,request,response);
+    }
+
+    public void createLists(ActionMapping mapping, HttpServletRequest request,ZoekConfiguratie zc) throws Exception{
+        //bronnen
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        List bronnen=sess.createQuery("from Bron").list();
+        request.setAttribute("bronnen",bronnen);
+        //zoekconfiguraties
+        List zoekConfiguraties =sess.createQuery("from ZoekConfiguratie where id != :id").setParameter("id", zc.getId()).list();
+        request.setAttribute("zoekConfiguratieList", zoekConfiguraties);
+        //features;
+        if (zc.getBron()!=null){
+            try{
+                String[] featureTypes= ZoekConfiguratieListUtil.getTypeNames(zc.getBron());
+                request.setAttribute("featureTypes",featureTypes);
+            }catch(Exception ex){
+                addAlternateMessage(mapping,request,GENERAL_ERROR_KEY,ex.getMessage());
+            }
+        }
+    }
+
+    private ZoekConfiguratie getZoekConfiguratie(HttpServletRequest request, boolean createNew) {
+        Integer id = FormUtils.StringToInteger(request.getParameter("id"));
+        ZoekConfiguratie z = null;
+        if (id == null && createNew) {
+            z = new ZoekConfiguratie();
+        } else if (id != null) {
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+            z = (ZoekConfiguratie) sess.get(ZoekConfiguratie.class, id);
+        }
+        return z;
+    }
+
+    private void populateForm(ZoekConfiguratie z, DynaValidatorForm dynaForm) {
+        dynaForm.set("zoekConfiguratieId", z.getId().toString());
+        dynaForm.set("naam", z.getNaam());
+        dynaForm.set("featureType", z.getFeatureType());
+        if (z.getParentBron()!=null)
+            dynaForm.set("parentBron", z.getParentBron().toString());
+        if (z.getParentZoekConfiguratie()!=null)
+            dynaForm.set("parentZoekConfiguratie", z.getParentZoekConfiguratie().toString());
+
+    }
+}
