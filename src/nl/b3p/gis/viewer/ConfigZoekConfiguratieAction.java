@@ -59,10 +59,20 @@ public class ConfigZoekConfiguratieAction extends ViewerCrudAction {
         if (z!=null){
             populateForm(z,dynaForm);
         }
-        createLists(mapping,request,z);
+        createEditLists(request,z);
+        
         return super.edit(mapping,dynaForm,request,response);
     }
+    public void createEditLists(HttpServletRequest request,ZoekConfiguratie z){
+         //zoekconfiguraties
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        List zoekConfiguraties =sess.createQuery("from ZoekConfiguratie where id != :id").setParameter("id", z.getId()).list();
+        request.setAttribute("zoekConfiguratieList", zoekConfiguraties);
 
+        request.setAttribute("zoekVelden",z.getZoekVelden());
+        request.setAttribute("resultaatVelden",z.getResultaatVelden());
+    }
+/*
     public void createLists(ActionMapping mapping, HttpServletRequest request,ZoekConfiguratie zc) throws Exception{
         //bronnen
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
@@ -81,7 +91,7 @@ public class ConfigZoekConfiguratieAction extends ViewerCrudAction {
             }
         }
     }
-
+*/
     private ZoekConfiguratie getZoekConfiguratie(HttpServletRequest request, boolean createNew) {
         Integer id = FormUtils.StringToInteger(request.getParameter("id"));
         ZoekConfiguratie z = null;
