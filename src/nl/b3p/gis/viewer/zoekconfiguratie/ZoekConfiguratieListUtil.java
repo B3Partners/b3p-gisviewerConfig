@@ -22,19 +22,22 @@
  */
 package nl.b3p.gis.viewer.zoekconfiguratie;
 
-import java.util.List;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.zoeker.configuratie.Bron;
+import nl.b3p.zoeker.configuratie.ResultaatAttribuut;
+import nl.b3p.zoeker.configuratie.ZoekAttribuut;
 import nl.b3p.zoeker.services.Zoeker;
 import org.geotools.data.DataStore;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 /*
  * @author Roy Braam
  */
 public class ZoekConfiguratieListUtil{
 
+    /**
+     * Haalt de mogelijke featureTypeNames van een bron op.
+     **/
     public static String[] getTypeNames(Bron bron) throws Exception {
         if (bron==null){
             throw new Exception("Bron kan niet worden gevonden");
@@ -45,18 +48,25 @@ public class ZoekConfiguratieListUtil{
         }
         return ds.getTypeNames();
     }
-    /*
-    public static String[] getTypeNames(Integer bronId) throws Exception{
+    /**
+     * Haalt de mogelijke featureTypeNames van een bron op adhv het id van de bron
+     **/
+    public static String[] getTypeNamesById(Integer bronId) throws Exception{
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        Bron bron=null;
-        Transaction t=null;
-        try {
-            t=sess.beginTransaction();
-            bron = (Bron) sess.get(Bron.class,bronId);
-            t.commit();
-        }finally {
-            sess.close();
-        }
+        Bron bron = (Bron) sess.get(Bron.class,bronId);
         return getTypeNames(bron);
-    }*/
+    }
+
+    public static void removeZoekAttribuut(Integer id){
+        Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
+        ZoekAttribuut za = (ZoekAttribuut) sess.get(ZoekAttribuut.class, id);
+        za.getZoekConfiguratie().getZoekVelden().remove(za);
+        sess.delete(za);
+    }
+    public static void removeResultaatAttribuut(Integer id){
+        Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
+        ResultaatAttribuut ra = (ResultaatAttribuut) sess.get(ResultaatAttribuut.class, id);
+        ra.getZoekConfiguratie().getResultaatVelden().remove(ra);
+        sess.delete(ra);
+    }
 }
