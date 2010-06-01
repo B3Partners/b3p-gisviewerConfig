@@ -40,8 +40,9 @@ import org.apache.struts.validator.DynaValidatorForm;
 import org.hibernate.Session;
 
 /**
- *
+ * B3partners B.V. http://www.b3partners.nl
  * @author Roy Braam
+ * Created on 31-mei-2010, 12:29:12
  */
 public class ConfigZoekConfiguratieAction extends ViewerCrudAction {
 
