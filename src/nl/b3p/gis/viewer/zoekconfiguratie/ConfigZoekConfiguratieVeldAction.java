@@ -68,6 +68,7 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
             request.setAttribute(ATTRIBUUTTYPE,request.getParameter(ATTRIBUUTTYPE));
             request.setAttribute(ZOEKCONFIGURATIEID,request.getParameter(ZOEKCONFIGURATIEID));
         }
+        createLists(request);
         return super.unspecified(mapping, dynaForm, request, response);
     }
 
@@ -81,8 +82,7 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         return super.save(mapping, dynaForm, request, response);
     }
 
-    @Override
-    public void createLists(DynaValidatorForm dynaForm, HttpServletRequest request) throws IOException {
+    public void createLists(HttpServletRequest request) throws IOException {
         Attribuut a = getAttribuut(request,false);
         ZoekConfiguratie zc=null;
         if (a!=null)
