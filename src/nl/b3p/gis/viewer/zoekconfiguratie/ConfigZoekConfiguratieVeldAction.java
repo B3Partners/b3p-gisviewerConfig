@@ -55,7 +55,7 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
     private static final Log log = LogFactory.getLog(ConfigZoekConfiguratieAction.class);
     private static final String ZOEKATTRIBUUTID = "zoekAttribuutId";
     private static final String RESULTAATATTRIBUUTID = "resultaatAttribuutId";
-    private static final String ZOEKCONFIGURATIEID = "zoekConfiguratieId";
+    //private static final String ZOEKCONFIGURATIEID = "zoekConfiguratieId";
     private static final String ATTRIBUUTTYPE = "attribuutType";
 
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -66,18 +66,18 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         }else{
             //als een attr null is dan is het een nieuw. Geef het ZoekConfigId en attribuutType door
             request.setAttribute(ATTRIBUUTTYPE,request.getParameter(ATTRIBUUTTYPE));
-            request.setAttribute(ZOEKCONFIGURATIEID,request.getParameter(ZOEKCONFIGURATIEID));
+            request.setAttribute(ConfigZoekConfiguratieAction.ZOEKCONFIGURATIEID,request.getParameter(ConfigZoekConfiguratieAction.ZOEKCONFIGURATIEID));
         }
         createLists(request);
         return super.unspecified(mapping, dynaForm, request, response);
     }
 
+    @Override
     public ActionForward save(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Attribuut attr=populateObject(dynaForm,request);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         sess.saveOrUpdate(attr);
-        sess.flush();
-        sess.refresh(attr);
+        sess.flush();        
         request.setAttribute("doClose", true);
         return super.save(mapping, dynaForm, request, response);
     }
@@ -156,7 +156,7 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         return attribuut;
     }
     private ZoekConfiguratie getZoekConfiguratie(HttpServletRequest request){
-        String zid=request.getParameter(ZOEKCONFIGURATIEID);
+        String zid=request.getParameter(ConfigZoekConfiguratieAction.ZOEKCONFIGURATIEID);
         if (zid!=null){
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
             ZoekConfiguratie zc=(ZoekConfiguratie) sess.get(ZoekConfiguratie.class,new Integer(zid));

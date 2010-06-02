@@ -22,6 +22,7 @@
  */
 package nl.b3p.gis.viewer.zoekconfiguratie;
 
+import java.util.Arrays;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.zoeker.configuratie.Bron;
 import nl.b3p.zoeker.configuratie.ResultaatAttribuut;
@@ -38,7 +39,7 @@ public class ZoekConfiguratieListUtil{
     /**
      * Haalt de mogelijke featureTypeNames van een bron op.
      **/
-    public static String[] getTypeNames(Bron bron) throws Exception {
+    public static String[] getTypeNames(Bron bron, Boolean sort) throws Exception {
         if (bron==null){
             throw new Exception("Bron kan niet worden gevonden");
         }
@@ -46,7 +47,9 @@ public class ZoekConfiguratieListUtil{
         if (ds==null){
             throw new Exception("Kan geen verbinding maken met bron");
         }
-        return ds.getTypeNames();
+        String[] types=ds.getTypeNames();
+        Arrays.sort(types);
+        return types;
     }
     /**
      * Haalt de mogelijke featureTypeNames van een bron op adhv het id van de bron
@@ -54,7 +57,7 @@ public class ZoekConfiguratieListUtil{
     public static String[] getTypeNamesById(Integer bronId) throws Exception{
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         Bron bron = (Bron) sess.get(Bron.class,bronId);
-        return getTypeNames(bron);
+        return getTypeNames(bron,true);
     }
 
     public static void removeZoekAttribuut(Integer id){
