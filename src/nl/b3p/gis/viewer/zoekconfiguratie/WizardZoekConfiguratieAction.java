@@ -51,12 +51,12 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
     private static final Log log = LogFactory.getLog(ConfigZoekConfiguratieAction.class);
     private static final String BRONID = "bronId";
     private static final String FEATURETYPE="featureType";
+    private static final String PARENTZOEKCONFIGURATIE="parentZoekConfiguratie";
     //forwards
     public static final String STEP1 = "step1";
     public static final String STEP2 = "step2";
     public static final String STEP3 = "step3";
     public static final String STEP4 = "step4";
-    public static final String STEP5 = "step5";
 
     @Override
     protected Map getActionMethodPropertiesMap() {
@@ -76,16 +76,6 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         crudProp.setAlternateForwardName(FAILURE);
         map.put(STEP3, crudProp);
 
-        crudProp = new ExtendedMethodProperties(STEP4);
-        crudProp.setDefaultForwardName(STEP4);
-        crudProp.setAlternateForwardName(FAILURE);
-        map.put(STEP4, crudProp);
-
-        crudProp = new ExtendedMethodProperties(STEP5);
-        crudProp.setDefaultForwardName(STEP5);
-        crudProp.setAlternateForwardName(FAILURE);
-        map.put(STEP5, crudProp);
-
         return map;
     }
 
@@ -98,62 +88,69 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
     }
 
     public ActionForward step1(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {        
-        if("nieuw".equalsIgnoreCase(request.getParameter("nieuwofbestaandebron"))){
-            return mapping.findForward(STEP2);
-        }else{
-            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-            List bronnen=sess.createQuery("from Bron").list();
-            request.setAttribute("bronnen", bronnen);
-            return mapping.findForward(STEP3);
-            
-        }
-    }
-    public ActionForward step2(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-return super.unspecified(mapping, dynaForm, request, response);
-    }
-    public ActionForward step3(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         if(FormUtils.nullIfEmpty(request.getParameter(BRONID))==null){
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"U dient een bron te selecteren.");
             return step1(mapping, dynaForm, request, response);
-        }                
+        }
+        if ("new".equalsIgnoreCase(request.getParameter(BRONID))){
+            ActionRedirect redirect = new ActionRedirect(mapping.findForward("wizardCreateBron"));
+            return redirect;
+        }
         Bron bron=getAndSetBron(request);
         String[] types=ZoekConfiguratieListUtil.getTypeNames(bron,true);
         request.setAttribute("featureTypes",types);
-        return mapping.findForward(STEP4);
-    }
-    public ActionForward step4(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        return mapping.findForward(STEP2);
+    }   
+    public ActionForward step2(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Bron bron=getAndSetBron(request);
+        //controleer of er een bron en featuretype is.
         if (bron==null){
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"We zijn vergeten welke bron u geselecteerd heeft, selecteer opnieuw een bron.");
             return step1(mapping,dynaForm,request,response);
         }else if (FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE))==null){
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"U dient featureType/tabel te selecteren.");
-            return step3(mapping,dynaForm,request,response);
-        }
+            return step1(mapping,dynaForm,request,response);
+        }        
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        //maak een lijst met mogelijke zoekconfiguraties (om als parent te kiezen)
+        List zoekconfiguraties = sess.createQuery("from ZoekConfiguratie").list();
+        request.setAttribute("zoekConfiguraties",zoekconfiguraties);
         request.setAttribute(FEATURETYPE,request.getParameter(FEATURETYPE));
-        return mapping.findForward(STEP5);
+        return mapping.findForward(STEP3);
     }
-    public ActionForward step5(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public ActionForward step3(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Bron bron=getBron(request);
         if (bron==null){
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"We zijn vergeten welke bron u geselecteerd heeft, selecteer opnieuw een bron.");
             return step1(mapping,dynaForm,request,response);
         }else if (FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE))==null){
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"U dient featureType/tabel te selecteren.");
-            return step3(mapping,dynaForm,request,response);
+            return step1(mapping,dynaForm,request,response);
         }
+        Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
+        //maak de zoekconfiguratie:
         ZoekConfiguratie zc= new ZoekConfiguratie();
+        if (FormUtils.StringToInteger(request.getParameter(PARENTZOEKCONFIGURATIE))!=null){
+            Integer parentId=FormUtils.StringToInteger(request.getParameter(PARENTZOEKCONFIGURATIE));
+            ZoekConfiguratie parent=(ZoekConfiguratie) sess.get(ZoekConfiguratie.class, parentId);
+            zc.setParentZoekConfiguratie(parent);
+        }
         zc.setNaam(request.getParameter("naam"));
         zc.setParentBron(bron);
         zc.setFeatureType(request.getParameter(FEATURETYPE));
-        Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
+        
         sess.save(zc);
         sess.flush();
         //set de juiste waarden om de juiste pagina te openen om te editen.
-        ActionRedirect redirect = new ActionRedirect(mapping.findForward("wizardDone"));
+        /*ActionRedirect redirect = new ActionRedirect(mapping.findForward("wizardDone"));
         redirect.addParameter(ConfigZoekConfiguratieAction.ZOEKCONFIGURATIEID, zc.getId().toString());
         redirect.addParameter(EDIT,"submit");
-        return redirect;        
+        return redirect;   */
+        request.setAttribute("zoekConfiguratieId",zc.getId());
+        request.setAttribute("zoekVelden",zc.getZoekVelden());
+        request.setAttribute("resultaatVelden",zc.getResultaatVelden());
+        
+        return mapping.findForward(STEP4);
     }
 
     private Bron getAndSetBron(HttpServletRequest request){
