@@ -91,7 +91,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
     public ActionForward step1(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {        
         if(FormUtils.nullIfEmpty(request.getParameter(BRONID))==null){
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"U dient een bron te selecteren.");
-            return step1(mapping, dynaForm, request, response);
+            return unspecified(mapping, dynaForm, request, response);
         }
         if ("new".equalsIgnoreCase(request.getParameter(BRONID))){
             ActionRedirect redirect = new ActionRedirect(mapping.findForward("wizardCreateBron"));
@@ -122,10 +122,15 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             featureType=FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
         }
         request.setAttribute(FEATURETYPE,featureType);
+        //controleer of de ZoekConfiguratie niet corrupt is.
+        if (zc!=null && (bron==null || featureType==null)){
+            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"De zoekconfiguratie die u wilt bewerken is onjuist geoconfigureerd en kan niet worden bewerkt. U kunt wel een nieuwe zoekconfiguratie aanmaken.");
+            return unspecified(mapping,dynaForm,request,response);
+        }
         //controleer of er een bron en featuretype is.
         if (bron==null){
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"We zijn vergeten welke bron u geselecteerd heeft, selecteer opnieuw een bron.");
-            return step1(mapping,dynaForm,request,response);
+            return unspecified(mapping,dynaForm,request,response);
         }else if (featureType==null){
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"U dient featureType/tabel te selecteren.");
             return step1(mapping,dynaForm,request,response);
@@ -144,12 +149,19 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         ZoekConfiguratie zc= getAndSetZoekConfiguratie(request);
         Bron bron=null;
         String featureType=null;
+        String naam=null;
         if (zc!=null){
             bron=zc.getBron();
             featureType=zc.getFeatureType();
+            naam=zc.getNaam();
         }else{
             bron=getAndSetBron(request);
             featureType=FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
+            naam=FormUtils.nullIfEmpty(request.getParameter("naam"));
+        }
+        if (zc!=null && (bron==null || featureType==null)){
+            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"De zoekconfiguratie die u wilt bewerken is onjuist geoconfigureerd en kan niet worden bewerkt. U kan wel een nieuwe zoekconfiguratie aanmaken.");
+            return unspecified(mapping,dynaForm,request,response);
         }
         if (bron==null){
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"We zijn vergeten welke bron u geselecteerd heeft, selecteer opnieuw een bron.");
@@ -157,6 +169,9 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         }else if (featureType==null){
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"U dient featureType/tabel te selecteren.");
             return step1(mapping,dynaForm,request,response);
+        }else if (naam==null){
+            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY,"U dient een naam op te geven voor deze configuratie");
+            return step2(mapping,dynaForm,request,response);
         }
         Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
         //maak de zoekconfiguratie als die nog niet bestaat
@@ -170,7 +185,8 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         }else{
             zc.setParentZoekConfiguratie(null);
         }
-        zc.setNaam(request.getParameter("naam"));
+        if (FormUtils.nullIfEmpty(request.getParameter("naam"))!=null)
+            zc.setNaam(request.getParameter("naam"));
         zc.setParentBron(bron);
         zc.setFeatureType(featureType);
         //sla alles op.
@@ -189,6 +205,8 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
      */
     private Bron getAndSetBron(HttpServletRequest request){
         Bron bron= getBron(request);
+        if (bron==null)
+            return null;
         request.setAttribute(BRONID, bron.getId());
         return bron;
     }

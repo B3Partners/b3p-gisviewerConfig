@@ -23,6 +23,7 @@
 package nl.b3p.gis.viewer.zoekconfiguratie;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -96,9 +97,19 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         SimpleFeatureType sft = ds.getSchema(zc.getFeatureType());
 
         List<AttributeDescriptor> descriptors = sft.getAttributeDescriptors();
-        String[] attributen = new String[descriptors.size()];
+        List attributen = new ArrayList();
+        //maak een lijst met mogelijke attributen en de binding class namen.
         for (int i = 0; i < descriptors.size(); i++) {
-            attributen[i] = descriptors.get(i).getName().toString();
+            String[] attr = new String[2];
+            attr[0] = descriptors.get(i).getName().toString();
+            attr[1]="";
+            if (descriptors.get(i).getType().getBinding()!=null){
+                String type=descriptors.get(i).getType().getBinding().getName();
+                type=type.substring(type.lastIndexOf(".")+1);
+                attr[1]=type;
+            }
+            attributen.add(attr);
+
         }
         request.setAttribute("attribuutNamen", attributen);
 

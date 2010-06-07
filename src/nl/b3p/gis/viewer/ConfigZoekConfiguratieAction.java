@@ -26,14 +26,10 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
-import nl.b3p.gis.viewer.ViewerCrudAction;
-import nl.b3p.gis.viewer.db.Connecties;
 import nl.b3p.gis.viewer.services.HibernateUtil;
-import nl.b3p.gis.viewer.zoekconfiguratie.ZoekConfiguratieListUtil;
 import nl.b3p.zoeker.configuratie.ZoekConfiguratie;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
@@ -48,12 +44,14 @@ public class ConfigZoekConfiguratieAction extends ViewerCrudAction {
 
     private static final Log log = LogFactory.getLog(ConfigZoekConfiguratieAction.class);
     public static final String ZOEKCONFIGURATIEID="zoekConfiguratieId";
+    @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         createStartLists(request);
         return super.unspecified(mapping, dynaForm, request, response);
     }
 
+    @Override
     public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         ZoekConfiguratie z= getZoekConfiguratie(request, false);
         if (z!=null){
@@ -96,26 +94,7 @@ public class ConfigZoekConfiguratieAction extends ViewerCrudAction {
         List zoekConfiguraties=sess.createQuery("from ZoekConfiguratie").list();
         request.setAttribute("zoekConfiguraties", zoekConfiguraties);
     }
-/*
-    public void createLists(ActionMapping mapping, HttpServletRequest request,ZoekConfiguratie zc) throws Exception{
-        //bronnen
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List bronnen=sess.createQuery("from Bron").list();
-        request.setAttribute("bronnen",bronnen);
-        //zoekconfiguraties
-        List zoekConfiguraties =sess.createQuery("from ZoekConfiguratie where id != :id").setParameter("id", zc.getId()).list();
-        request.setAttribute("zoekConfiguratieList", zoekConfiguraties);
-        //features;
-        if (zc.getBron()!=null){
-            try{
-                String[] featureTypes= ZoekConfiguratieListUtil.getTypeNames(zc.getBron());
-                request.setAttribute("featureTypes",featureTypes);
-            }catch(Exception ex){
-                addAlternateMessage(mapping,request,GENERAL_ERROR_KEY,ex.getMessage());
-            }
-        }
-    }
-*/
+
     private ZoekConfiguratie getZoekConfiguratie(HttpServletRequest request, boolean createNew) {
         Integer id = FormUtils.StringToInteger(request.getParameter(ZOEKCONFIGURATIEID));
         ZoekConfiguratie z = null;
