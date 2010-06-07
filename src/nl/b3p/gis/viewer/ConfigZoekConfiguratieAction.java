@@ -46,7 +46,6 @@ public class ConfigZoekConfiguratieAction extends ViewerCrudAction {
     public static final String ZOEKCONFIGURATIEID="zoekConfiguratieId";
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         createStartLists(request);
         return super.unspecified(mapping, dynaForm, request, response);
     }

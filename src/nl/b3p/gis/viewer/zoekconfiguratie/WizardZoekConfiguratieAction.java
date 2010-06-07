@@ -22,6 +22,8 @@
  */
 package nl.b3p.gis.viewer.zoekconfiguratie;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -32,6 +34,8 @@ import nl.b3p.gis.viewer.ConfigZoekConfiguratieAction;
 import nl.b3p.gis.viewer.ViewerCrudAction;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.zoeker.configuratie.Bron;
+import nl.b3p.zoeker.configuratie.ResultaatAttribuut;
+import nl.b3p.zoeker.configuratie.ZoekAttribuut;
 import nl.b3p.zoeker.configuratie.ZoekConfiguratie;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -196,7 +200,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         request.setAttribute("zoekConfiguratieId",zc.getId());
         request.setAttribute("zoekVelden",zc.getZoekVelden());
         request.setAttribute("resultaatVelden",zc.getResultaatVelden());
-        
+        request.setAttribute("tips",createTips(zc));
         return mapping.findForward(STEP4);
     }
     /**
@@ -231,5 +235,59 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         if (zc!=null)
             request.setAttribute(ZOEKCONFIGURATIEID, zc.getId());
         return zc;
+    }
+    /*Maak een lijst met tip resource keys zodat de gebruiker wat feedback krijgt bij het aanmaken van de velden.*/
+    private ArrayList<String> createTips(ZoekConfiguratie zc) {
+        if(zc==null){
+            return null;
+        }
+        ArrayList<String> tips = new ArrayList();
+        if (zc.getZoekVelden()==null || zc.getZoekVelden().size()==0){
+            tips.add("wizardzoekconfiguratie.tip.geenzoekvelden");
+        }
+        if (zc.getResultaatVelden()==null || zc.getResultaatVelden().size()==0){
+            tips.add("wizardzoekconfiguratie.tip.geenresultaatvelden");
+        }
+        //als er zoek veldne zijn, controleer dan op de bruikbaarheid daarvan.
+        if (zc.getZoekVelden()!=null && zc.getZoekVelden().size()==0){
+            Iterator<ZoekAttribuut> it = zc.getZoekVelden().iterator();
+            boolean geometryExists=false;
+            boolean geometryDependentExists=false;
+            while(it.hasNext()){
+                ZoekAttribuut za= it.next();
+                if (ZoekAttribuut.GEOMETRY_TYPE==za.getType()){
+                    geometryExists=true;
+                }else if(ZoekAttribuut.STRAAL_TYPE==za.getType()){
+                    geometryDependentExists=true;
+                }
+            }
+            if (geometryDependentExists && !geometryExists){
+                tips.add("wizardzoekconfiguratie.tip.geengeometriezoek");
+            }
+        }
+        //als er resultaat velden zijn, controleer dan op de bruikbaarheid.
+        if (zc.getResultaatVelden()!=null && zc.getResultaatVelden().size()>0){
+            Iterator<ResultaatAttribuut> it=zc.getResultaatVelden().iterator();
+            boolean geometryExists=false;
+            boolean toonExists=false;
+            while (it.hasNext()){
+                ResultaatAttribuut ra= it.next();
+                //controleer of er een geometry is opgegeven zodat er kan worden gezoomd
+                if (ResultaatAttribuut.GEOMETRY_TYPE==ra.getType()){
+                    geometryExists=true;
+                }
+                //kijk of er velden zijn die als resultaat worden getoond.
+                else if (ResultaatAttribuut.TOON_TYPE == ra.getType()){
+                    toonExists=true;
+                }
+            }
+            if(!geometryExists){
+                tips.add("wizardzoekconfiguratie.tip.geengeometrieresultaat");
+            }
+            if (!toonExists){
+                tips.add("wizardzoekconfiguratie.tip.geentoonresultaat");
+            }
+        }
+        return tips;
     }
 }
