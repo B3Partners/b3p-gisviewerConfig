@@ -160,9 +160,11 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         }
         dynaForm.set("id", Integer.toString(c.getId()));
         dynaForm.set("naam", c.getNaam());
-        dynaForm.set("url", c.getConnectie_url());
+        dynaForm.set("url", c.getUrl());
         dynaForm.set("gebruikersnaam", c.getGebruikersnaam());
         dynaForm.set("wachtwoord", c.getWachtwoord());
+        if (c.getVolgorde()!=null)
+            dynaForm.set("volgorde", c.getVolgorde().toString());
     }
 
     private void populateConnectieObject(DynaValidatorForm dynaForm, Connecties c, HttpServletRequest request) {
@@ -170,8 +172,11 @@ public class ConfigConnectieAction extends ViewerCrudAction {
             c.setId(new Integer (dynaForm.getString("id")));
         }
         c.setNaam(FormUtils.nullIfEmpty(dynaForm.getString("naam")));
-        c.setConnectie_url(FormUtils.nullIfEmpty(dynaForm.getString("url")));
+        c.setUrl(FormUtils.nullIfEmpty(dynaForm.getString("url")));
         c.setGebruikersnaam(FormUtils.nullIfEmpty(dynaForm.getString("gebruikersnaam")));
         c.setWachtwoord(FormUtils.nullIfEmpty(dynaForm.getString("wachtwoord")));
+        if (FormUtils.nullIfEmpty(dynaForm.getString("volgorde"))!=null){
+            c.setVolgorde(new Integer (dynaForm.getString("volgorde")));
+        }
     }
 }
