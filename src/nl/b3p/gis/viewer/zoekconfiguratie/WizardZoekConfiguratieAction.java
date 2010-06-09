@@ -32,6 +32,7 @@ import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.viewer.ConfigZoekConfiguratieAction;
 import nl.b3p.gis.viewer.ViewerCrudAction;
+import nl.b3p.gis.viewer.db.Connecties;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.zoeker.configuratie.Bron;
 import nl.b3p.zoeker.configuratie.ResultaatAttribuut;
@@ -87,7 +88,8 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List bronnen=sess.createQuery("from Bron").list();
+        List bronnen=sess.createCriteria(Bron.class).list();
+        bronnen=filterConnecties(bronnen);
         request.setAttribute("bronnen", bronnen);
         return super.unspecified(mapping, dynaForm, request, response);
     }
@@ -186,7 +188,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             Integer parentId=FormUtils.StringToInteger(request.getParameter(PARENTZOEKCONFIGURATIE));
             ZoekConfiguratie parent=(ZoekConfiguratie) sess.get(ZoekConfiguratie.class, parentId);
             zc.setParentZoekConfiguratie(parent);
-        }else{
+        }else if (request.getParameter(PARENTZOEKCONFIGURATIE)!=null){
             zc.setParentZoekConfiguratie(null);
         }
         if (FormUtils.nullIfEmpty(request.getParameter("naam"))!=null)
@@ -201,6 +203,9 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         request.setAttribute("zoekVelden",zc.getZoekVelden());
         request.setAttribute("resultaatVelden",zc.getResultaatVelden());
         request.setAttribute("tips",createTips(zc));
+        if (zc.getParentZoekConfiguratie()!=null){
+            request.setAttribute("parentResultaatVelden",zc.getParentZoekConfiguratie().getResultaatVelden());
+        }
         return mapping.findForward(STEP4);
     }
     /**
@@ -289,5 +294,18 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             }
         }
         return tips;
+    }
+
+    private List filterConnecties(List bronnen) {
+        List returnValue=new ArrayList();
+        Iterator it=bronnen.iterator();
+        while(it.hasNext()){
+            Object o = it.next();
+            if (o instanceof Connecties){
+            }else{
+                returnValue.add(o);
+            }
+        }
+        return returnValue;
     }
 }
