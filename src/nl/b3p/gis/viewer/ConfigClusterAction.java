@@ -26,7 +26,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
-import nl.b3p.gis.viewer.ViewerCrudAction;
 import nl.b3p.gis.viewer.db.Clusters;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import org.apache.commons.logging.Log;
@@ -145,6 +144,23 @@ public class ConfigClusterAction extends ViewerCrudAction {
         if (c == null) {
             prepareMethod(dynaForm, request, LIST, EDIT);
             addAlternateMessage(mapping, request, NOTFOUND_ERROR_KEY);
+            return getAlternateForward(mapping, request);
+        }
+
+        /* indien nog themas of children dan niet wissen, levert
+         * ConstraintViolationException op */
+        int themaSize = c.getThemas().size();
+        int childrenSize = c.getChildren().size();
+
+        if (themaSize > 0) {
+            prepareMethod(dynaForm, request, LIST, EDIT);
+            addAlternateMessage(mapping, request, HASTHEMAS_ERROR_KEY);
+            return getAlternateForward(mapping, request);
+        }
+
+        if (childrenSize > 0) {
+            prepareMethod(dynaForm, request, LIST, EDIT);
+            addAlternateMessage(mapping, request, HASCHILDCLUSTER_ERROR_KEY);
             return getAlternateForward(mapping, request);
         }
 
