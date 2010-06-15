@@ -44,87 +44,12 @@ public class ConfigZoekConfiguratieAction extends ViewerCrudAction {
 
     private static final Log log = LogFactory.getLog(ConfigZoekConfiguratieAction.class);
     public static final String ZOEKCONFIGURATIEID="zoekConfiguratieId";
-    @Override
-    public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        createStartLists(request);
-        return super.unspecified(mapping, dynaForm, request, response);
-    }
 
     @Override
-    public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        ZoekConfiguratie z= getZoekConfiguratie(request, false);
-        if (z!=null){
-            populateForm(z,dynaForm);
-        }
-        request.setAttribute("newObject",true);
-        createEditLists(request,z);        
-        return super.edit(mapping,dynaForm,request,response);
-    }
-
-    @Override
-    public ActionForward save(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Session sess=HibernateUtil.getSessionFactory().getCurrentSession();
-        ZoekConfiguratie z= populateObject(dynaForm, request);
-        //sla de zoekconfiguratie op.
-        sess.saveOrUpdate(z);
-        sess.flush();
-        //maak de start lijst.
-        createStartLists(request);
-        //roep de super aan maar wacht met returnen
-        ActionForward af= super.save(mapping, dynaForm, request, response);
-        //reset het formulier.
-        dynaForm.initialize(mapping);
-        return af;
-    }
-    public void createEditLists(HttpServletRequest request,ZoekConfiguratie z){
-        if (z==null){
-            return;
-        }
-         //zoekconfiguraties
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List zoekConfiguraties =sess.createQuery("from ZoekConfiguratie where id != :id").setParameter("id", z.getId()).list();
-        request.setAttribute("zoekConfiguratieList", zoekConfiguraties);
-
-        request.setAttribute("zoekVelden",z.getZoekVelden());
-        request.setAttribute("resultaatVelden",z.getResultaatVelden());
-    }
-    public void createStartLists(HttpServletRequest request){
+    public void createLists(DynaValidatorForm dynaForm,HttpServletRequest request){
         Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
         List zoekConfiguraties=sess.createQuery("from ZoekConfiguratie").list();
         request.setAttribute("zoekConfiguraties", zoekConfiguraties);
     }
 
-    private ZoekConfiguratie getZoekConfiguratie(HttpServletRequest request, boolean createNew) {
-        Integer id = FormUtils.StringToInteger(request.getParameter(ZOEKCONFIGURATIEID));
-        ZoekConfiguratie z = null;
-        if (id == null && createNew) {
-            z = new ZoekConfiguratie();
-        } else if (id != null) {
-            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-            z = (ZoekConfiguratie) sess.get(ZoekConfiguratie.class, id);
-        }
-        return z;
-    }
-
-    private void populateForm(ZoekConfiguratie z, DynaValidatorForm dynaForm) {
-        dynaForm.set(ZOEKCONFIGURATIEID, z.getId().toString());
-        dynaForm.set("naam", z.getNaam());
-        dynaForm.set("featureType", z.getFeatureType());
-        if (z.getParentBron()!=null)
-            dynaForm.set("parentBron", z.getParentBron().toString());
-        if (z.getParentZoekConfiguratie()!=null)
-            dynaForm.set("parentZoekConfiguratie", z.getParentZoekConfiguratie().toString());
-    }
-
-    private ZoekConfiguratie populateObject(DynaValidatorForm dynaForm,HttpServletRequest request){
-        ZoekConfiguratie z= getZoekConfiguratie(request, true);
-        z.setNaam(dynaForm.getString("naam"));
-        if (FormUtils.nullIfEmpty(dynaForm.getString("parentZoekConfiguratie"))!=null){
-            Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
-            Integer parentId=new Integer(dynaForm.getString("parentZoekConfiguratie"));
-            ZoekConfiguratie parent=(ZoekConfiguratie) sess.get(ZoekConfiguratie.class,parentId);
-            z.setParentZoekConfiguratie(parent);
-        }
-        return z;
-    }
 }

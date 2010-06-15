@@ -93,6 +93,32 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         request.setAttribute("bronnen", bronnen);
         return super.unspecified(mapping, dynaForm, request, response);
     }
+    @Override
+    public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        if (FormUtils.nullIfEmpty(request.getParameter(ZOEKCONFIGURATIEID))!=null){
+            Integer id= new Integer (request.getParameter(ZOEKCONFIGURATIEID));
+            Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
+            Object zc=sess.get(ZoekConfiguratie.class, id);
+            if (zc!=null){
+                List childs=sess.createQuery("from ZoekConfiguratie z where z.parentZoekConfiguratie=:zc").setParameter("zc", zc).list();
+                if (childs.size()>0){
+                    String message="Kan Zoekconfiguratie niet verwijderen er zijn nog relaties met de volgende Zoekconfiguratie(s): ";
+                    for (int i=0; i < childs.size(); i++){
+                        if (i!=0)
+                            message+=", ";
+                        message+=childs.get(i).toString();
+                    }
+                    addAlternateMessage(mapping, request,GENERAL_ERROR_KEY,message);
+                }else{
+                    sess.delete(zc);
+                }
+                sess.flush();
+            }else{
+                addAlternateMessage(mapping, request,GENERAL_ERROR_KEY,"Kan opgegeven zoekconfiguratie niet vinden.");
+            }
+        }
+        return mapping.findForward("wizardDone");
+    }
 
     public ActionForward step1(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {        
         if(FormUtils.nullIfEmpty(request.getParameter(BRONID))==null){
