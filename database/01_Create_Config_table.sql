@@ -1,8 +1,8 @@
 CREATE TABLE configuratie
 (
-  "ID" serial NOT NULL,
-  "PROPERTY" character varying(255),
-  "PROPVAL" character varying,
-  "SETTING" character varying(255),
-  "TYPE" character varying(255)
+  "id" serial NOT NULL,
+  "property" character varying(255),
+  "propval" character varying,
+  "setting" character varying(255),
+  "type" character varying(255)
 );
