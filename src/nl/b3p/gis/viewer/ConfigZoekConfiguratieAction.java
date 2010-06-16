@@ -24,14 +24,9 @@ package nl.b3p.gis.viewer;
 
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import nl.b3p.commons.services.FormUtils;
 import nl.b3p.gis.viewer.services.HibernateUtil;
-import nl.b3p.zoeker.configuratie.ZoekConfiguratie;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
 import org.hibernate.Session;
 
