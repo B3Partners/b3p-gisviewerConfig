@@ -10,7 +10,7 @@ CREATE TABLE configuratie
 insert into configuratie (property, propval, setting, "type") values ('useCookies', 'true', 'viewer', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('multipleActiveThemas', 'false', 'viewer', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('dataframepopupHandle', 'false', 'viewer', 'java.lang.Boolean');
-insert into configuratie (property, propval, setting, "type") values ('showLeftPanel', 'null', 'viewer', 'java.lang.Boolean');
+insert into configuratie (property, propval, setting, "type") values ('showLeftPanel', 'false', 'viewer', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('autoRedirect', '2', 'viewer', 'java.lang.Integer');
 insert into configuratie (property, propval, setting, "type") values ('useSortableFunction', 'false', 'viewer', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('layerDelay', '5000', 'viewer', 'java.lang.Integer');
