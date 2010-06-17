@@ -1,9 +1,11 @@
 package nl.b3p.gis.viewer;
 
+import java.util.Collection;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.gis.utils.ConfigKeeper;
+import nl.b3p.gis.viewer.db.Configuratie;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -77,31 +79,113 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         if (!isTokenValid(request)) {
-            prepareMethod(dynaForm, request, EDIT, LIST);
+  
             addAlternateMessage(mapping, request, TOKEN_ERROR_KEY);
             return getAlternateForward(mapping, request);
         }
 
-        // nieuwe default actie op delete zetten
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        ConfigKeeper configKeeper = new ConfigKeeper();
+        Configuratie c = null;
 
-        ActionErrors errors = dynaForm.validate(mapping, request);
-        if (!errors.isEmpty()) {
-            addMessages(request, errors);
-            prepareMethod(dynaForm, request, EDIT, LIST);
-            addAlternateMessage(mapping, request, VALIDATION_ERROR_KEY);
-            return getAlternateForward(mapping, request);
-        }
+        c = configKeeper.getConfiguratie("useCookies","viewer");
+        writeBoolean(dynaForm, "cfg_useCookies", c);
 
-        /* Updaten config in db
-        ConfigKeeper configKeeper = Conf
+        c = configKeeper.getConfiguratie("multipleActiveThemas","viewer");
+        writeBoolean(dynaForm, "cfg_multipleActiveThemas", c);
 
-        populateClustersObject(dynaForm, c, request);
+        c = configKeeper.getConfiguratie("usePopup","viewer");
+        writeBoolean(dynaForm, "cfg_usePopup", c);
 
-        sess.saveOrUpdate(c);
-        sess.flush();
-        */
+        c = configKeeper.getConfiguratie("useDivPopup","viewer");
+        writeBoolean(dynaForm, "cfg_useDivPopup", c);
+
+        c = configKeeper.getConfiguratie("dataframepopupHandle","viewer");
+        writeBoolean(dynaForm, "cfg_dataframepopupHandle", c);
+
+        c = configKeeper.getConfiguratie("usePanelControls","viewer");
+        writeBoolean(dynaForm, "cfg_usePanelControls", c);
+
+        c = configKeeper.getConfiguratie("usePanelControls","viewer");
+        writeBoolean(dynaForm, "cfg_showLeftPanel", c);
+
+        c = configKeeper.getConfiguratie("autoRedirect","viewer");
+        writeInteger(dynaForm, "cfg_autoRedirect", c);
+
+        c = configKeeper.getConfiguratie("tolerance","viewer");
+        writeInteger(dynaForm, "cfg_tolerance", c);
+
+        c = configKeeper.getConfiguratie("useSortableFunction","viewer");
+        writeBoolean(dynaForm, "cfg_useSortableFunction", c);
+
+        c = configKeeper.getConfiguratie("layerDelay","viewer");
+        writeInteger(dynaForm, "cfg_layerDelay", c);
+
+        c = configKeeper.getConfiguratie("refreshDelay","viewer");
+        writeInteger(dynaForm, "cfg_refreshDelay", c);
+
+        c = configKeeper.getConfiguratie("zoekConfigIds","viewer");
+        writeString(dynaForm, "cfg_zoekConfigIds", c);
+
+        c = configKeeper.getConfiguratie("minBboxZoeken","viewer");
+        writeInteger(dynaForm, "cfg_minBboxZoeken", c);
+
+        c = configKeeper.getConfiguratie("maxResults","viewer");
+        writeInteger(dynaForm, "cfg_maxResults", c);
+
+        c = configKeeper.getConfiguratie("expandAll","viewer");
+        writeBoolean(dynaForm, "cfg_expandAll", c);
+
+        c = configKeeper.getConfiguratie("tabbladenBeheerder","viewer");
+        writeString(dynaForm, "cfg_tabbladenBeheerder", c);
+
+        c = configKeeper.getConfiguratie("tabbladenGebruiker","viewer");
+        writeString(dynaForm, "cfg_tabbladenGebruiker", c);
+
+        c = configKeeper.getConfiguratie("tabbladenDemoGebruiker","viewer");
+        writeString(dynaForm, "cfg_tabbladenDemoGebruiker", c);
+
+        c = configKeeper.getConfiguratie("tabbladenAnoniem","viewer");
+        writeString(dynaForm, "cfg_tabbladenAnoniem", c);
 
         return super.save(mapping, dynaForm, request, response);
+    }
+
+    private void writeBoolean(DynaValidatorForm form, String field, Configuratie c) {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        if (form.get(field) != null) {
+            c.setPropval("true");
+        } else {
+            c.setPropval("false");
+        }
+
+        sess.merge(c);
+        sess.flush();
+    }
+
+    private void writeInteger(DynaValidatorForm form, String field, Configuratie c) {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        if (form.get(field) != null) {
+            c.setPropval(form.get(field).toString());
+        } else {
+            c.setPropval("0");
+        }
+
+        sess.merge(c);
+        sess.flush();
+    }
+
+    private void writeString(DynaValidatorForm form, String field, Configuratie c) {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        if (form.get(field) != null) {
+            c.setPropval(form.get(field).toString());
+        } else {
+            c.setPropval("");
+        }
+
+        sess.merge(c);
+        sess.flush();
     }
 }
