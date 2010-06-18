@@ -52,6 +52,15 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         if (usePopup && useDivPopup && !usePanelControls)
             dynaForm.set("cfg_objectInfo", "popup");
 
+        /* ophalen alle zoekconfigs */
+
+        /* ophalen huidige selecties zoeker */
+        String[] ids = new String[2];
+        ids[0] = "1";
+        ids[1] = "3";
+
+        dynaForm.set("zoekconfigids", ids);
+
         /* overige settings klaarzetten voor formulier */
         dynaForm.set("cfg_useCookies", useCookies);
         dynaForm.set("cfg_autoRedirect", autoRedirect);
@@ -108,6 +117,14 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("expandAll","viewer");
         writeBoolean(dynaForm, "cfg_expandAll", c);
+
+        /* opslaan zoekconfig id's */
+        if (dynaForm.get("zoekconfigids") != null) {
+            String[] zoekConfigIds = (String[]) dynaForm.get("zoekconfigids");
+
+            for (int i=0; i < zoekConfigIds.length; i++)
+                logger.debug("ZOEKCONFIGIDS=" + zoekConfigIds[i]);
+        }
 
         return super.save(mapping, dynaForm, request, response);
     }
