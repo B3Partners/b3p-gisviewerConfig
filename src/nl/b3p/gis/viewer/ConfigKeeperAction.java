@@ -1,5 +1,6 @@
 package nl.b3p.gis.viewer;
 
+import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -37,6 +38,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         int minBboxZoeken = (Integer) map.get("minBboxZoeken");
         int maxResults = (Integer) map.get("maxResults");
         boolean expandAll = (Boolean) map.get("expandAll");
+        boolean multipleActiveThemas = (Boolean) map.get("multipleActiveThemas");
 
         /* Vinkjes voor config tabbladen goedzetten */
         fillTabbladenConfig(dynaForm, map);
@@ -52,24 +54,18 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         if (usePopup && useDivPopup && !usePanelControls)
             dynaForm.set("cfg_objectInfo", "popup");
 
-        /* ophalen alle zoekconfigs */
-
-        /* ophalen huidige selecties zoeker */
-        String[] ids = new String[2];
-        ids[0] = "1";
-        ids[1] = "3";
-
-        dynaForm.set("zoekconfigids", ids);
+        /* vullen box voor zoekconfigs */
+        fillZoekConfigBox(dynaForm, request, zoekConfigIds);
 
         /* overige settings klaarzetten voor formulier */
         dynaForm.set("cfg_useCookies", useCookies);
         dynaForm.set("cfg_autoRedirect", autoRedirect);
         dynaForm.set("cfg_tolerance", tolerance);
         dynaForm.set("cfg_refreshDelay", refreshDelay);
-        dynaForm.set("cfg_zoekConfigIds", zoekConfigIds);
         dynaForm.set("cfg_minBboxZoeken", minBboxZoeken);
         dynaForm.set("cfg_maxResults", maxResults);
         dynaForm.set("cfg_expandAll", expandAll);
+        dynaForm.set("cfg_multipleActiveThemas", multipleActiveThemas);
 
         return super.unspecified(mapping, dynaForm, request, response);
     }
@@ -106,9 +102,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("refreshDelay","viewer");
         writeInteger(dynaForm, "cfg_refreshDelay", c);
 
-        c = configKeeper.getConfiguratie("zoekConfigIds","viewer");
-        writeString(dynaForm, "cfg_zoekConfigIds", c);
-
         c = configKeeper.getConfiguratie("minBboxZoeken","viewer");
         writeInteger(dynaForm, "cfg_minBboxZoeken", c);
 
@@ -118,14 +111,38 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("expandAll","viewer");
         writeBoolean(dynaForm, "cfg_expandAll", c);
 
-        /* opslaan zoekconfig id's */
-        if (dynaForm.get("zoekconfigids") != null) {
-            String[] zoekConfigIds = (String[]) dynaForm.get("zoekconfigids");
+        c = configKeeper.getConfiguratie("multipleActiveThemas","viewer");
+        writeBoolean(dynaForm, "cfg_multipleActiveThemas", c);
 
-            for (int i=0; i < zoekConfigIds.length; i++)
-                logger.debug("ZOEKCONFIGIDS=" + zoekConfigIds[i]);
+        /* opslaan zoekconfig id's */
+        String ids = "";
+
+        if (dynaForm.get("zoekconfigids") != null) {         
+            String[] arr = (String[]) dynaForm.get("zoekconfigids");
+
+            for (int i=0; i < arr.length; i++) {
+                ids += arr[i] + ",";
+            }
+
+            int lastComma = ids.lastIndexOf(",");
+
+            if (lastComma > 0)
+                ids = ids.substring(0, lastComma);
+
+            ids = "\"" + ids + "\"";
+
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+            Configuratie zoekConfigIds = configKeeper.getConfiguratie("zoekConfigIds","viewer");
+            zoekConfigIds.setPropval(ids);
+
+            sess.merge(zoekConfigIds);
+            sess.flush();
         }
 
+        /* vullen box voor zoekconfigs */
+        fillZoekConfigBox(dynaForm, request, ids);
+        
         return super.save(mapping, dynaForm, request, response);
     }
 
@@ -451,5 +468,17 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             
             sess.flush();
         }
+    }
+
+    private void fillZoekConfigBox(DynaValidatorForm dynaForm,
+            HttpServletRequest request, String ids) {
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        List zoekconfigs = sess.createQuery("from ZoekConfiguratie order by naam").list();
+
+        request.setAttribute("zoekConfigs", zoekconfigs);
+
+        String[] tmp = ids.replaceAll("\"", "").split(",");
+        dynaForm.set("zoekconfigids", tmp);
     }
 }
