@@ -20,7 +20,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
-            HttpServletRequest request, HttpServletResponse response) throws Exception {
+            HttpServletRequest request, HttpServletResponse response) throws Exception {        
 
         ConfigKeeper configKeeper = new ConfigKeeper();
         Map map = configKeeper.getConfigMap("viewer");

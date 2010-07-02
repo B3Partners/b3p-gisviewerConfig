@@ -44,6 +44,9 @@ public class ConfigClusterAction extends ViewerCrudAction {
 
     private static final Log log = LogFactory.getLog(ConfigThemaAction.class);
 
+    protected static final String HASTHEMAS_ERROR_KEY = "error.hasthemas";
+    protected static final String HASCHILDCLUSTER_ERROR_KEY = "error.haschildcluster";
+
     protected Clusters getCluster(DynaValidatorForm form, boolean createNew) {
         Integer id = FormUtils.StringToInteger(form.getString("clusterID"));
         Clusters c = null;
