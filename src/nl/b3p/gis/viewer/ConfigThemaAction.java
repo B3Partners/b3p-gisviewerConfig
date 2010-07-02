@@ -35,6 +35,7 @@ import nl.b3p.gis.viewer.db.Themas;
 import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.gis.viewer.services.SpatialUtil;
+import nl.b3p.zoeker.configuratie.Bron;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.ActionErrors;
@@ -100,7 +101,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         request.setAttribute("listValidGeoms", SpatialUtil.VALID_GEOMS);
 
         Themas t = getThema(dynaForm, false);
-        Connecties c = null;
+        Bron b = null;
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
 
         Integer cId = new Integer(-1);
@@ -110,9 +111,9 @@ public class ConfigThemaAction extends ViewerCrudAction {
             log.debug("No connection id found in form, input: " + dynaForm.getString("connectie"));
         }
 
-        c = ConfigListsUtil.getConnectie(sess, user, cId);
+        b = ConfigListsUtil.getBron(sess, user, cId);
         //maak lijsten die iets te maken hebben met de admin/spatial_data
-        List tns = ConfigListsUtil.getPossibleFeatures(c);
+        List tns = ConfigListsUtil.getPossibleFeatures(b);
         request.setAttribute("listTables", tns);
 
         String adminTable = null;
@@ -126,11 +127,11 @@ public class ConfigThemaAction extends ViewerCrudAction {
             spatialTable = t.getSpatial_tabel();
         }
         if (adminTable != null) {
-            List atc = ConfigListsUtil.getPossibleAttributes(c, adminTable);
+            List atc = ConfigListsUtil.getPossibleAttributes(b, adminTable);
             request.setAttribute("listAdminTableColumns", atc);
         }
         if (spatialTable != null) {
-            List stc = ConfigListsUtil.getPossibleAttributes(c, spatialTable);
+            List stc = ConfigListsUtil.getPossibleAttributes(b, spatialTable);
             request.setAttribute("listSpatialTableColumns", stc);
         }
         if (user != null) {
@@ -275,14 +276,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         dynaForm.set("admin_pk_complex", new Boolean(t.isAdmin_pk_complex()));
         dynaForm.set("admin_spatial_ref", t.getAdmin_spatial_ref());
 
-        dynaForm.set("admin_query", "");
-        if (t.getConnectie() != null) {
-            if (t.getConnectie().getType().equals("jdbc")) {
-                dynaForm.set("admin_query", t.getAdmin_query());
-            } else if (t.getAdmin_query() != null && !t.getAdmin_query().startsWith("select")) {
-                dynaForm.set("admin_query", t.getAdmin_query());
-            }
-        }
+        dynaForm.set("admin_query", t.getAdmin_query());        
 
         dynaForm.set("spatial_tabel_opmerkingen", t.getSpatial_tabel_opmerkingen());
         dynaForm.set("spatial_tabel", t.getSpatial_tabel());

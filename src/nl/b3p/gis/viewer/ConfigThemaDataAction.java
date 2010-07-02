@@ -22,6 +22,7 @@
  */
 package nl.b3p.gis.viewer;
 
+import nl.b3p.gis.geotools.DataStoreUtil;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,12 +42,14 @@ import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.gis.viewer.services.SpatialUtil;
 import nl.b3p.gis.viewer.services.WfsUtil;
 import nl.b3p.ogc.utils.OGCConstants;
+import nl.b3p.zoeker.configuratie.Bron;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
+import org.geotools.data.DataStore;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.w3c.dom.Element;
@@ -147,20 +150,9 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         Query q = sess.createQuery("from ThemaData where thema.id = :themaID order by dataorder, label");
         request.setAttribute("listThemaData", q.setParameter("themaID", t.getId()).list());
 
-        Connecties c = t.getConnectie(request);
-        String connectieType = Connecties.TYPE_EMPTY;
-        if (c != null) {
-            connectieType = c.getType();
-            if (Connecties.TYPE_JDBC.equalsIgnoreCase(connectieType)) {
-                Connection conn = t.getJDBCConnection();
-                List columnNames = SpatialUtil.getColumnNames(t.getAdmin_tabel(), conn);
-                request.setAttribute("listAdminTableColumns", columnNames);
-            } else if (Connecties.TYPE_WFS.equalsIgnoreCase(connectieType)) {
-                List elementsNames = WfsUtil.getFeatureElementNames(c, t.getAdmin_tabel(), true);
-                request.setAttribute("listAdminTableColumns", elementsNames);
-            }
-        }
-        request.setAttribute("connectieType", connectieType);
+        ArrayList<String> attributes = DataStoreUtil.getAttributeNames(t);
+        request.setAttribute("listAdminTableColumns", attributes);
+        request.setAttribute("connectieType", Connecties.TYPE_EMPTY);
     }
 
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -258,33 +250,10 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
     public ActionForward createAllThemaData(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Themas t = getThema(dynaForm, false);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List attributes = null;
 
-        Connecties c = t.getConnectie(request);
-        String connectieType = Connecties.TYPE_EMPTY;
-        if (c != null) {
-            connectieType = c.getType();
-            if (Connecties.TYPE_JDBC.equalsIgnoreCase(connectieType)) {
-                Connection conn = t.getJDBCConnection();
-                attributes = SpatialUtil.getColumnNames(t.getAdmin_tabel(), conn);
-                if (attributes != null && attributes.size() != 0) {
-                    //als het attribuut van het type geometry is moet hij niet worden gebruikt
-                    for (int i = 0; i < attributes.size(); i++) {
-                        String attr = (String) attributes.get(i);
-                        int type = SpatialUtil.getColumnDatatype(t, attr, conn);
-                        if (type == java.sql.Types.OTHER) {
-                            /*if (attributes==null){
-                            attributes=new ArrayList();
-                            attributes.add(attr);
-                            }*/
-                            attributes.remove(attr);
-                        }
-                    }
-                }
-            } else if (Connecties.TYPE_WFS.equalsIgnoreCase(connectieType)) {
-                attributes = WfsUtil.getFeatureElementNames(c, t.getAdmin_tabel(), false);
-            }
-        }
+        Bron b = t.getConnectie();        
+        ArrayList<String> attributes = DataStoreUtil.getAttributeNames(t);
+        
         if (attributes != null) {
             List bestaandeObjecten = SpatialUtil.getThemaData(t, false);
             for (int i = 0; i < attributes.size(); i++) {

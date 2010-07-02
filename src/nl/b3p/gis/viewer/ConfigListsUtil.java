@@ -4,23 +4,24 @@
  */
 package nl.b3p.gis.viewer;
 
-import java.sql.Connection;
+import nl.b3p.gis.geotools.DataStoreUtil;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
-import nl.b3p.gis.viewer.BaseGisAction;
 import nl.b3p.gis.viewer.db.Connecties;
 import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
-import nl.b3p.gis.viewer.services.SpatialUtil;
 import nl.b3p.gis.viewer.services.WfsUtil;
-import nl.b3p.xml.wfs.WFS_Capabilities;
+import nl.b3p.zoeker.configuratie.Bron;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Session;
-import org.w3c.dom.Element;
 import org.directwebremoting.WebContext;
 import org.directwebremoting.WebContextFactory;
+import org.geotools.data.DataStore;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeDescriptor;
 
 /**
  *
@@ -30,29 +31,29 @@ public class ConfigListsUtil {
 
     private static final Log log = LogFactory.getLog(ConfigListsUtil.class);
 
-    private static Connecties getConnectie(Session sess, Integer connId) {
+    private static Bron getBron(Session sess, Integer bronId) {
         WebContext ctx = WebContextFactory.get();
         HttpServletRequest request = ctx.getHttpServletRequest();
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
-        return getConnectie(sess, user, connId);
+        return getBron(sess, user, bronId);
     }
 
-    public static Connecties getConnectie(Session sess, GisPrincipal user, Integer connId) {
-        Connecties c = null;
-        if (connId == null || connId.intValue() == 0) {
-            c = user.getKbWfsConnectie();
-        } else if (connId.intValue() > 0) {
-            c = (Connecties) sess.get(Connecties.class, connId);
+    public static Bron getBron(Session sess, GisPrincipal user, Integer bronId) {
+        Bron b = null;
+        if (bronId == null || bronId.intValue() == 0) {
+            b = user.getKbWfsConnectie();
+        } else if (bronId.intValue() > 0) {
+            b = (Bron) sess.get(Bron.class, bronId);
         }
-        return c;
+        return b;
     }
 
     public static List getPossibleFeaturesById(Integer connId) {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         try {
             sess.beginTransaction();
-            Connecties c = getConnectie(sess, connId);
-            return getPossibleFeatures(c);
+            Bron b = getBron(sess, connId);
+            return getPossibleFeatures(b);
         } catch (Exception e) {
             log.error("getPossibleFeaturesById error: ", e);
         } finally {
@@ -65,15 +66,11 @@ public class ConfigListsUtil {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         try {
             sess.beginTransaction();
-            Connecties c = getConnectie(sess, connId);
-            if (c == null) {
+            Bron b = getBron(sess, connId);
+            if (b == null) {
                 return null;
-            }
-            if (Connecties.TYPE_JDBC.equalsIgnoreCase(c.getType())) {
-                return getPossibleJDBCAttributes(c, feature);
-            } else if (Connecties.TYPE_WFS.equalsIgnoreCase(c.getType())) {
-                return getPossibleWFSAttributes(c, feature);
-            }
+            }            
+            return getPossibleAttributes(b, feature);
         } catch (Exception e) {
             log.error("getPossibleAttributesById error: ", e);
         } finally {
@@ -82,116 +79,55 @@ public class ConfigListsUtil {
         return null;
     }
 
-    public static List getPossibleFeatures(Connecties c) throws Exception {
-        if (c == null) {
-            return null;
-        }
-        if (Connecties.TYPE_JDBC.equalsIgnoreCase(c.getType())) {
-            return getPossibleJDBCFeatures(c);
-        } else if (Connecties.TYPE_WFS.equalsIgnoreCase(c.getType())) {
-            return getPossibleWFSFeatures(c);
-        }
-        return null;
-    }
-
     /**
      * Maakt een lijst met mogelijke features voor de gegeven wfs connectie en gebruiker
      */
-    public static List getPossibleWFSFeatures(Connecties c) throws Exception {
-        if (c == null) {
+    public static List getPossibleFeatures(Bron b) throws Exception {
+        if (b == null) {
             return null;
         }
         ArrayList returnValue = null;
-        WFS_Capabilities cap = null;
-        try {
-            cap = WfsUtil.getCapabilities(c);
-        } catch (Exception e) {
-            log.error("fout bij ophalen capabilities", e);
-        }
-        List features = WfsUtil.getFeatureNameList(cap);
-        if (features != null) {
-            returnValue = new ArrayList();
-            for (int i = 0; i < features.size(); i++) {
-                String[] s = new String[2];
-                s[0] = (String) features.get(i);
-                s[1] = BaseGisAction.removeNamespace((String) features.get(i));
-                returnValue.add(s);
-            }
-        }
-        return returnValue;
-    }
-
-    /**
-     * Maakt een lijst met mogelijke features voor de gegeven jdbc connectie en gebruiker
-     */
-    public static List getPossibleJDBCFeatures(Connecties c) throws Exception {
-        if (c == null) {
-            return null;
-        }
-        Connection conn = c.getJdbcConnection();
-        if (conn == null) {
-            return null;
-        }
-        ArrayList returnValue = null;
-        try {
-            List features = SpatialUtil.getTableNames(conn);
+        DataStore ds= b.toDatastore();
+        try{
+            String[] features=ds.getTypeNames();
             if (features != null) {
                 returnValue = new ArrayList();
+                for (int i = 0; i < features.length; i++) {
+                    String[] s = new String[2];
+                    s[0] = features[i];
+                    s[1] = BaseGisAction.removeNamespace(features[i]);
+                    returnValue.add(s);
+                }
             }
-            for (int i = 0; i < features.size(); i++) {
-                String[] s = new String[2];
-                s[0] = (String) features.get(i);
-                s[1] = BaseGisAction.removeNamespace((String) features.get(i));
-                returnValue.add(s);
-            }
-        } finally {
-            if (conn != null) {
-                conn.close();
-            }
+        }finally{
+            ds.dispose();
         }
         return returnValue;
     }
-
-    public static List getPossibleAttributes(Connecties c, String feature) throws Exception {
-        if (c == null) {
-            return null;
-        }
-        if (Connecties.TYPE_JDBC.equalsIgnoreCase(c.getType())) {
-            return getPossibleJDBCAttributes(c, feature);
-        } else if (Connecties.TYPE_WFS.equalsIgnoreCase(c.getType())) {
-            return getPossibleWFSAttributes(c, feature);
-        }
-        return null;
-    }
-
     /**
-     * Maakt een lijst met mogelijke attributen van een meegegeven jdbc tabel.
+     * Maakt een lijst met mogelijke attributen van een meegegeven featureType.
      */
-    public static List getPossibleJDBCAttributes(Connecties c, String tabel) throws Exception {
-        if (c == null || tabel == null) {
+    public static List getPossibleAttributes(Bron b, String type) throws Exception {
+        if (b == null || type == null) {
             return null;
         }
-        Connection conn = c.getJdbcConnection();
-        if (conn == null) {
-            return null;
-        }
-        ArrayList returnValue = null;
-        try {
-            List columns = SpatialUtil.getColumnNames(tabel, conn);
-            if (columns == null) {
-                return null;
-            }
-            returnValue = new ArrayList();
-            for (int i = 0; i < columns.size(); i++) {
+        ArrayList returnValue = new ArrayList();
+        DataStore ds=b.toDatastore();
+        returnValue=DataStoreUtil.getAttributeNames(ds, type);
+        returnValue = new ArrayList();
+        try{
+            SimpleFeatureType sft=ds.getSchema(type);
+            List<AttributeDescriptor> attributes=sft.getAttributeDescriptors();
+            Iterator<AttributeDescriptor> it= attributes.iterator();
+            while(it.hasNext()){
+                AttributeDescriptor attribute=it.next();
                 String[] s = new String[2];
-                s[0] = (String) columns.get(i);
-                s[1] = BaseGisAction.removeNamespace((String) columns.get(i));
+                s[0] = attribute.getName().toString();
+                s[1] = attribute.getLocalName();
                 returnValue.add(s);
             }
-        } finally {
-            if (conn != null) {
-                conn.close();
-            }
+        }finally{
+            ds.dispose();
         }
         return returnValue;
     }
