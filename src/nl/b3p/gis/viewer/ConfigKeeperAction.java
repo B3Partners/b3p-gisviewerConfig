@@ -29,7 +29,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Map map = configKeeper.getConfigMap(rolnaam);
 
         if (map.size() < 1) {
-            writeDeafultConfigForRole(rolnaam);
+            writeDefaultConfigForRole(rolnaam);
         } else {
 
             boolean useCookies = (Boolean) map.get("useCookies");
@@ -71,6 +71,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             dynaForm.set("cfg_maxResults", maxResults);
             dynaForm.set("cfg_expandAll", expandAll);
             dynaForm.set("cfg_multipleActiveThemas", multipleActiveThemas);
+
+            dynaForm.set("rolnaam", rolnaam);
         }
 
         return super.unspecified(mapping, dynaForm, request, response);
@@ -80,6 +82,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     public ActionForward save(ActionMapping mapping, DynaValidatorForm dynaForm,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
 
+        String rolnaam = (String)dynaForm.get("rolnaam");
+
         if (!isTokenValid(request)) {
   
             addAlternateMessage(mapping, request, TOKEN_ERROR_KEY);
@@ -87,37 +91,37 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         /* Opslaan tabbladen vinkjes */
-        writeTabbladenConfig(dynaForm);
+        writeTabbladenConfig(dynaForm, rolnaam);
 
         /* opslaan I-tool dropdown */
-        writeObjectInfoDisplayMethod(dynaForm);
+        writeObjectInfoDisplayMethod(dynaForm, rolnaam);
 
         /* opslaan overige settings */
         ConfigKeeper configKeeper = new ConfigKeeper();
         Configuratie c = null;
 
-        c = configKeeper.getConfiguratie("useCookies","viewer");
+        c = configKeeper.getConfiguratie("useCookies",rolnaam);
         writeBoolean(dynaForm, "cfg_useCookies", c);
 
-        c = configKeeper.getConfiguratie("autoRedirect","viewer");
+        c = configKeeper.getConfiguratie("autoRedirect",rolnaam);
         writeInteger(dynaForm, "cfg_autoRedirect", c);
 
-        c = configKeeper.getConfiguratie("tolerance","viewer");
+        c = configKeeper.getConfiguratie("tolerance",rolnaam);
         writeInteger(dynaForm, "cfg_tolerance", c);
 
-        c = configKeeper.getConfiguratie("refreshDelay","viewer");
+        c = configKeeper.getConfiguratie("refreshDelay",rolnaam);
         writeInteger(dynaForm, "cfg_refreshDelay", c);
 
-        c = configKeeper.getConfiguratie("minBboxZoeken","viewer");
+        c = configKeeper.getConfiguratie("minBboxZoeken",rolnaam);
         writeInteger(dynaForm, "cfg_minBboxZoeken", c);
 
-        c = configKeeper.getConfiguratie("maxResults","viewer");
+        c = configKeeper.getConfiguratie("maxResults",rolnaam);
         writeInteger(dynaForm, "cfg_maxResults", c);
 
-        c = configKeeper.getConfiguratie("expandAll","viewer");
+        c = configKeeper.getConfiguratie("expandAll",rolnaam);
         writeBoolean(dynaForm, "cfg_expandAll", c);
 
-        c = configKeeper.getConfiguratie("multipleActiveThemas","viewer");
+        c = configKeeper.getConfiguratie("multipleActiveThemas",rolnaam);
         writeBoolean(dynaForm, "cfg_multipleActiveThemas", c);
 
         /* opslaan zoekconfig id's */
@@ -139,7 +143,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-            Configuratie zoekConfigIds = configKeeper.getConfiguratie("zoekConfigIds","viewer");
+            Configuratie zoekConfigIds = configKeeper.getConfiguratie("zoekConfigIds",rolnaam);
             zoekConfigIds.setPropval(ids);
 
             sess.merge(zoekConfigIds);
@@ -152,35 +156,35 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         return super.save(mapping, dynaForm, request, response);
     }
 
-    private void writeTabbladenConfig(DynaValidatorForm form) {
+    private void writeTabbladenConfig(DynaValidatorForm form, String rolnaam) {
+
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         ConfigKeeper configKeeper = new ConfigKeeper();
         int lastComma = -1;
 
-        /* beheerder */
-        Configuratie configBeheer = configKeeper.getConfiguratie("tabbladenBeheerder","viewer");
+        Configuratie configTabs = configKeeper.getConfiguratie("tabs",rolnaam);
         String strBeheerTabs = "";
 
-        if (form.get("cfg_tab_beh_thema") != null)
+        if (form.get("cfg_tab_thema") != null)
             strBeheerTabs += "\"themas\",";
 
-        if (form.get("cfg_tab_beh_legenda") != null)
+        if (form.get("cfg_tab_legenda") != null)
             strBeheerTabs += "\"legenda\",";
 
-        if (form.get("cfg_tab_beh_zoek") != null)
+        if (form.get("cfg_tab_zoek") != null)
             strBeheerTabs += "\"zoeken\",";
 
-        if (form.get("cfg_tab_beh_info") != null)
+        if (form.get("cfg_tab_info") != null)
             strBeheerTabs += "\"informatie\",";
         
-        if (form.get("cfg_tab_beh_gebied") != null)
+        if (form.get("cfg_tab_gebied") != null)
             strBeheerTabs += "\"gebieden\",";
         
-        if (form.get("cfg_tab_beh_analyse") != null)
+        if (form.get("cfg_tab_analyse") != null)
             strBeheerTabs += "\"analyse\",";
         
-        if (form.get("cfg_tab_beh_plansel") != null)
+        if (form.get("cfg_tab_plansel") != null)
             strBeheerTabs += "\"planselectie\",";
 
         lastComma = strBeheerTabs.lastIndexOf(",");
@@ -188,108 +192,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         if (lastComma > 1)
             strBeheerTabs = strBeheerTabs.substring(0, lastComma);
 
-        configBeheer.setPropval(strBeheerTabs);
-        sess.merge(configBeheer);
-        
-        /* gebruiker */
-        Configuratie configGebruiker = configKeeper.getConfiguratie("tabbladenGebruiker","viewer");
-        String strGebruikerTabs = "";
-
-        if (form.get("cfg_tab_geb_thema") != null)
-            strGebruikerTabs += "\"themas\",";
-
-        if (form.get("cfg_tab_geb_legenda") != null)
-            strGebruikerTabs += "\"legenda\",";
-
-        if (form.get("cfg_tab_geb_zoek") != null)
-            strGebruikerTabs += "\"zoeken\",";
-
-        if (form.get("cfg_tab_geb_info") != null)
-            strGebruikerTabs += "\"informatie\",";
-        
-        if (form.get("cfg_tab_geb_gebied") != null)
-            strGebruikerTabs += "\"gebieden\",";
-        
-        if (form.get("cfg_tab_geb_analyse") != null)
-            strGebruikerTabs += "\"analyse\",";
-        
-        if (form.get("cfg_tab_geb_plansel") != null)
-            strGebruikerTabs += "\"planselectie\",";
-
-        lastComma = strGebruikerTabs.lastIndexOf(",");
-
-        if (lastComma > 1)
-            strGebruikerTabs = strGebruikerTabs.substring(0, lastComma);
-
-        configGebruiker.setPropval(strGebruikerTabs);
-        sess.merge(configGebruiker);
-        
-        /* demo */
-        Configuratie configDemo = configKeeper.getConfiguratie("tabbladenDemoGebruiker","viewer");
-        String strDemoTabs = "";
-
-        if (form.get("cfg_tab_dem_thema") != null)
-            strDemoTabs += "\"themas\",";
-
-        if (form.get("cfg_tab_dem_legenda") != null)
-            strDemoTabs += "\"legenda\",";
-
-        if (form.get("cfg_tab_dem_zoek") != null)
-            strDemoTabs += "\"zoeken\",";
-
-        if (form.get("cfg_tab_dem_info") != null)
-            strDemoTabs += "\"informatie\",";
-        
-        if (form.get("cfg_tab_dem_gebied") != null)
-            strDemoTabs += "\"gebieden\",";
-        
-        if (form.get("cfg_tab_dem_analyse") != null)
-            strDemoTabs += "\"analyse\",";
-        
-        if (form.get("cfg_tab_dem_plansel") != null)
-            strDemoTabs += "\"planselectie\",";
-
-        lastComma = strDemoTabs.lastIndexOf(",");
-
-        if (lastComma > 1)
-            strDemoTabs = strDemoTabs.substring(0, lastComma);
-
-        configDemo.setPropval(strDemoTabs);
-        sess.merge(configDemo);
-        
-        /* demo */
-        Configuratie configAnoniem = configKeeper.getConfiguratie("tabbladenAnoniem","viewer");
-        String strAnomTabs = "";
-
-        if (form.get("cfg_tab_ano_thema") != null)
-            strAnomTabs += "\"themas\",";
-
-        if (form.get("cfg_tab_ano_legenda") != null)
-            strAnomTabs += "\"legenda\",";
-
-        if (form.get("cfg_tab_ano_zoek") != null)
-            strAnomTabs += "\"zoeken\",";
-
-        if (form.get("cfg_tab_ano_info") != null)
-            strAnomTabs += "\"informatie\",";
-        
-        if (form.get("cfg_tab_ano_gebied") != null)
-            strAnomTabs += "\"gebieden\",";
-        
-        if (form.get("cfg_tab_ano_analyse") != null)
-            strAnomTabs += "\"analyse\",";
-        
-        if (form.get("cfg_tab_ano_plansel") != null)
-            strAnomTabs += "\"planselectie\",";
-
-        lastComma = strAnomTabs.lastIndexOf(",");
-
-        if (lastComma > 1)
-            strAnomTabs = strAnomTabs.substring(0, lastComma);
-
-        configAnoniem.setPropval(strAnomTabs);
-        sess.merge(configAnoniem);
-
+        configTabs.setPropval(strBeheerTabs);
+        sess.merge(configTabs);
         sess.flush();
     }
 
@@ -357,14 +261,15 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             dynaForm.set("cfg_tab_plansel", true);
     }
 
-    private void writeObjectInfoDisplayMethod(DynaValidatorForm form) {
+    private void writeObjectInfoDisplayMethod(DynaValidatorForm form, String rolnaam) {
+
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         ConfigKeeper configKeeper = new ConfigKeeper();
 
-        Configuratie usePopup = configKeeper.getConfiguratie("usePopup","viewer");
-        Configuratie useDivPopup = configKeeper.getConfiguratie("useDivPopup","viewer");
-        Configuratie usePanelControls = configKeeper.getConfiguratie("usePanelControls","viewer");
+        Configuratie usePopup = configKeeper.getConfiguratie("usePopup",rolnaam);
+        Configuratie useDivPopup = configKeeper.getConfiguratie("useDivPopup",rolnaam);
+        Configuratie usePanelControls = configKeeper.getConfiguratie("usePanelControls",rolnaam);
 
         // geen, paneel, popup
         String cfg_objectInfo = (String) form.get("cfg_objectInfo");
@@ -418,7 +323,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("zoekconfigids", tmp);
     }
 
-    private void writeDeafultConfigForRole(String rol) {
+    private void writeDefaultConfigForRole(String rol) {
 
         /* Invoegen default config voor rolnaam */
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
