@@ -22,50 +22,56 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
             HttpServletRequest request, HttpServletResponse response) throws Exception {        
 
+        /* rol ophalen */
+        String rolnaam = (String)request.getParameter("rolnaam");
+
         ConfigKeeper configKeeper = new ConfigKeeper();
-        Map map = configKeeper.getConfigMap("viewer");
+        Map map = configKeeper.getConfigMap(rolnaam);
 
-        /* de getConfigMap geeft alle waardes terug volgens de types
-         * zoals deze gedefinieerd zijn in het type kolom van de configuratie */
-        boolean useCookies = (Boolean) map.get("useCookies");
-        boolean usePopup = (Boolean) map.get("usePopup");
-        boolean useDivPopup = (Boolean) map.get("useDivPopup");
-        boolean usePanelControls = (Boolean) map.get("usePanelControls");
-        int autoRedirect = (Integer) map.get("autoRedirect");
-        int tolerance = (Integer) map.get("tolerance");
-        int refreshDelay = (Integer) map.get("refreshDelay");
-        String zoekConfigIds = (String) map.get("zoekConfigIds");
-        int minBboxZoeken = (Integer) map.get("minBboxZoeken");
-        int maxResults = (Integer) map.get("maxResults");
-        boolean expandAll = (Boolean) map.get("expandAll");
-        boolean multipleActiveThemas = (Boolean) map.get("multipleActiveThemas");
+        if (map.size() < 1) {
+            writeDeafultConfigForRole(rolnaam);
+        } else {
 
-        /* Vinkjes voor config tabbladen goedzetten */
-        fillTabbladenConfig(dynaForm, map);
+            boolean useCookies = (Boolean) map.get("useCookies");
+            boolean usePopup = (Boolean) map.get("usePopup");
+            boolean useDivPopup = (Boolean) map.get("useDivPopup");
+            boolean usePanelControls = (Boolean) map.get("usePanelControls");
+            int autoRedirect = (Integer) map.get("autoRedirect");
+            int tolerance = (Integer) map.get("tolerance");
+            int refreshDelay = (Integer) map.get("refreshDelay");
+            String zoekConfigIds = (String) map.get("zoekConfigIds");
+            int minBboxZoeken = (Integer) map.get("minBboxZoeken");
+            int maxResults = (Integer) map.get("maxResults");
+            boolean expandAll = (Boolean) map.get("expandAll");
+            boolean multipleActiveThemas = (Boolean) map.get("multipleActiveThemas");
 
-        /* dropdown voor i-tool goedzetten
-           geen, paneel of popup */
-        if (!usePopup && !useDivPopup && !usePanelControls)
-            dynaForm.set("cfg_objectInfo", "geen");
-        
-        if (!usePopup && !useDivPopup && usePanelControls)
-            dynaForm.set("cfg_objectInfo", "paneel");
-        
-        if (usePopup && useDivPopup && !usePanelControls)
-            dynaForm.set("cfg_objectInfo", "popup");
+            /* Vinkjes voor config tabbladen goedzetten */
+            fillTabbladenConfig(dynaForm, map);
 
-        /* vullen box voor zoekconfigs */
-        fillZoekConfigBox(dynaForm, request, zoekConfigIds);
+            /* dropdown voor i-tool goedzetten
+               geen, paneel of popup */
+            if (!usePopup && !useDivPopup && !usePanelControls)
+                dynaForm.set("cfg_objectInfo", "geen");
 
-        /* overige settings klaarzetten voor formulier */
-        dynaForm.set("cfg_useCookies", useCookies);
-        dynaForm.set("cfg_autoRedirect", autoRedirect);
-        dynaForm.set("cfg_tolerance", tolerance);
-        dynaForm.set("cfg_refreshDelay", refreshDelay);
-        dynaForm.set("cfg_minBboxZoeken", minBboxZoeken);
-        dynaForm.set("cfg_maxResults", maxResults);
-        dynaForm.set("cfg_expandAll", expandAll);
-        dynaForm.set("cfg_multipleActiveThemas", multipleActiveThemas);
+            if (!usePopup && !useDivPopup && usePanelControls)
+                dynaForm.set("cfg_objectInfo", "paneel");
+
+            if (usePopup && useDivPopup && !usePanelControls)
+                dynaForm.set("cfg_objectInfo", "popup");
+
+            /* vullen box voor zoekconfigs */
+            fillZoekConfigBox(dynaForm, request, zoekConfigIds);
+
+            /* overige settings klaarzetten voor formulier */
+            dynaForm.set("cfg_useCookies", useCookies);
+            dynaForm.set("cfg_autoRedirect", autoRedirect);
+            dynaForm.set("cfg_tolerance", tolerance);
+            dynaForm.set("cfg_refreshDelay", refreshDelay);
+            dynaForm.set("cfg_minBboxZoeken", minBboxZoeken);
+            dynaForm.set("cfg_maxResults", maxResults);
+            dynaForm.set("cfg_expandAll", expandAll);
+            dynaForm.set("cfg_multipleActiveThemas", multipleActiveThemas);
+        }
 
         return super.unspecified(mapping, dynaForm, request, response);
     }
@@ -327,98 +333,28 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     }
 
     private void fillTabbladenConfig(DynaValidatorForm dynaForm, Map map) {
-        String beheerderTabs = (String) map.get("tabbladenBeheerder");
-        String gebruikerTabs = (String) map.get("tabbladenGebruiker");
-        String demoTabs = (String) map.get("tabbladenDemoGebruiker");
-        String anoniemTabs = (String) map.get("tabbladenAnoniem");
+        String tabs = (String) map.get("tabs");
 
-        /* beheerder */
-        if (beheerderTabs.contains("themas"))
-            dynaForm.set("cfg_tab_beh_thema", true);
+        if (tabs.contains("themas"))
+            dynaForm.set("cfg_tab_thema", true);
 
-        if (beheerderTabs.contains("legenda"))
-            dynaForm.set("cfg_tab_beh_legenda", true);
+        if (tabs.contains("legenda"))
+            dynaForm.set("cfg_tab_legenda", true);
 
-        if (beheerderTabs.contains("zoeken"))
-            dynaForm.set("cfg_tab_beh_zoek", true);
+        if (tabs.contains("zoeken"))
+            dynaForm.set("cfg_tab_zoek", true);
 
-        if (beheerderTabs.contains("informatie"))
-            dynaForm.set("cfg_tab_beh_info", true);
+        if (tabs.contains("informatie"))
+            dynaForm.set("cfg_tab_info", true);
 
-        if (beheerderTabs.contains("gebieden"))
-            dynaForm.set("cfg_tab_beh_gebied", true);
+        if (tabs.contains("gebieden"))
+            dynaForm.set("cfg_tab_gebied", true);
 
-        if (beheerderTabs.contains("analyse"))
-            dynaForm.set("cfg_tab_beh_analyse", true);
+        if (tabs.contains("analyse"))
+            dynaForm.set("cfg_tab_analyse", true);
 
-        if (beheerderTabs.contains("planselectie"))
-            dynaForm.set("cfg_tab_beh_plansel", true);
-
-        /* gebruiker */
-        if (gebruikerTabs.contains("themas"))
-            dynaForm.set("cfg_tab_geb_thema", true);
-
-        if (gebruikerTabs.contains("legenda"))
-            dynaForm.set("cfg_tab_geb_legenda", true);
-
-        if (gebruikerTabs.contains("zoeken"))
-            dynaForm.set("cfg_tab_geb_zoek", true);
-
-        if (gebruikerTabs.contains("informatie"))
-            dynaForm.set("cfg_tab_geb_info", true);
-
-        if (gebruikerTabs.contains("gebieden"))
-            dynaForm.set("cfg_tab_geb_gebied", true);
-
-        if (gebruikerTabs.contains("analyse"))
-            dynaForm.set("cfg_tab_geb_analyse", true);
-
-        if (gebruikerTabs.contains("planselectie"))
-            dynaForm.set("cfg_tab_geb_plansel", true);
-
-        /* demo */
-        if (demoTabs.contains("themas"))
-            dynaForm.set("cfg_tab_dem_thema", true);
-
-        if (demoTabs.contains("legenda"))
-            dynaForm.set("cfg_tab_dem_legenda", true);
-
-        if (demoTabs.contains("zoeken"))
-            dynaForm.set("cfg_tab_dem_zoek", true);
-
-        if (demoTabs.contains("informatie"))
-            dynaForm.set("cfg_tab_dem_info", true);
-
-        if (demoTabs.contains("gebieden"))
-            dynaForm.set("cfg_tab_dem_gebied", true);
-
-        if (demoTabs.contains("analyse"))
-            dynaForm.set("cfg_tab_dem_analyse", true);
-
-        if (demoTabs.contains("planselectie"))
-            dynaForm.set("cfg_tab_dem_plansel", true);
-
-        /* anoniem */
-        if (anoniemTabs.contains("themas"))
-            dynaForm.set("cfg_tab_ano_thema", true);
-
-        if (anoniemTabs.contains("legenda"))
-            dynaForm.set("cfg_tab_ano_legenda", true);
-
-        if (anoniemTabs.contains("zoeken"))
-            dynaForm.set("cfg_tab_ano_zoek", true);
-
-        if (anoniemTabs.contains("informatie"))
-            dynaForm.set("cfg_tab_ano_info", true);
-
-        if (anoniemTabs.contains("gebieden"))
-            dynaForm.set("cfg_tab_ano_gebied", true);
-
-        if (anoniemTabs.contains("analyse"))
-            dynaForm.set("cfg_tab_ano_analyse", true);
-
-        if (anoniemTabs.contains("planselectie"))
-            dynaForm.set("cfg_tab_ano_plansel", true);
+        if (tabs.contains("planselectie"))
+            dynaForm.set("cfg_tab_plansel", true);
     }
 
     private void writeObjectInfoDisplayMethod(DynaValidatorForm form) {
@@ -480,5 +416,167 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         String[] tmp = ids.replaceAll("\"", "").split(",");
         dynaForm.set("zoekconfigids", tmp);
+    }
+
+    private void writeDeafultConfigForRole(String rol) {
+
+        /* Invoegen default config voor rolnaam */
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        ConfigKeeper configKeeper = new ConfigKeeper();
+        Configuratie cfg = null;
+
+        cfg = new Configuratie();
+        cfg.setProperty("useCookies");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("multipleActiveThemas");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("dataframepopupHandle");
+        cfg.setPropval("null");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("showLeftPanel");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("autoRedirect");
+        cfg.setPropval("2");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("useSortableFunction");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("layerDelay");
+        cfg.setPropval("5000");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("refreshDelay");
+        cfg.setPropval("1000");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("minBboxZoeken");
+        cfg.setPropval("1000");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("zoekConfigIds");
+        cfg.setPropval("\"1\"");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("maxResults");
+        cfg.setPropval("25");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("usePopup");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("useDivPopup");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("usePanelControls");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("expandAll");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("tabs");
+        cfg.setPropval("\"themas\", \"legenda\", \"zoeken\"");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+
+        sess.save(cfg);
+        sess.flush();
+
+        cfg = new Configuratie();
+        cfg.setProperty("tolerance");
+        cfg.setPropval("1");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+
+        sess.save(cfg);
+        sess.flush();
     }
 }

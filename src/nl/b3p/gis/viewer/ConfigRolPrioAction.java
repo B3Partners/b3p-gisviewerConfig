@@ -38,10 +38,12 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
         Set roles = user.getRoles();
 
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        
 
         ConfigKeeper configKeeper = new ConfigKeeper();
         Configuratie rollenPrio = configKeeper.getConfiguratie("rollenPrio","rollen");
+
+
 
         /* indien nog geen rollenPrio config dan aanmaken met huidige
          beheerder rollen */
@@ -54,6 +56,8 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
             rollenPrio.setPropval(strRoles);
 
             rollenPrio.setType("java.lang.String");
+
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
             sess.save(rollenPrio);
             sess.flush();
@@ -72,6 +76,8 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
                     configRollen += "," + rolnaam;
                 }
             }
+
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
             
             rollenPrio.setPropval(configRollen);
             sess.merge(rollenPrio);
@@ -79,6 +85,8 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
 
         } else {
 
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+            
             rollenPrio.setPropval(nieuweRollen);
             sess.merge(rollenPrio);
             sess.flush();
@@ -103,13 +111,13 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
 
         String nieuwe_rol = (String)dynaForm.get("nieuwe_rol");
 
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-
         ConfigKeeper configKeeper = new ConfigKeeper();
         Configuratie rollenPrio = configKeeper.getConfiguratie("rollenPrio","rollen");
 
         String rollen = rollenPrio.getPropval();
         rollen += "," + nieuwe_rol;
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         rollenPrio.setPropval(rollen);
         sess.merge(rollenPrio);
@@ -127,8 +135,6 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
             HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         String rol = (String)request.getParameter("delete");
-
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         ConfigKeeper configKeeper = new ConfigKeeper();
         Configuratie rollenPrio = configKeeper.getConfiguratie("rollenPrio","rollen");
@@ -148,6 +154,8 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
 
         if (lastComma > 1)
             strRollen = strRollen.substring(0, lastComma);
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         rollenPrio.setPropval(strRollen);
         sess.merge(rollenPrio);
