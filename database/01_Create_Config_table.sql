@@ -6,6 +6,7 @@ CREATE TABLE configuratie
   "setting" character varying(255),
   "type" character varying(255)
 );
+ALTER TABLE configuratie ADD CONSTRAINT configuratie_id_pk PRIMARY KEY (id);
 
 insert into configuratie (property, propval, setting, "type") values ('useCookies', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('multipleActiveThemas', 'true', 'default', 'java.lang.Boolean');

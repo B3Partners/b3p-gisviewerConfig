@@ -23,7 +23,6 @@
 package nl.b3p.gis.viewer;
 
 import nl.b3p.gis.geotools.DataStoreUtil;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,17 +30,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
-import nl.b3p.gis.viewer.ViewerCrudAction;
 import nl.b3p.gis.viewer.db.Connecties;
 import nl.b3p.gis.viewer.db.DataTypen;
 import nl.b3p.gis.viewer.db.ThemaData;
 import nl.b3p.gis.viewer.db.Themas;
 import nl.b3p.gis.viewer.db.WaardeTypen;
-import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.gis.viewer.services.SpatialUtil;
-import nl.b3p.gis.viewer.services.WfsUtil;
-import nl.b3p.ogc.utils.OGCConstants;
 import nl.b3p.zoeker.configuratie.Bron;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,10 +44,8 @@ import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
-import org.geotools.data.DataStore;
 import org.hibernate.Query;
 import org.hibernate.Session;
-import org.w3c.dom.Element;
 
 /**
  *

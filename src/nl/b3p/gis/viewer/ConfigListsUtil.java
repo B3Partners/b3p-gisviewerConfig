@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import nl.b3p.gis.viewer.db.Connecties;
 import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
-import nl.b3p.gis.viewer.services.WfsUtil;
 import nl.b3p.zoeker.configuratie.Bron;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -130,27 +129,5 @@ public class ConfigListsUtil {
             ds.dispose();
         }
         return returnValue;
-    }
-
-    /**
-     * Maakt een lijst met mogelijke attributen van een meegegeven wfs feature.
-     */
-    public static List getPossibleWFSAttributes(Connecties c, String feature) throws Exception {
-        if (c == null || feature == null) {
-            return null;
-        }
-        List attrs =  WfsUtil.getFeatureElementNames(c, feature, true);
-        if (attrs == null) {
-            return null;
-        }
-        List returnValue = new ArrayList();
-        for (int i = 0; i < attrs.size(); i++) {
-            String name = (String) attrs.get(i);
-            String[] s = new String[2];
-            s[0] = name;
-            s[1] = BaseGisAction.removeNamespace(name);
-            returnValue.add(s);
-        }
-        return returnValue;
-    }
+    }    
 }
