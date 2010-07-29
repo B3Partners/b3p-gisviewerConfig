@@ -1,8 +1,6 @@
 package nl.b3p.gis.viewer;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,10 +14,12 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 public class ConfigRolPrioAction extends ViewerCrudAction {
 
     private static final Log logger = LogFactory.getLog(ConfigRolPrioAction.class);
+    protected static final String ERROR_ROLE = "error.role";
 
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
@@ -28,25 +28,22 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         /* heeft de gebruiker op het pijltje geklikt om een item
          * te verplaatsen ? */
         String moveAction = (String)request.getParameter("moveAction");
-        String nieuweRollen = "";
+        String alleRollen = "";
 
         if (moveAction != null && !moveAction.equals("")) {
-            nieuweRollen = handleMoveAction(moveAction);
+            handleMoveAction(moveAction);
         }
 
-        /* huidige beheerder rollen ophalen */
+        /* huidige kaartenbalie rollen ophalen */
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
         Set roles = user.getRoles();
 
-        
-
+        /* rollen uit config database ophalen */
         ConfigKeeper configKeeper = new ConfigKeeper();
         Configuratie rollenPrio = configKeeper.getConfiguratie("rollenPrio","rollen");
 
-
-
-        /* indien nog geen rollenPrio config dan aanmaken met huidige
-         beheerder rollen */
+        /* indien nog geen rollenPrio config dan init met huidige
+         beheerder rollen en opslaan in configkeerp tabel */
         if (rollenPrio == null) {
             rollenPrio = new Configuratie();
             rollenPrio.setProperty("rollenPrio");
@@ -54,42 +51,59 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
 
             String strRoles = getCommaSeperatedValues(roles);
             rollenPrio.setPropval(strRoles);
-
             rollenPrio.setType("java.lang.String");
 
-            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+            Session sess = null;
+            Transaction tx = null;
 
-            sess.save(rollenPrio);
-            sess.flush();
+            try {
+                sess = HibernateUtil.getSessionFactory().openSession();
+                tx = sess.beginTransaction();
+
+                sess.save(rollenPrio);
+
+                tx.commit();
+
+            } catch (Exception ex) {
+                logger.error("Fout bij opslaan nieuwe rollen config: " + ex.getLocalizedMessage());
+                tx.rollback();
+            }
         }
 
-        if (nieuweRollen.equals("")) {
+        /* bekijken of er een nieuwe rol in kaartenbalie is toegewezen
+         * deze dan toevoegen aan config rollen */
+        String configRollen = rollenPrio.getPropval();
+        Iterator iter = roles.iterator();
 
-            /* nieuwe rollen in config plaatsen */
-            String configRollen = rollenPrio.getPropval();
-            Iterator iter = roles.iterator();
+        int count = 0;
 
-            while (iter.hasNext()) {
-                String rolnaam = iter.next().toString();
+        while (iter.hasNext()) {
+            String rolnaam = iter.next().toString();
 
-                if (!configRollen.contains(rolnaam)) {
-                    configRollen += "," + rolnaam;
-                }
+            if (!configRollen.contains(rolnaam)) {
+                configRollen += "," + rolnaam;
+                count++;
             }
+        }
 
-            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-            
-            rollenPrio.setPropval(configRollen);
-            sess.merge(rollenPrio);
-            sess.flush();
+        /* indien nieuwe rol dan weer opslaan in configkpeer tabel */
+        if (count > 0) {
+            Session sess = null;
+            Transaction tx = null;
 
-        } else {
+            try {
+                sess = HibernateUtil.getSessionFactory().openSession();
+                tx = sess.beginTransaction();
 
-            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-            
-            rollenPrio.setPropval(nieuweRollen);
-            sess.merge(rollenPrio);
-            sess.flush();
+                rollenPrio.setPropval(configRollen);
+                sess.merge(rollenPrio);
+
+                tx.commit();
+
+            } catch (Exception ex) {
+                logger.error("Fout bij opslaan na samengevoegde rollen config: " + ex.getLocalizedMessage());
+                tx.rollback();
+            }
         }
 
         /* rollen klaarzetten voor form */
@@ -117,11 +131,33 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         String rollen = rollenPrio.getPropval();
         rollen += "," + nieuwe_rol;
 
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        /* rol met naam default mag niet worden opgeslagen */
+        if ( (nieuwe_rol == null) || (nieuwe_rol.equals("default")) || (nieuwe_rol.equals("")) ) {
+            addAlternateMessage(mapping, request, ERROR_ROLE);
 
-        rollenPrio.setPropval(rollen);
-        sess.merge(rollenPrio);
-        sess.flush();
+            /* rollen klaarzetten voor form */
+            String[] arr = rollenPrio.getPropval().split(",");
+            request.setAttribute("rollen", arr);
+
+            return getAlternateForward(mapping, request);
+        }
+
+        Session sess = null;
+        Transaction tx = null;
+
+        try {
+            sess = HibernateUtil.getSessionFactory().openSession();
+            tx = sess.beginTransaction();
+
+            rollenPrio.setPropval(rollen);
+            sess.merge(rollenPrio);
+
+            tx.commit();
+
+        } catch (Exception ex) {
+            logger.error("Fout bij opslaan nieuwe rol: " + ex.getLocalizedMessage());
+            tx.rollback();
+        }
 
         /* rollen klaarzetten voor form */
         String[] arr = rollenPrio.getPropval().split(",");
@@ -155,11 +191,26 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         if (lastComma > 1)
             strRollen = strRollen.substring(0, lastComma);
 
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        Session sess = null;
+        Transaction tx = null;
 
-        rollenPrio.setPropval(strRollen);
-        sess.merge(rollenPrio);
-        sess.flush();
+        try {
+            sess = HibernateUtil.getSessionFactory().openSession();
+            tx = sess.beginTransaction();
+
+            rollenPrio.setPropval(strRollen);
+            sess.merge(rollenPrio);
+
+            int query = sess.createSQLQuery("delete from configuratie" +
+                " where setting = :rolnaam")
+                .setParameter("rolnaam", rol).executeUpdate();
+
+            tx.commit();
+
+        } catch (Exception ex) {
+            logger.error("Fout bij verwijderen rol: " + ex.getLocalizedMessage());
+            tx.rollback();
+        }
 
         /* rollen klaarzetten voor form */
         String[] arr = rollenPrio.getPropval().split(",");
@@ -195,13 +246,13 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         return str;
     }
 
-    private String handleMoveAction(String action) {
+    private void handleMoveAction(String action) {
         String splitChar = "@@";
 
         String[] arr = action.split(splitChar);
 
         if (arr.length < 1 || arr.length > 2)
-            return "";
+            return;
 
         String rolnaam = arr[0];
         String move = arr[1];
@@ -240,6 +291,21 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         if (lastComma > 1)
             str = str.substring(0, lastComma);
 
-        return str;
+        Session sess = null;
+        Transaction tx = null;
+
+        try {
+            sess = HibernateUtil.getSessionFactory().openSession();
+            tx = sess.beginTransaction();
+
+            rollenPrio.setPropval(str);
+            sess.merge(rollenPrio);
+
+            tx.commit();
+
+        } catch (Exception ex) {
+            logger.error("Fout bij opslaan na move rollen: " + ex.getLocalizedMessage());
+            tx.rollback();
+        }
     }
 }
