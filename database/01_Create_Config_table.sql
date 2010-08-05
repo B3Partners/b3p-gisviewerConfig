@@ -25,3 +25,4 @@ insert into configuratie (property, propval, setting, "type") values ('usePanelC
 insert into configuratie (property, propval, setting, "type") values ('expandAll', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('tabs', '"themas", "legenda", "zoeken"', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, "type") values ('tolerance', '1', 'default', 'java.lang.Integer');
+insert into configuratie (property, propval, setting, "type") values ('rollenPrio', 'beheerder,gebruiker', 'rollen', 'java.lang.String');
