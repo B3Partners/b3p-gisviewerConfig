@@ -20,6 +20,7 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
 
     private static final Log logger = LogFactory.getLog(ConfigRolPrioAction.class);
     protected static final String ERROR_ROLE = "error.role";
+    protected static final String ERROR_REMOVE_ROLE = "error.remove.role";
 
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
@@ -174,6 +175,17 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
 
         ConfigKeeper configKeeper = new ConfigKeeper();
         Configuratie rollenPrio = configKeeper.getConfiguratie("rollenPrio","rollen");
+
+        /* rollen die niet verwijderd mogen worden */
+        if ( (rol == null) || (rol.equals("beheerder")) || (rol.equals("gebruiker")) || (rol.equals("default")) ) {
+            addAlternateMessage(mapping, request, ERROR_REMOVE_ROLE);
+
+            /* rollen klaarzetten voor form */
+            String[] arr = rollenPrio.getPropval().split(",");
+            request.setAttribute("rollen", arr);
+
+            return getAlternateForward(mapping, request);
+        }
 
         String[] list = rollenPrio.getPropval().split(",");
         String strRollen = "";

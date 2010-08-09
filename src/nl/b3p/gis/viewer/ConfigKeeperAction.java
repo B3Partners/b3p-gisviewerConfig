@@ -48,6 +48,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         int maxResults = (Integer) map.get("maxResults");
         boolean expandAll = (Boolean) map.get("expandAll");
         boolean multipleActiveThemas = (Boolean) map.get("multipleActiveThemas");
+        boolean useInheritCheckbox = (Boolean) map.get("useInheritCheckbox");
 
         /* Vinkjes voor config tabbladen goedzetten */
         fillTabbladenConfig(dynaForm, map);
@@ -77,6 +78,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_multipleActiveThemas", multipleActiveThemas);
 
         dynaForm.set("rolnaam", rolnaam);
+
+        dynaForm.set("cfg_useInheritCheckbox", useInheritCheckbox);
         
         return super.unspecified(mapping, dynaForm, request, response);
     }
@@ -126,6 +129,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("multipleActiveThemas",rolnaam);
         writeBoolean(dynaForm, "cfg_multipleActiveThemas", c);
+
+        c = configKeeper.getConfiguratie("useInheritCheckbox",rolnaam);
+        writeBoolean(dynaForm, "cfg_useInheritCheckbox", c);
 
         /* opslaan zoekconfig id's */
         String ids = "";
@@ -458,6 +464,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             cfg.setPropval("1");
             cfg.setSetting(rol);
             cfg.setType("java.lang.Integer");
+            sess.save(cfg);
+
+            cfg = new Configuratie();
+            cfg.setProperty("useInheritCheckbox");
+            cfg.setPropval("true");
+            cfg.setSetting(rol);
+            cfg.setType("java.lang.Boolean");
             sess.save(cfg);
 
             tx.commit();
