@@ -28,3 +28,4 @@ insert into configuratie (property, propval, setting, "type") values ('tolerance
 insert into configuratie (property, propval, setting, "type") values ('rollenPrio', 'beheerder,gebruiker', 'rollen', 'java.lang.String');
 insert into configuratie (property, propval, setting, "type") values ('useInheritCheckbox', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('showLegendInTree', 'true', 'default', 'java.lang.Boolean');
+insert into configuratie (property, propval, setting, "type") values ('useMouseOverTabs', 'true', 'default', 'java.lang.Boolean');
