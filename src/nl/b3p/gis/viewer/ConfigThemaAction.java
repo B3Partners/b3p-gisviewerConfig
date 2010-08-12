@@ -296,6 +296,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         dynaForm.set("visible", new Boolean(t.isVisible()));
         dynaForm.set("sldattribuut",t.getSldattribuut());
         dynaForm.set("uitgebreid", new Boolean(t.isUitgebreid()));
+        dynaForm.set("layoutadmindata",t.getLayoutadmindata());
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         List themadataobjecten = sess.createQuery("select kolomnaam from ThemaData where thema = :thema").setEntity("thema", t).list();
@@ -357,6 +358,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         t.setSldattribuut(FormUtils.nullIfEmpty(dynaForm.getString("sldattribuut")));
         b = (Boolean) dynaForm.get("uitgebreid");
         t.setUitgebreid(b == null ? false : b.booleanValue());
+        t.setLayoutadmindata(FormUtils.nullIfEmpty(dynaForm.getString("layoutadmindata")));
 
         int cId = -1;
         try {

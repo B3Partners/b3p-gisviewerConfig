@@ -51,6 +51,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         boolean useInheritCheckbox = (Boolean) map.get("useInheritCheckbox");
         boolean showLegendInTree = (Boolean) map.get("showLegendInTree");
         boolean useMouseOverTabs = (Boolean) map.get("useMouseOverTabs");
+        String layoutAdminData = (String) map.get("layoutAdminData");
 
         /* Vinkjes voor config tabbladen goedzetten */
         fillTabbladenConfig(dynaForm, map);
@@ -84,6 +85,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_useInheritCheckbox", useInheritCheckbox);
         dynaForm.set("cfg_showLegendInTree", showLegendInTree);
         dynaForm.set("cfg_useMouseOverTabs", useMouseOverTabs);
+
+        dynaForm.set("cfg_layoutAdminData", layoutAdminData);
         
         return super.unspecified(mapping, dynaForm, request, response);
     }
@@ -142,6 +145,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("useMouseOverTabs",rolnaam);
         writeBoolean(dynaForm, "cfg_useMouseOverTabs", c);
+
+        c = configKeeper.getConfiguratie("layoutAdminData",rolnaam);
+        writeString(dynaForm, "cfg_layoutAdminData", c);
 
         /* opslaan zoekconfig id's */
         String ids = "";
@@ -495,6 +501,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             cfg.setPropval("true");
             cfg.setSetting(rol);
             cfg.setType("java.lang.Boolean");
+            sess.save(cfg);
+
+            cfg = new Configuratie();
+            cfg.setProperty("layoutAdminData");
+            cfg.setPropval("admindata1");
+            cfg.setSetting(rol);
+            cfg.setType("java.lang.String");
             sess.save(cfg);
 
             tx.commit();
