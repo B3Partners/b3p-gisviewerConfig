@@ -8,6 +8,8 @@ CREATE TABLE configuratie
 );
 ALTER TABLE configuratie ADD CONSTRAINT configuratie_id_pk PRIMARY KEY (id);
 
+insert into configuratie (property, propval, setting, "type") values ('rollenPrio', 'beheerder,gebruiker', 'rollen', 'java.lang.String');
+
 insert into configuratie (property, propval, setting, "type") values ('useCookies', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('multipleActiveThemas', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('dataframepopupHandle', 'null', 'default', 'java.lang.Boolean');
@@ -17,16 +19,16 @@ insert into configuratie (property, propval, setting, "type") values ('useSortab
 insert into configuratie (property, propval, setting, "type") values ('layerDelay', '5000', 'default', 'java.lang.Integer');
 insert into configuratie (property, propval, setting, "type") values ('refreshDelay', '1000', 'default', 'java.lang.Integer');
 insert into configuratie (property, propval, setting, "type") values ('minBboxZoeken', '1000', 'default', 'java.lang.Integer');
-insert into configuratie (property, propval, setting, "type") values ('zoekConfigIds', '"1"', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, "type") values ('zoekConfigIds', '-1', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, "type") values ('maxResults', '25', 'default', 'java.lang.Integer');
 insert into configuratie (property, propval, setting, "type") values ('usePopup', 'false', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('useDivPopup', 'false', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('usePanelControls', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('expandAll', 'true', 'default', 'java.lang.Boolean');
-insert into configuratie (property, propval, setting, "type") values ('tabs', '"themas", "legenda", "zoeken"', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, "type") values ('tolerance', '1', 'default', 'java.lang.Integer');
-insert into configuratie (property, propval, setting, "type") values ('rollenPrio', 'beheerder,gebruiker', 'rollen', 'java.lang.String');
 insert into configuratie (property, propval, setting, "type") values ('useInheritCheckbox', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('showLegendInTree', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('useMouseOverTabs', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, "type") values ('layoutAdminData', 'admindata1', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, "type") values ('tabs', '"themas","legenda","zoeken"', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, "type") values ('planSelectieIds', '-1', 'default', 'java.lang.String');
