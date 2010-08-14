@@ -143,7 +143,8 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         Query q = sess.createQuery("from ThemaData where thema.id = :themaID order by dataorder, label");
         request.setAttribute("listThemaData", q.setParameter("themaID", t.getId()).list());
 
-        ArrayList<String> attributes = DataStoreUtil.getAttributeNames(t);
+        Bron b = t.getConnectie(request);
+        ArrayList<String> attributes = DataStoreUtil.getAttributeNames(b, t);
         request.setAttribute("listAdminTableColumns", attributes);
         request.setAttribute("connectieType", Connecties.TYPE_EMPTY);
     }
@@ -244,8 +245,8 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         Themas t = getThema(dynaForm, false);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        Bron b = t.getConnectie();        
-        ArrayList<String> attributes = DataStoreUtil.getAttributeNames(t);
+        Bron b = t.getConnectie(request);
+        ArrayList<String> attributes = DataStoreUtil.getAttributeNames(b, t);
         
         if (attributes != null) {
             List bestaandeObjecten = SpatialUtil.getThemaData(t, false);

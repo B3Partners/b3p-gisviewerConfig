@@ -93,7 +93,7 @@ public class ConfigListsUtil {
                 returnValue = new ArrayList();
                 for (int i = 0; i < features.length; i++) {
                     String[] s = new String[2];
-                    s[0] = BaseGisAction.removeNamespace(features[i]);
+                    s[0] = features[i];
                     s[1] = BaseGisAction.removeNamespace(features[i]);
                     returnValue.add(s);
                 }
