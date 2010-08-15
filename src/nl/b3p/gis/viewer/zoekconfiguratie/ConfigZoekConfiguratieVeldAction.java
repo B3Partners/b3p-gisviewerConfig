@@ -83,7 +83,7 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         return super.save(mapping, dynaForm, request, response);
     }
 
-    public void createLists(HttpServletRequest request) throws IOException {
+    public void createLists(HttpServletRequest request) throws IOException, Exception {
         Attribuut a = getAttribuut(request,false);
         ZoekConfiguratie zc=null;
         if (a!=null)

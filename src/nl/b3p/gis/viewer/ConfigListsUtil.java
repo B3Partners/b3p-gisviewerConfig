@@ -21,6 +21,7 @@ import org.directwebremoting.WebContextFactory;
 import org.geotools.data.DataStore;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
+import org.opengis.feature.type.Name;
 
 /**
  *
@@ -88,13 +89,19 @@ public class ConfigListsUtil {
         ArrayList returnValue = null;
         DataStore ds= b.toDatastore();
         try{
-            String[] features=ds.getTypeNames();
+            Name[] features = DataStoreUtil.getTypeNames(ds);
             if (features != null) {
                 returnValue = new ArrayList();
                 for (int i = 0; i < features.length; i++) {
                     String[] s = new String[2];
-                    s[0] = features[i];
-                    s[1] = BaseGisAction.removeNamespace(features[i]);
+                    String nsu = features[i].getNamespaceURI();
+                    if (nsu != null && nsu.length()!=0) {
+                        s[0] = "{" + features[i].getNamespaceURI() + "}" +
+                                features[i].getLocalPart();
+                    } else {
+                        s[0] = features[i].getLocalPart();
+                    }
+                    s[1] = features[i].getLocalPart();
                     returnValue.add(s);
                 }
             }
@@ -115,13 +122,19 @@ public class ConfigListsUtil {
         returnValue=DataStoreUtil.getAttributeNames(ds, type);
         returnValue = new ArrayList();
         try{
-            SimpleFeatureType sft=ds.getSchema(type);
+            SimpleFeatureType sft=DataStoreUtil.getSchema(ds, type);
             List<AttributeDescriptor> attributes=sft.getAttributeDescriptors();
             Iterator<AttributeDescriptor> it= attributes.iterator();
             while(it.hasNext()){
                 AttributeDescriptor attribute=it.next();
                 String[] s = new String[2];
-                s[0] = attribute.getName().toString();
+                if (attribute.getName().getNamespaceURI()!=null) {
+                    s[0]  = "{" + attribute.getName().getNamespaceURI() + "}" +
+                            attribute.getLocalName();
+                } else {
+                    s[0] = attribute.getLocalName();
+                }
+                s[0] += attribute.getLocalName();
                 s[1] = attribute.getLocalName();
                 returnValue.add(s);
             }
