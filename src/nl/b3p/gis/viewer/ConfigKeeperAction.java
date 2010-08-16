@@ -578,7 +578,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
             cfg = new Configuratie();
             cfg.setProperty("zoekConfigIds");
-            cfg.setPropval("-1");
+            cfg.setPropval("\"-1\"");
             cfg.setSetting(rol);
             cfg.setType("java.lang.String");
             sess.save(cfg);
