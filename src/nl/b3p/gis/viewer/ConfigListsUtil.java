@@ -96,11 +96,11 @@ public class ConfigListsUtil {
                     String[] s = new String[2];
                     String nsu = features[i].getNamespaceURI();
                     if (nsu != null && nsu.length()!=0) {
-                        s[0] = "{" + features[i].getNamespaceURI() + "}" +
-                                features[i].getLocalPart();
+                        s[0] = "{" + features[i].getNamespaceURI() + "}";
                     } else {
-                        s[0] = features[i].getLocalPart();
+                        s[0] = "";
                     }
+                        s[0] += features[i].getLocalPart();
                     s[1] = features[i].getLocalPart();
                     returnValue.add(s);
                 }
@@ -129,10 +129,9 @@ public class ConfigListsUtil {
                 AttributeDescriptor attribute=it.next();
                 String[] s = new String[2];
                 if (attribute.getName().getNamespaceURI()!=null) {
-                    s[0]  = "{" + attribute.getName().getNamespaceURI() + "}" +
-                            attribute.getLocalName();
+                    s[0]  = "{" + attribute.getName().getNamespaceURI() + "}";
                 } else {
-                    s[0] = attribute.getLocalName();
+                    s[0] = "";
                 }
                 s[0] += attribute.getLocalName();
                 s[1] = attribute.getLocalName();
