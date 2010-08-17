@@ -21,12 +21,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
     private static final String[] CONFIGKEEPER_TABS = {
         "leeg","themas","legenda","zoeken","informatie","gebieden",
-        "analyse","planselectie","vergunningzoeker","voorzieningzoeker"
+        "analyse","planselectie"
     };
 
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-","Kaarten","Legenda","Zoeken","Info","Gebieden",
-        "Analyse","Plannen","Vergunningen","Voorzieningen"
+        "Analyse","Plannen"
     };
 
     @Override
