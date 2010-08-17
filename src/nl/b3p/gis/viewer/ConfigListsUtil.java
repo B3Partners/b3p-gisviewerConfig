@@ -117,7 +117,7 @@ public class ConfigListsUtil {
         if (b == null || type == null) {
             return null;
         }
-        ArrayList returnValue = new ArrayList();
+        List returnValue = new ArrayList();
         DataStore ds=b.toDatastore();
         returnValue=DataStoreUtil.getAttributeNames(ds, type);
         returnValue = new ArrayList();

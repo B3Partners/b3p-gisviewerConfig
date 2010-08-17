@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.namespace.QName;
 import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.viewer.db.Connecties;
@@ -35,6 +36,7 @@ import nl.b3p.gis.viewer.db.DataTypen;
 import nl.b3p.gis.viewer.db.ThemaData;
 import nl.b3p.gis.viewer.db.Themas;
 import nl.b3p.gis.viewer.db.WaardeTypen;
+import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.gis.viewer.services.SpatialUtil;
 import nl.b3p.zoeker.configuratie.Bron;
@@ -46,6 +48,8 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.opengis.feature.type.Name;
+
 
 /**
  *
@@ -124,6 +128,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
     protected void createLists(DynaValidatorForm dynaForm, HttpServletRequest request) throws Exception {
         super.createLists(dynaForm, request);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
         request.setAttribute("listThemas", sess.createQuery("from Themas where code in ('1', '2') order by belangnr").list());
         request.setAttribute("listWaardeTypen", sess.createQuery("from WaardeTypen order by naam").list());
         request.setAttribute("listDataTypen", sess.createQuery("from DataTypen order by naam").list());
@@ -140,13 +145,38 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         if (t == null) {
             return;
         }
-        Query q = sess.createQuery("from ThemaData where thema.id = :themaID order by dataorder, label");
-        request.setAttribute("listThemaData", q.setParameter("themaID", t.getId()).list());
+
+        List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(t, false);
+        request.setAttribute("listThemaData", bestaandeObjecten);
 
         Bron b = t.getConnectie(request);
-        ArrayList<String> attributes = DataStoreUtil.getAttributeNames(b, t);
+        List<String> attributes = DataStoreUtil.getAttributeNames(b, t);
         request.setAttribute("listAdminTableColumns", attributes);
         request.setAttribute("connectieType", Connecties.TYPE_EMPTY);
+
+        StringBuilder uglyThemaData =  new StringBuilder();
+        for (ThemaData tdi : bestaandeObjecten) {
+            if (tdi.getKolomnaam() == null) {
+                continue;
+            }
+            QName dbkolom = DataStoreUtil.convertFullnameToQName(tdi.getKolomnaam());
+            boolean bestaatNog = false;
+            for (String attribute : attributes) {
+                QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
+                if (attributeName.getLocalPart().compareTo(dbkolom.getLocalPart()) == 0) {
+                    bestaatNog = true;
+                    break;
+                }
+            }
+            if (!bestaatNog) {
+                uglyThemaData.append("[");
+                uglyThemaData.append(dbkolom.getLocalPart());
+                uglyThemaData.append("]");
+            }
+        }
+        request.setAttribute("listUglyThemaData", uglyThemaData);
+
+
     }
 
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -246,55 +276,88 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         Bron b = t.getConnectie(request);
-        ArrayList<String> attributes = DataStoreUtil.getAttributeNames(b, t);
-        
-        if (attributes != null) {
-            List bestaandeObjecten = SpatialUtil.getThemaData(t, false);
-            for (int i = 0; i < attributes.size(); i++) {
-                boolean bestaatAl = false;
-                String themadataobject = (String) attributes.get(i);
-                for (int j = 0; j < bestaandeObjecten.size() && !bestaatAl; j++) {
-                    ThemaData td = (ThemaData) bestaandeObjecten.get(j);
-                    if (td.getKolomnaam() != null && themadataobject.compareTo(td.getKolomnaam()) == 0) {
-                        bestaatAl = true;
-                    }
+        List<String> attributes = DataStoreUtil.getAttributeNames(b, t);
+        if (attributes == null) {
+            return unspecified(mapping, dynaForm, request, response);
+        }
+
+        GisPrincipal user = (GisPrincipal) request.getUserPrincipal();
+        Name geomName = DataStoreUtil.getThemaGeomName(t, user);
+        String geomPropname =  "";
+        if (geomName!=null && geomName.getLocalPart()!=null) {
+            geomPropname = geomName.getLocalPart();
+        }
+
+        List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(t, false);
+        for (String attribute : attributes) {
+             QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
+            if (attributeName==null || attributeName.getLocalPart().compareTo(geomPropname) == 0) {
+                // geometry column not added
+                continue;
+            }
+            boolean bestaatAl = false;
+            for (ThemaData td : bestaandeObjecten) {
+                if (td.getKolomnaam() == null) {
+                    continue;
                 }
-                if (!bestaatAl) {
-                    ThemaData td = new ThemaData();
-                    if (attributes.size() <= DEFAULTBASISCOLUMNS) {
-                        td.setBasisregel(true);
-                    } else {
-                        td.setBasisregel(false);
-                    }
-                    td.setDataType((DataTypen) sess.get(DataTypen.class, DataTypen.DATA));
-                    String netteNaam = themadataobject;
-                    if (netteNaam.indexOf("{") >= 0 && netteNaam.indexOf("}") >= 0) {
-                        netteNaam = netteNaam.substring(netteNaam.indexOf("}") + 1);
-                    }
-                    td.setLabel(netteNaam);
-                    td.setKolomnaam(themadataobject);
-                    td.setThema(t);
-                    td.setWaardeType((WaardeTypen) sess.get(WaardeTypen.class, WaardeTypen.STRING));
-                    sess.saveOrUpdate(td);
+                QName dbkolomName = DataStoreUtil.convertFullnameToQName(td.getKolomnaam());
+                if (attributeName.getLocalPart().compareTo(dbkolomName.getLocalPart()) == 0) {
+                    bestaatAl = true;
+                    break;
+                }
+            }
+            if (!bestaatAl) {
+                ThemaData td = new ThemaData();
+                if (attributes.size() <= DEFAULTBASISCOLUMNS) {
+                    td.setBasisregel(true);
                 } else {
-                    //niks doen
+                    td.setBasisregel(false);
                 }
+                td.setDataType((DataTypen) sess.get(DataTypen.class, DataTypen.DATA));
+                String netteNaam = attributeName.getLocalPart();
+                if (netteNaam.indexOf("{") >= 0 && netteNaam.indexOf("}") >= 0) {
+                    netteNaam = netteNaam.substring(netteNaam.indexOf("}") + 1);
+                }
+                td.setLabel(netteNaam);
+                td.setKolomnaam(attributeName.getLocalPart());
+                td.setThema(t);
+                td.setWaardeType((WaardeTypen) sess.get(WaardeTypen.class, WaardeTypen.STRING));
+                sess.saveOrUpdate(td);
+            } else {
+                //niks doen
             }
         }
-        //haal opnieuw de ThemaData objecten op om te kijken of er een Extra data veld is of nog moet aangemaakt worden.
-        if (attributes != null && attributes.size() > DEFAULTBASISCOLUMNS) {
-            List bestaandeObjecten = SpatialUtil.getThemaData(t, false);
-            boolean extraBestaat = false;
-            boolean nietBasisregels = false;
-            for (int i = 0; i < bestaandeObjecten.size(); i++) {
-                ThemaData td = (ThemaData) bestaandeObjecten.get(i);
-                if (!td.isBasisregel()) {
-                    nietBasisregels = true;
-                }
-                if (td.getCommando() != null && td.getCommando().toLowerCase().startsWith("viewerdata.do?aanvullendeinfo=t")) {
-                    extraBestaat = true;
+        // kijken of oude themadata verwijderd moet worden omdat bijbehorend attribuut niet meer bestaat
+        // kijken of er een Extra data veld is of nog moet aangemaakt worden.
+        boolean extraBestaat = false;
+        boolean nietBasisregels = false;
+        for (ThemaData td : bestaandeObjecten) {
+            if (!td.isBasisregel()) {
+                nietBasisregels = true;
+            }
+            if (td.getCommando() != null && td.getCommando().toLowerCase().startsWith("viewerdata.do?aanvullendeinfo=t")) {
+                extraBestaat = true;
+            }
+            if (td.getKolomnaam() == null) {
+                continue;
+            }
+            QName dbkolom = DataStoreUtil.convertFullnameToQName(td.getKolomnaam());
+            boolean bestaatNog = false;
+            for (String attribute : attributes) {
+                QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
+                if (attributeName.getLocalPart().compareTo(dbkolom.getLocalPart()) == 0) {
+                    bestaatNog = true;
+                    break;
                 }
             }
+            if (!bestaatNog) {
+                Themas tdt = td.getThema();
+                tdt.getThemaData().remove(td);
+                sess.delete(td);
+                sess.flush();
+            }
+        }
+        if (attributes.size() > DEFAULTBASISCOLUMNS) {
             if (!extraBestaat && nietBasisregels) {
                 ThemaData td = createDefaultExtraThemaData(t);
                 sess.saveOrUpdate(td);
