@@ -170,7 +170,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             }
             if (!bestaatNog) {
                 uglyThemaData.append("[");
-                uglyThemaData.append(dbkolom.getLocalPart());
+                uglyThemaData.append(tdi.getKolomnaam());
                 uglyThemaData.append("]");
             }
         }
