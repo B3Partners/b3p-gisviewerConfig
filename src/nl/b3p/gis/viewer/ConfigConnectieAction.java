@@ -26,9 +26,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
-import nl.b3p.gis.viewer.ViewerCrudAction;
-import nl.b3p.gis.viewer.db.Connecties;
 import nl.b3p.gis.viewer.services.HibernateUtil;
+import nl.b3p.zoeker.configuratie.Bron;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.ActionErrors;
@@ -45,23 +44,23 @@ public class ConfigConnectieAction extends ViewerCrudAction {
 
     private static final Log log = LogFactory.getLog(ConfigConnectieAction.class);
 
-    protected Connecties getConnectie(DynaValidatorForm form, boolean createNew) {
+    protected Bron getConnectie(DynaValidatorForm form, boolean createNew) {
         Integer id = FormUtils.StringToInteger(form.getString("id"));
-        Connecties c = null;
+        Bron c = null;
         if (id == null && createNew) {
-            c = new Connecties();
+            c = new Bron();
         } else if (id != null) {
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-            c = (Connecties) sess.get(Connecties.class, id);
+            c = (Bron) sess.get(Bron.class, id);
         }
         return c;
     }
 
-    protected Connecties getFirstConnectie() {
+    protected Bron getFirstConnectie() {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List cs = sess.createQuery("from Connecties order by naam").setMaxResults(1).list();
+        List cs = sess.createQuery("from Bron order by naam").setMaxResults(1).list();
         if (cs != null && cs.size() > 0) {
-            return (Connecties) cs.get(0);
+            return (Bron) cs.get(0);
         }
         return null;
     }
@@ -69,11 +68,11 @@ public class ConfigConnectieAction extends ViewerCrudAction {
     protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
         super.createLists(form, request);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        request.setAttribute("allConnecties", sess.createQuery("from Connecties order by naam").list());
+        request.setAttribute("allConnecties", sess.createQuery("from Bron order by naam").list());
     }
 
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Connecties c = getConnectie(dynaForm, false);
+        Bron c = getConnectie(dynaForm, false);
         if (c == null) {
             c = getFirstConnectie();
         }
@@ -82,7 +81,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
     }
 
     public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Connecties c = getConnectie(dynaForm, false);
+        Bron c = getConnectie(dynaForm, false);
         if (c == null) {
             c = getFirstConnectie();
         }
@@ -109,7 +108,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
             return getAlternateForward(mapping, request);
         }
 
-        Connecties c = getConnectie(dynaForm, true);
+        Bron c = getConnectie(dynaForm, true);
         if (c == null) {
             prepareMethod(dynaForm, request, LIST, EDIT);
             addAlternateMessage(mapping, request, NOTFOUND_ERROR_KEY);
@@ -141,7 +140,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         // nieuwe default actie op delete zetten
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        Connecties c = getConnectie(dynaForm, false);
+        Bron c = getConnectie(dynaForm, false);
         if (c == null) {
             prepareMethod(dynaForm, request, LIST, EDIT);
             addAlternateMessage(mapping, request, NOTFOUND_ERROR_KEY);
@@ -154,7 +153,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         return super.delete(mapping, dynaForm, request, response);
     }
 
-    private void populateConnectieForm(Connecties c, DynaValidatorForm dynaForm, HttpServletRequest request) {
+    private void populateConnectieForm(Bron c, DynaValidatorForm dynaForm, HttpServletRequest request) {
         if (c == null) {
             return;
         }
@@ -167,7 +166,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
             dynaForm.set("volgorde", c.getVolgorde().toString());
     }
 
-    private void populateConnectieObject(DynaValidatorForm dynaForm, Connecties c, HttpServletRequest request) {
+    private void populateConnectieObject(DynaValidatorForm dynaForm, Bron c, HttpServletRequest request) {
         if (FormUtils.nullIfEmpty(dynaForm.getString("id"))!=null){
             c.setId(new Integer (dynaForm.getString("id")));
         }

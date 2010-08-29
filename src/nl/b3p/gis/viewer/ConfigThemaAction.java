@@ -28,9 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
-import nl.b3p.gis.viewer.ViewerCrudAction;
 import nl.b3p.gis.viewer.db.Clusters;
-import nl.b3p.gis.viewer.db.Connecties;
 import nl.b3p.gis.viewer.db.Themas;
 import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
@@ -97,7 +95,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         request.setAttribute("allThemas", sess.createQuery("from Themas order by belangnr").list());
         request.setAttribute("allClusters",
                 sess.createQuery("from Clusters where default_cluster=:defaultCluster order by naam").setBoolean("defaultCluster", false).list());
-        request.setAttribute("listConnecties", sess.createQuery("from Connecties").list());
+        request.setAttribute("listConnecties", sess.createQuery("from Bron").list());
         request.setAttribute("listValidGeoms", SpatialUtil.VALID_GEOMS);
 
         Themas t = getThema(dynaForm, false);
@@ -308,7 +306,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         t.setCode(FormUtils.nullIfEmpty(dynaForm.getString("themaCode")));
         t.setNaam(FormUtils.nullIfEmpty(dynaForm.getString("naam")));
         t.setMetadata_link(FormUtils.nullIfEmpty(dynaForm.getString("metadatalink")));
-        Connecties conn = null;
+        Bron conn = null;
         int connId = -1;
         try {
             connId = Integer.parseInt(dynaForm.getString("connectie"));
@@ -316,7 +314,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
             log.debug("No connection id found in form, input: " + dynaForm.getString("connectie"));
         }
         if (connId > 0) {
-            conn = (Connecties) sess.get(Connecties.class, connId);
+            conn = (Bron) sess.get(Bron.class, connId);
         }
         t.setConnectie(conn);
         if (dynaForm.getString("belangnr") != null && dynaForm.getString("belangnr").length() > 0) {
