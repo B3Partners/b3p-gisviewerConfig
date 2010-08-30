@@ -18,23 +18,21 @@ import org.hibernate.Transaction;
 public class ConfigKeeperAction extends ViewerCrudAction {
 
     private static final Log logger = LogFactory.getLog(ConfigKeeperAction.class);
-
     private static final String[] CONFIGKEEPER_TABS = {
-        "leeg","themas","legenda","zoeken","informatie","gebieden",
-        "analyse","planselectie"
+        "leeg", "themas", "legenda", "zoeken", "informatie", "gebieden",
+        "analyse", "planselectie"
     };
-
     private static final String[] LABELS_VOOR_TABS = {
-        "-Kies een tabblad-","Kaarten","Legenda","Zoeken","Info","Gebieden",
-        "Analyse","Plannen"
+        "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Info", "Gebieden",
+        "Analyse", "Plannen"
     };
 
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
-            HttpServletRequest request, HttpServletResponse response) throws Exception {        
+            HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         /* rol ophalen */
-        String rolnaam = (String)request.getParameter("rolnaam");
+        String rolnaam = (String) request.getParameter("rolnaam");
 
         Map map = null;
 
@@ -72,15 +70,18 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         request.setAttribute("tabLabels", LABELS_VOOR_TABS);
 
         /* dropdown voor i-tool goedzetten
-           geen, paneel of popup */
-        if (!usePopup && !useDivPopup && !usePanelControls)
+        geen, paneel of popup */
+        if (!usePopup && !useDivPopup && !usePanelControls) {
             dynaForm.set("cfg_objectInfo", "geen");
+        }
 
-        if (!usePopup && !useDivPopup && usePanelControls)
+        if (!usePopup && !useDivPopup && usePanelControls) {
             dynaForm.set("cfg_objectInfo", "paneel");
+        }
 
-        if (usePopup && useDivPopup && !usePanelControls)
+        if (usePopup && useDivPopup && !usePanelControls) {
             dynaForm.set("cfg_objectInfo", "popup");
+        }
 
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
@@ -94,14 +95,14 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_minBboxZoeken", minBboxZoeken);
         dynaForm.set("cfg_maxResults", maxResults);
         dynaForm.set("cfg_expandAll", expandAll);
-        dynaForm.set("cfg_multipleActiveThemas", multipleActiveThemas);      
+        dynaForm.set("cfg_multipleActiveThemas", multipleActiveThemas);
         dynaForm.set("cfg_useInheritCheckbox", useInheritCheckbox);
         dynaForm.set("cfg_showLegendInTree", showLegendInTree);
         dynaForm.set("cfg_useMouseOverTabs", useMouseOverTabs);
         dynaForm.set("cfg_layoutAdminData", layoutAdminData);
 
         dynaForm.set("rolnaam", rolnaam);
-        
+
         return super.unspecified(mapping, dynaForm, request, response);
     }
 
@@ -109,10 +110,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     public ActionForward save(ActionMapping mapping, DynaValidatorForm dynaForm,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
 
-        String rolnaam = (String)dynaForm.get("rolnaam");
+        String rolnaam = (String) dynaForm.get("rolnaam");
 
         if (!isTokenValid(request)) {
-  
+
             addAlternateMessage(mapping, request, TOKEN_ERROR_KEY);
             return getAlternateForward(mapping, request);
         }
@@ -127,40 +128,40 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* Opslaan tabbladen */
         writeTabbladenConfig(dynaForm, rolnaam);
 
-        c = configKeeper.getConfiguratie("useCookies",rolnaam);
+        c = configKeeper.getConfiguratie("useCookies", rolnaam);
         writeBoolean(dynaForm, "cfg_useCookies", c);
 
-        c = configKeeper.getConfiguratie("autoRedirect",rolnaam);
+        c = configKeeper.getConfiguratie("autoRedirect", rolnaam);
         writeInteger(dynaForm, "cfg_autoRedirect", c);
 
-        c = configKeeper.getConfiguratie("tolerance",rolnaam);
+        c = configKeeper.getConfiguratie("tolerance", rolnaam);
         writeInteger(dynaForm, "cfg_tolerance", c);
 
-        c = configKeeper.getConfiguratie("refreshDelay",rolnaam);
+        c = configKeeper.getConfiguratie("refreshDelay", rolnaam);
         writeInteger(dynaForm, "cfg_refreshDelay", c);
 
-        c = configKeeper.getConfiguratie("minBboxZoeken",rolnaam);
+        c = configKeeper.getConfiguratie("minBboxZoeken", rolnaam);
         writeInteger(dynaForm, "cfg_minBboxZoeken", c);
 
-        c = configKeeper.getConfiguratie("maxResults",rolnaam);
+        c = configKeeper.getConfiguratie("maxResults", rolnaam);
         writeInteger(dynaForm, "cfg_maxResults", c);
 
-        c = configKeeper.getConfiguratie("expandAll",rolnaam);
+        c = configKeeper.getConfiguratie("expandAll", rolnaam);
         writeBoolean(dynaForm, "cfg_expandAll", c);
 
-        c = configKeeper.getConfiguratie("multipleActiveThemas",rolnaam);
+        c = configKeeper.getConfiguratie("multipleActiveThemas", rolnaam);
         writeBoolean(dynaForm, "cfg_multipleActiveThemas", c);
 
-        c = configKeeper.getConfiguratie("useInheritCheckbox",rolnaam);
+        c = configKeeper.getConfiguratie("useInheritCheckbox", rolnaam);
         writeBoolean(dynaForm, "cfg_useInheritCheckbox", c);
 
-        c = configKeeper.getConfiguratie("showLegendInTree",rolnaam);
+        c = configKeeper.getConfiguratie("showLegendInTree", rolnaam);
         writeBoolean(dynaForm, "cfg_showLegendInTree", c);
 
-        c = configKeeper.getConfiguratie("useMouseOverTabs",rolnaam);
+        c = configKeeper.getConfiguratie("useMouseOverTabs", rolnaam);
         writeBoolean(dynaForm, "cfg_useMouseOverTabs", c);
 
-        c = configKeeper.getConfiguratie("layoutAdminData",rolnaam);
+        c = configKeeper.getConfiguratie("layoutAdminData", rolnaam);
         writeString(dynaForm, "cfg_layoutAdminData", c);
 
         /* opslaan zoekinganen */
@@ -174,18 +175,18 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         request.setAttribute("zoekConfigs", zoekconfigs);
 
         /* opnieuwe klaarzetten zoekinganen */
-        String cfg_zoekenid1 = (String)dynaForm.get("cfg_zoekenid1");
-        String cfg_zoekenid2 = (String)dynaForm.get("cfg_zoekenid2");
-        String cfg_zoekenid3 = (String)dynaForm.get("cfg_zoekenid3");
-        String cfg_zoekenid4 = (String)dynaForm.get("cfg_zoekenid4");
+        String cfg_zoekenid1 = (String) dynaForm.get("cfg_zoekenid1");
+        String cfg_zoekenid2 = (String) dynaForm.get("cfg_zoekenid2");
+        String cfg_zoekenid3 = (String) dynaForm.get("cfg_zoekenid3");
+        String cfg_zoekenid4 = (String) dynaForm.get("cfg_zoekenid4");
 
         dynaForm.set("cfg_zoekenid1", cfg_zoekenid1);
         dynaForm.set("cfg_zoekenid2", cfg_zoekenid2);
         dynaForm.set("cfg_zoekenid3", cfg_zoekenid3);
         dynaForm.set("cfg_zoekenid4", cfg_zoekenid4);
 
-        String cfg_planselectieid1 = (String)dynaForm.get("cfg_planselectieid1");
-        String cfg_planselectieid2 = (String)dynaForm.get("cfg_planselectieid2");
+        String cfg_planselectieid1 = (String) dynaForm.get("cfg_planselectieid1");
+        String cfg_planselectieid2 = (String) dynaForm.get("cfg_planselectieid2");
 
         dynaForm.set("cfg_planselectieid1", cfg_planselectieid1);
         dynaForm.set("cfg_planselectieid2", cfg_planselectieid2);
@@ -195,18 +196,18 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         request.setAttribute("tabLabels", LABELS_VOOR_TABS);
 
         /* opnieuw vullen box voor tabs */
-        String cfg_tab1 = (String)dynaForm.get("cfg_tab1");
-        String cfg_tab2 = (String)dynaForm.get("cfg_tab2");
-        String cfg_tab3 = (String)dynaForm.get("cfg_tab3");
-        String cfg_tab4 = (String)dynaForm.get("cfg_tab4");
-        String cfg_tab5 = (String)dynaForm.get("cfg_tab5");
+        String cfg_tab1 = (String) dynaForm.get("cfg_tab1");
+        String cfg_tab2 = (String) dynaForm.get("cfg_tab2");
+        String cfg_tab3 = (String) dynaForm.get("cfg_tab3");
+        String cfg_tab4 = (String) dynaForm.get("cfg_tab4");
+        String cfg_tab5 = (String) dynaForm.get("cfg_tab5");
 
         dynaForm.set("cfg_tab1", cfg_tab1);
         dynaForm.set("cfg_tab2", cfg_tab2);
         dynaForm.set("cfg_tab3", cfg_tab3);
         dynaForm.set("cfg_tab4", cfg_tab4);
         dynaForm.set("cfg_tab5", cfg_tab5);
-        
+
         return super.save(mapping, dynaForm, request, response);
     }
 
@@ -217,29 +218,35 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         ConfigKeeper configKeeper = new ConfigKeeper();
         int lastComma = -1;
 
-        Configuratie configTabs = configKeeper.getConfiguratie("zoekConfigIds",rolnaam);
+        Configuratie configTabs = configKeeper.getConfiguratie("zoekConfigIds", rolnaam);
         String strBeheerTabs = "";
 
-        if (!form.get("cfg_zoekenid1").equals("leeg"))
+        if (!form.get("cfg_zoekenid1").equals("leeg")) {
             strBeheerTabs += form.get("cfg_zoekenid1") + ",";
+        }
 
-        if (!form.get("cfg_zoekenid2").equals("leeg"))
+        if (!form.get("cfg_zoekenid2").equals("leeg")) {
             strBeheerTabs += form.get("cfg_zoekenid2") + ",";
+        }
 
-        if (!form.get("cfg_zoekenid3").equals("leeg"))
+        if (!form.get("cfg_zoekenid3").equals("leeg")) {
             strBeheerTabs += form.get("cfg_zoekenid3") + ",";
+        }
 
-        if (!form.get("cfg_zoekenid4").equals("leeg"))
+        if (!form.get("cfg_zoekenid4").equals("leeg")) {
             strBeheerTabs += form.get("cfg_zoekenid4") + ",";
+        }
 
         lastComma = strBeheerTabs.lastIndexOf(",");
 
-        if (lastComma > 1)
+        if (lastComma > 1) {
             strBeheerTabs = strBeheerTabs.substring(0, lastComma);
+        }
 
         strBeheerTabs = "\"" + strBeheerTabs + "\"";
 
         configTabs.setPropval(strBeheerTabs);
+        configTabs.setType("java.lang.String");
         sess.merge(configTabs);
         sess.flush();
     }
@@ -251,23 +258,27 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         ConfigKeeper configKeeper = new ConfigKeeper();
         int lastComma = -1;
 
-        Configuratie configTabs = configKeeper.getConfiguratie("planSelectieIds",rolnaam);
+        Configuratie configTabs = configKeeper.getConfiguratie("planSelectieIds", rolnaam);
         String strBeheerTabs = "";
 
-        if (!form.get("cfg_planselectieid1").equals("leeg"))
+        if (!form.get("cfg_planselectieid1").equals("leeg")) {
             strBeheerTabs += form.get("cfg_planselectieid1") + ",";
+        }
 
-        if (!form.get("cfg_planselectieid2").equals("leeg"))
+        if (!form.get("cfg_planselectieid2").equals("leeg")) {
             strBeheerTabs += form.get("cfg_planselectieid2") + ",";
+        }
 
         lastComma = strBeheerTabs.lastIndexOf(",");
 
-        if (lastComma > 1)
+        if (lastComma > 1) {
             strBeheerTabs = strBeheerTabs.substring(0, lastComma);
+        }
 
         strBeheerTabs = "\"" + strBeheerTabs + "\"";
 
         configTabs.setPropval(strBeheerTabs);
+        configTabs.setType("java.lang.String");
         sess.merge(configTabs);
         sess.flush();
     }
@@ -279,30 +290,37 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         ConfigKeeper configKeeper = new ConfigKeeper();
         int lastComma = -1;
 
-        Configuratie configTabs = configKeeper.getConfiguratie("tabs",rolnaam);
+        Configuratie configTabs = configKeeper.getConfiguratie("tabs", rolnaam);
         String strBeheerTabs = "";
 
-        if (!form.get("cfg_tab1").equals("leeg"))
+        if (!form.get("cfg_tab1").equals("leeg")) {
             strBeheerTabs += "\"" + form.get("cfg_tab1") + "\",";
+        }
 
-        if (!form.get("cfg_tab2").equals("leeg"))
+        if (!form.get("cfg_tab2").equals("leeg")) {
             strBeheerTabs += "\"" + form.get("cfg_tab2") + "\",";
+        }
 
-        if (!form.get("cfg_tab3").equals("leeg"))
+        if (!form.get("cfg_tab3").equals("leeg")) {
             strBeheerTabs += "\"" + form.get("cfg_tab3") + "\",";
+        }
 
-        if (!form.get("cfg_tab4").equals("leeg"))
+        if (!form.get("cfg_tab4").equals("leeg")) {
             strBeheerTabs += "\"" + form.get("cfg_tab4") + "\",";
+        }
 
-        if (!form.get("cfg_tab5").equals("leeg"))
+        if (!form.get("cfg_tab5").equals("leeg")) {
             strBeheerTabs += "\"" + form.get("cfg_tab5") + "\",";
+        }
 
         lastComma = strBeheerTabs.lastIndexOf(",");
 
-        if (lastComma > 1)
+        if (lastComma > 1) {
             strBeheerTabs = strBeheerTabs.substring(0, lastComma);
+        }
 
         configTabs.setPropval(strBeheerTabs);
+        configTabs.setType("java.lang.String");
         sess.merge(configTabs);
         sess.flush();
     }
@@ -310,11 +328,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private void writeBoolean(DynaValidatorForm form, String field, Configuratie c) {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        if (form.get(field) != null) {
+        if (form.get(field) != null && form.get(field).toString().length()>0) {
             c.setPropval("true");
         } else {
             c.setPropval("false");
         }
+        c.setType("java.lang.Boolean");
 
         sess.merge(c);
         sess.flush();
@@ -328,6 +347,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         } else {
             c.setPropval("0");
         }
+        c.setType("java.lang.Integer");
 
         sess.merge(c);
         sess.flush();
@@ -341,6 +361,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         } else {
             c.setPropval("");
         }
+        c.setType("java.lang.String");
 
         sess.merge(c);
         sess.flush();
@@ -351,7 +372,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String[] items = tabs.split(",");
 
         if (items.length > 0) {
-            if ( (items[0] != null) || items[0].equals("") ) {
+            if ((items[0] != null) || items[0].equals("")) {
                 String cfg_tab1 = items[0].replaceAll("\"", "");
                 dynaForm.set("cfg_tab1", cfg_tab1);
             }
@@ -360,7 +381,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         if (items.length > 1) {
-            if ( (items[1] != null) || items[1].equals("") ) {
+            if ((items[1] != null) || items[1].equals("")) {
                 String cfg_tab2 = items[1].replaceAll("\"", "");
                 dynaForm.set("cfg_tab2", cfg_tab2);
             }
@@ -369,7 +390,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         if (items.length > 2) {
-            if ( (items[2] != null) || items[2].equals("") ) {
+            if ((items[2] != null) || items[2].equals("")) {
                 String cfg_tab3 = items[2].replaceAll("\"", "");
                 dynaForm.set("cfg_tab3", cfg_tab3);
             }
@@ -378,7 +399,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         if (items.length > 3) {
-            if ( (items[3] != null) || items[3].equals("") ) {
+            if ((items[3] != null) || items[3].equals("")) {
                 String cfg_tab4 = items[3].replaceAll("\"", "");
                 dynaForm.set("cfg_tab4", cfg_tab4);
             }
@@ -387,7 +408,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         if (items.length > 4) {
-            if ( (items[4] != null) || items[4].equals("") ) {
+            if ((items[4] != null) || items[4].equals("")) {
                 String cfg_tab5 = items[4].replaceAll("\"", "");
                 dynaForm.set("cfg_tab5", cfg_tab5);
             }
@@ -402,9 +423,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         ConfigKeeper configKeeper = new ConfigKeeper();
 
-        Configuratie usePopup = configKeeper.getConfiguratie("usePopup",rolnaam);
-        Configuratie useDivPopup = configKeeper.getConfiguratie("useDivPopup",rolnaam);
-        Configuratie usePanelControls = configKeeper.getConfiguratie("usePanelControls",rolnaam);
+        Configuratie usePopup = configKeeper.getConfiguratie("usePopup", rolnaam);
+        usePopup.setType("java.lang.Boolean");
+        Configuratie useDivPopup = configKeeper.getConfiguratie("useDivPopup", rolnaam);
+        useDivPopup.setType("java.lang.Boolean");
+        Configuratie usePanelControls = configKeeper.getConfiguratie("usePanelControls", rolnaam);
+        usePanelControls.setType("java.lang.Boolean");
 
         // geen, paneel, popup
         String cfg_objectInfo = (String) form.get("cfg_objectInfo");
@@ -420,28 +444,28 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
             sess.flush();
         }
-        
+
         if (cfg_objectInfo.equals("paneel")) {
             usePopup.setPropval("false");
             useDivPopup.setPropval("false");
             usePanelControls.setPropval("true");
-            
+
             sess.merge(usePopup);
             sess.merge(useDivPopup);
             sess.merge(usePanelControls);
-            
+
             sess.flush();
         }
-        
+
         if (cfg_objectInfo.equals("popup")) {
             usePopup.setPropval("true");
             useDivPopup.setPropval("true");
             usePanelControls.setPropval("false");
-            
+
             sess.merge(usePopup);
             sess.merge(useDivPopup);
             sess.merge(usePanelControls);
-            
+
             sess.flush();
         }
     }
@@ -454,30 +478,34 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         request.setAttribute("zoekConfigs", zoekconfigs);
 
-        if (ids==null) {
+        if (ids == null) {
             return;
         }
 
         String[] items = ids.replaceAll("\"", "").split(",");
 
         if (items.length > 0) {
-            if ( (items[0] != null) || items[0].equals("") )
+            if ((items[0] != null) || items[0].equals("")) {
                 dynaForm.set("cfg_zoekenid1", items[0].replaceAll("\"", ""));
+            }
         }
 
         if (items.length > 1) {
-            if ( (items[1] != null) || items[1].equals("") )
+            if ((items[1] != null) || items[1].equals("")) {
                 dynaForm.set("cfg_zoekenid2", items[1].replaceAll("\"", ""));
+            }
         }
 
         if (items.length > 2) {
-            if ( (items[2] != null) || items[2].equals("") )
+            if ((items[2] != null) || items[2].equals("")) {
                 dynaForm.set("cfg_zoekenid3", items[2].replaceAll("\"", ""));
+            }
         }
 
         if (items.length > 3) {
-            if ( (items[3] != null) || items[3].equals("") )
+            if ((items[3] != null) || items[3].equals("")) {
                 dynaForm.set("cfg_zoekenid4", items[3].replaceAll("\"", ""));
+            }
         }
     }
 
@@ -489,20 +517,22 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         request.setAttribute("zoekConfigs", zoekconfigs);
 
-        if (ids==null) {
+        if (ids == null) {
             return;
         }
 
         String[] items = ids.replaceAll("\"", "").split(",");
 
         if (items.length > 0) {
-            if ( (items[0] != null) || items[0].equals("") )
+            if ((items[0] != null) || items[0].equals("")) {
                 dynaForm.set("cfg_planselectieid1", items[0].replaceAll("\"", ""));
+            }
         }
 
         if (items.length > 1) {
-            if ( (items[1] != null) || items[1].equals("") )
+            if ((items[1] != null) || items[1].equals("")) {
                 dynaForm.set("cfg_planselectieid2", items[1].replaceAll("\"", ""));
+            }
         }
     }
 
