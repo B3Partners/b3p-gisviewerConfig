@@ -47,22 +47,22 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             map = configKeeper.getConfigMap(rolnaam);
         }
 
-        boolean useCookies = (Boolean) map.get("useCookies");
-        boolean usePopup = (Boolean) map.get("usePopup");
-        boolean useDivPopup = (Boolean) map.get("useDivPopup");
-        boolean usePanelControls = (Boolean) map.get("usePanelControls");
-        int autoRedirect = (Integer) map.get("autoRedirect");
-        int tolerance = (Integer) map.get("tolerance");
-        int refreshDelay = (Integer) map.get("refreshDelay");
+        Boolean useCookies = (Boolean) map.get("useCookies");
+        Boolean usePopup = (Boolean) map.get("usePopup");
+        Boolean useDivPopup = (Boolean) map.get("useDivPopup");
+        Boolean usePanelControls = (Boolean) map.get("usePanelControls");
+        Integer autoRedirect = (Integer) map.get("autoRedirect");
+        Integer tolerance = (Integer) map.get("tolerance");
+        Integer refreshDelay = (Integer) map.get("refreshDelay");
         String zoekConfigIds = (String) map.get("zoekConfigIds");
         String planSelectieIds = (String) map.get("planSelectieIds");
-        int minBboxZoeken = (Integer) map.get("minBboxZoeken");
-        int maxResults = (Integer) map.get("maxResults");
-        boolean expandAll = (Boolean) map.get("expandAll");
-        boolean multipleActiveThemas = (Boolean) map.get("multipleActiveThemas");
-        boolean useInheritCheckbox = (Boolean) map.get("useInheritCheckbox");
-        boolean showLegendInTree = (Boolean) map.get("showLegendInTree");
-        boolean useMouseOverTabs = (Boolean) map.get("useMouseOverTabs");
+        Integer minBboxZoeken = (Integer) map.get("minBboxZoeken");
+        Integer maxResults = (Integer) map.get("maxResults");
+        Boolean expandAll = (Boolean) map.get("expandAll");
+        Boolean multipleActiveThemas = (Boolean) map.get("multipleActiveThemas");
+        Boolean useInheritCheckbox = (Boolean) map.get("useInheritCheckbox");
+        Boolean showLegendInTree = (Boolean) map.get("showLegendInTree");
+        Boolean useMouseOverTabs = (Boolean) map.get("useMouseOverTabs");
         String layoutAdminData = (String) map.get("layoutAdminData");
 
         /* Tabbladen vullen */
@@ -82,7 +82,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         if (usePopup && useDivPopup && !usePanelControls)
             dynaForm.set("cfg_objectInfo", "popup");
 
-        /* vullen box voor zoek inganen */
+        /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
         fillPlanSelectieBox(dynaForm, request, planSelectieIds);
 
@@ -454,6 +454,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         request.setAttribute("zoekConfigs", zoekconfigs);
 
+        if (ids==null) {
+            return;
+        }
+
         String[] items = ids.replaceAll("\"", "").split(",");
 
         if (items.length > 0) {
@@ -485,6 +489,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         request.setAttribute("zoekConfigs", zoekconfigs);
 
+        if (ids==null) {
+            return;
+        }
+
         String[] items = ids.replaceAll("\"", "").split(",");
 
         if (items.length > 0) {
@@ -501,7 +509,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private void writeDefaultConfigForRole(String rol) {
 
         /* Invoegen default config voor rolnaam */
-        ConfigKeeper configKeeper = new ConfigKeeper();
         Configuratie cfg = null;
 
         Session sess = null;
