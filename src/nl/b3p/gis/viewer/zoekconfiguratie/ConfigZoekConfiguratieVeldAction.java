@@ -59,11 +59,20 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
     //private static final String ZOEKCONFIGURATIEID = "zoekConfiguratieId";
     private static final String ATTRIBUUTTYPE = "attribuutType";
 
+    @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         Attribuut attr = getAttribuut(request,false);
         if (attr != null) {
             populateForm(attr, dynaForm);
+            
+            if (attr instanceof ResultaatAttribuut) {
+                request.setAttribute(ATTRIBUUTTYPE,"resultaat");
+            } else {
+                request.setAttribute(ATTRIBUUTTYPE,"zoek");
+            }
+
+
         }else{
             //als een attr null is dan is het een nieuw. Geef het ZoekConfigId en attribuutType door
             request.setAttribute(ATTRIBUUTTYPE,request.getParameter(ATTRIBUUTTYPE));
@@ -128,6 +137,7 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
             ZoekConfiguratie zc= getZoekConfiguratie(request);
             attr.setZoekConfiguratie(zc);
         }
+
         return attr;
 
     }
@@ -145,7 +155,6 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
             dynaForm.set("volgorde", a.getVolgorde().toString());
         }
         dynaForm.set("attribuutnaam", a.getAttribuutnaam());
-
     }
 
     private Attribuut getAttribuut(HttpServletRequest request,boolean createNew) {
