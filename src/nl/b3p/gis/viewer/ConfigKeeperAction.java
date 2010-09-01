@@ -62,6 +62,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showLegendInTree = (Boolean) map.get("showLegendInTree");
         Boolean useMouseOverTabs = (Boolean) map.get("useMouseOverTabs");
         String layoutAdminData = (String) map.get("layoutAdminData");
+        Boolean hideAdvancedButtons = (Boolean) map.get("hideAdvancedButtons");
 
         /* Tabbladen vullen */
         fillTabbladenConfig(dynaForm, map);
@@ -100,6 +101,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showLegendInTree", showLegendInTree);
         dynaForm.set("cfg_useMouseOverTabs", useMouseOverTabs);
         dynaForm.set("cfg_layoutAdminData", layoutAdminData);
+        dynaForm.set("cfg_hideAdvancedButtons", hideAdvancedButtons);
 
         dynaForm.set("rolnaam", rolnaam);
 
@@ -163,6 +165,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("layoutAdminData", rolnaam);
         writeString(dynaForm, "cfg_layoutAdminData", c);
+
+        c = configKeeper.getConfiguratie("hideAdvancedButtons", rolnaam);
+        writeBoolean(dynaForm, "cfg_hideAdvancedButtons", c);
 
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, rolnaam);
@@ -702,6 +707,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             cfg.setPropval("-1");
             cfg.setSetting(rol);
             cfg.setType("java.lang.String");
+            sess.save(cfg);
+
+            cfg = new Configuratie();
+            cfg.setProperty("hideAdvancedButtons");
+            cfg.setPropval("true");
+            cfg.setSetting(rol);
+            cfg.setType("java.lang.Boolean");
             sess.save(cfg);
 
             tx.commit();
