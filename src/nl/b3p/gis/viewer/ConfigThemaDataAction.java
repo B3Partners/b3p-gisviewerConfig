@@ -127,7 +127,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         super.createLists(dynaForm, request);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        request.setAttribute("listThemas", sess.createQuery("from Themas where code in ('1', '2') order by belangnr").list());
+        request.setAttribute("listThemas", sess.createQuery("from Themas where code in ('1', '2') order by naam").list());
         request.setAttribute("listWaardeTypen", sess.createQuery("from WaardeTypen order by naam").list());
         request.setAttribute("listDataTypen", sess.createQuery("from DataTypen order by naam").list());
         Themas t = null;
@@ -150,7 +150,11 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         Bron b = t.getConnectie(request);
         List<String> attributes = DataStoreUtil.getAttributeNames(b, t);
         request.setAttribute("listAdminTableColumns", attributes);
-        request.setAttribute("connectieType", Bron.TYPE_EMPTY);
+
+        if (t.getConnectie() != null)
+            request.setAttribute("connectieType", t.getConnectie().getType());
+        else
+            request.setAttribute("connectieType", Bron.TYPE_EMPTY);
 
         StringBuilder uglyThemaData =  new StringBuilder();
         for (ThemaData tdi : bestaandeObjecten) {
