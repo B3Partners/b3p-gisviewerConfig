@@ -1,25 +1,3 @@
-/*
- * B3P Gisviewer is an extension to Flamingo MapComponents making
- * it a complete webbased GIS viewer and configuration tool that
- * works in cooperation with B3P Kaartenbalie.
- *
- * Copyright 2006, 2007, 2008 B3Partners BV
- *
- * This file is part of B3P Gisviewer.
- *
- * B3P Gisviewer is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * B3P Gisviewer is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with B3P Gisviewer.  If not, see <http://www.gnu.org/licenses/>.
- */
 package nl.b3p.gis.viewer.zoekconfiguratie;
 
 import java.io.IOException;
@@ -53,7 +31,7 @@ import org.opengis.feature.type.AttributeDescriptor;
  */
 public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
 
-    private static final Log log = LogFactory.getLog(ConfigZoekConfiguratieAction.class);
+    private static final Log logger = LogFactory.getLog(ConfigZoekConfiguratieAction.class);
     private static final String ZOEKATTRIBUUTID = "zoekAttribuutId";
     private static final String RESULTAATATTRIBUUTID = "resultaatAttribuutId";
     //private static final String ZOEKCONFIGURATIEID = "zoekConfiguratieId";
@@ -66,14 +44,16 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         if (attr != null) {
             populateForm(attr, dynaForm);
             
-            if (attr instanceof ResultaatAttribuut) {
+            if (attr instanceof ResultaatAttribuut)
                 request.setAttribute(ATTRIBUUTTYPE,"resultaat");
-            } else {
+            else
                 request.setAttribute(ATTRIBUUTTYPE,"zoek");
-            }
 
+            if (attr.getType() != null)
+                request.setAttribute("selType", attr.getType().toString());
 
-        }else{
+        } else {
+            
             //als een attr null is dan is het een nieuw. Geef het ZoekConfigId en attribuutType door
             request.setAttribute(ATTRIBUUTTYPE,request.getParameter(ATTRIBUUTTYPE));
             request.setAttribute(ConfigZoekConfiguratieAction.ZOEKCONFIGURATIEID,request.getParameter(ConfigZoekConfiguratieAction.ZOEKCONFIGURATIEID));
@@ -95,34 +75,47 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
     public void createLists(HttpServletRequest request) throws IOException, Exception {
         Attribuut a = getAttribuut(request,false);
         ZoekConfiguratie zc=null;
+
         if (a!=null)
             zc=a.getZoekConfiguratie();
+
         /*Als zc nog steeds null is dan is het attribuut waarschijnlijk nieuw
          en staat het id van de zoekconfiguratie op het request*/
-        if (zc==null){
+        if (zc == null) {
             zc=getZoekConfiguratie(request);
         }
+
         DataStore ds = Zoeker.getDataStore(zc.getBron());
-        SimpleFeatureType sft = ds.getSchema(zc.getFeatureType());
+        String ftype = zc.getFeatureType();
+        SimpleFeatureType sft = null;
 
-        List<AttributeDescriptor> descriptors = sft.getAttributeDescriptors();
-        List attributen = new ArrayList();
-        //maak een lijst met mogelijke attributen en de binding class namen.
-        for (int i = 0; i < descriptors.size(); i++) {
-            String[] attr = new String[2];
-            attr[0] = descriptors.get(i).getName().toString();
-            attr[1]="";
-            if (descriptors.get(i).getType().getBinding()!=null){
-                String type=descriptors.get(i).getType().getBinding().getName();
-                type=type.substring(type.lastIndexOf(".")+1);
-                attr[1]=type;
-            }
-            attributen.add(attr);
-
+        try {
+            sft = ds.getSchema(ftype);
+        } catch (NullPointerException ex) {
+            logger.error("NullPointerException bij ophalen schema van datastore: ");
         }
-        request.setAttribute("attribuutNamen", attributen);
 
+        if (sft != null) {
+            List<AttributeDescriptor> descriptors = sft.getAttributeDescriptors();
+            List attributen = new ArrayList();
+            //maak een lijst met mogelijke attributen en de binding class namen.
+            for (int i = 0; i < descriptors.size(); i++) {
+                String[] attr = new String[2];
+                attr[0] = descriptors.get(i).getName().toString();
+                attr[1]="";
+                if (descriptors.get(i).getType().getBinding()!=null){
+                    String type=descriptors.get(i).getType().getBinding().getName();
+                    type=type.substring(type.lastIndexOf(".")+1);
+                    attr[1]=type;
+                }
+                attributen.add(attr);
+
+            }
+
+            request.setAttribute("attribuutNamen", attributen);
+        }
     }
+    
     private Attribuut populateObject(DynaValidatorForm dynaForm,HttpServletRequest request){
         Attribuut attr= getAttribuut(request, true);
         attr.setAttribuutnaam(dynaForm.getString("attribuutnaam"));
@@ -146,14 +139,18 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
             dynaForm.set("zoekAttribuutId", a.getId().toString());
         else if (a instanceof ResultaatAttribuut)
             dynaForm.set("resultaatAttribuutId", a.getId().toString());
+
         dynaForm.set("label", a.getLabel());
         dynaForm.set("naam", a.getNaam());
+
         if (a.getType() != null) {
             dynaForm.set("type", a.getType().toString());
         }
+
         if (a.getVolgorde() != null) {
             dynaForm.set("volgorde", a.getVolgorde().toString());
         }
+
         dynaForm.set("attribuutnaam", a.getAttribuutnaam());
     }
 
