@@ -374,6 +374,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
     private void fillTabbladenConfig(DynaValidatorForm dynaForm, Map map) {
         String tabs = (String) map.get("tabs");
+        if (tabs==null) {
+            return;
+        }
         String[] items = tabs.split(",");
 
         if (items.length > 0) {
