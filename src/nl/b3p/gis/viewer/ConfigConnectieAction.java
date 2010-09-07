@@ -22,6 +22,8 @@
  */
 package nl.b3p.gis.viewer;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -68,7 +70,26 @@ public class ConfigConnectieAction extends ViewerCrudAction {
     protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
         super.createLists(form, request);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        request.setAttribute("allConnecties", sess.createQuery("from Bron order by naam").list());
+
+        List alleBronnen = sess.createQuery("from Bron order by naam").list();
+        request.setAttribute("allConnecties", alleBronnen);
+
+        /* lijstje werkende bronnen om status te kunnen plaatsen bij niet werkende */
+        Iterator iter = alleBronnen.iterator();
+        List validBronIds = new ArrayList();
+
+        while (iter.hasNext()) {
+            Bron b = (Bron) iter.next();
+
+            try {
+                if (b.toDatastore() != null)
+                    validBronIds.add(b.getId());
+            } catch (Exception e) {
+                log.debug("", e);
+            }
+        }
+
+        request.setAttribute("validBronIds", validBronIds);
     }
 
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
