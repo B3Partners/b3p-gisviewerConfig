@@ -1,27 +1,7 @@
-/*
- * B3P Gisviewer is an extension to Flamingo MapComponents making
- * it a complete webbased GIS viewer and configuration tool that
- * works in cooperation with B3P Kaartenbalie.
- *
- * Copyright 2006, 2007, 2008 B3Partners BV
- * 
- * This file is part of B3P Gisviewer.
- * 
- * B3P Gisviewer is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * B3P Gisviewer is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with B3P Gisviewer.  If not, see <http://www.gnu.org/licenses/>.
- */
 package nl.b3p.gis.viewer;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -42,15 +22,12 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
 import org.hibernate.Session;
 
-/**
- *
- * @author Chris
- */
 public class ConfigThemaAction extends ViewerCrudAction {
 
-    private static final Log log = LogFactory.getLog(ConfigThemaAction.class);
+    private static final Log logger = LogFactory.getLog(ConfigThemaAction.class);
     private static final String REFRESHLISTS = "refreshLists";
 
+    @Override
     protected Map getActionMethodPropertiesMap() {
         Map map = super.getActionMethodPropertiesMap();
         ExtendedMethodProperties crudProp = new ExtendedMethodProperties(REFRESHLISTS);
@@ -61,7 +38,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
     }
 
     public ActionForward refreshLists(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        createLists(dynaForm, request);
+
         return mapping.findForward(SUCCESS);
 
     }
@@ -89,73 +66,72 @@ public class ConfigThemaAction extends ViewerCrudAction {
 
     @Override
     protected void createLists(DynaValidatorForm dynaForm, HttpServletRequest request) throws Exception {
-        super.createLists(dynaForm, request);
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
         request.setAttribute("allThemas", sess.createQuery("from Themas order by naam").list());
-        request.setAttribute("allClusters",
-                sess.createQuery("from Clusters where default_cluster=:defaultCluster order by naam").setBoolean("defaultCluster", false).list());
-        request.setAttribute("listConnecties", sess.createQuery("from Bron order by naam").list());
+        request.setAttribute("allClusters", sess.createQuery("from Clusters where default_cluster=:defaultCluster order by naam").setBoolean("defaultCluster", false).list());
         request.setAttribute("listValidGeoms", SpatialUtil.VALID_GEOMS);
+        request.setAttribute("listConnecties", sess.createQuery("from Bron order by naam").list());
 
         Themas t = getThema(dynaForm, false);
-        Bron b = null;
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
-
         Integer cId = new Integer(-1);
+
         try {
             cId = new Integer(dynaForm.getString("connectie"));
         } catch (NumberFormatException nfe) {
-            log.debug("No connection id found in form, input: " + dynaForm.getString("connectie"));
+            logger.debug("No connection id found in form, input: " + dynaForm.getString("connectie"));
         }
 
-        b = ConfigListsUtil.getBron(sess, user, cId);
-        //maak lijsten die iets te maken hebben met de admin/spatial_data
-        List tns = ConfigListsUtil.getPossibleFeatures(b);
+        if (user != null) {
+            List lns = user.getLayers(false, true);
+            request.setAttribute("listLayers", lns);
+
+            List llns = new ArrayList();
+            llns = user.getLayers(true, true);
+            request.setAttribute("listLegendLayers", llns);
+        }
+
+        /* vullen velden voor gegevensbron en geavanceerd */
+        List tns = new ArrayList();
+        Bron b = null;
+
+        try {
+            b = ConfigListsUtil.getBron(sess, user, cId);
+            tns = ConfigListsUtil.getPossibleFeatures(b);
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+
         request.setAttribute("listTables", tns);
 
         String adminTable = null;
         String spatialTable = null;
+
         adminTable = FormUtils.nullIfEmpty(dynaForm.getString("admin_tabel"));
         spatialTable = FormUtils.nullIfEmpty(dynaForm.getString("spatial_tabel"));
+
         if (adminTable == null && t != null) {
             adminTable = t.getAdmin_tabel();
         }
+
         if (spatialTable == null && t != null) {
             spatialTable = t.getSpatial_tabel();
         }
+
         if (adminTable != null) {
             List atc = ConfigListsUtil.getPossibleAttributes(b, adminTable);
             request.setAttribute("listAdminTableColumns", atc);
         }
+
         if (spatialTable != null) {
             List stc = ConfigListsUtil.getPossibleAttributes(b, spatialTable);
             request.setAttribute("listSpatialTableColumns", stc);
         }
-        if (user != null) {
-            List lns = user.getLayers(false, true);
-            /*if (t != null) {
-            String wlr = t.getWms_layers_real();
-            if (wlr != null && !lns.contains(wlr)) {
-            lns.add(wlr);
-            }
-            String wqr = t.getWms_querylayers_real();
-            if (wqr != null && !lns.contains(wqr)) {
-            lns.add(wqr);
-            }
-            }*/
-            request.setAttribute("listLayers", lns);
-            List llns = user.getLayers(true, true);
-            /*if (t != null) {
-            String wllr = t.getWms_legendlayer_real();
-            if (wllr != null && !lns.contains(wllr)) {
-            lns.add(wllr);
-            }
-            }*/
-            request.setAttribute("listLegendLayers", llns);
-        }
     }
 
+    @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Themas t = getThema(dynaForm, false);
         if (t == null) {
@@ -165,6 +141,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         return super.unspecified(mapping, dynaForm, request, response);
     }
 
+    @Override
     public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Themas t = getThema(dynaForm, false);
         if (t == null) {
@@ -174,6 +151,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         return super.edit(mapping, dynaForm, request, response);
     }
 
+    @Override
     public ActionForward save(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         if (!isTokenValid(request)) {
@@ -215,6 +193,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         return super.save(mapping, dynaForm, request, response);
     }
 
+    @Override
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         if (!isTokenValid(request)) {
@@ -311,7 +290,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         try {
             connId = Integer.parseInt(dynaForm.getString("connectie"));
         } catch (NumberFormatException nfe) {
-            log.debug("No connection id found in form, input: " + dynaForm.getString("connectie"));
+            logger.debug("No connection id found in form, input: " + dynaForm.getString("connectie"));
         }
         if (connId > 0) {
             conn = (Bron) sess.get(Bron.class, connId);
@@ -362,7 +341,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         try {
             cId = Integer.parseInt(dynaForm.getString("clusterID"));
         } catch (NumberFormatException ex) {
-            log.error("Illegal Cluster id", ex);
+            logger.error("Illegal Cluster id", ex);
         }
         Clusters c = (Clusters) sess.get(Clusters.class, new Integer(cId));
         t.setCluster(c);
