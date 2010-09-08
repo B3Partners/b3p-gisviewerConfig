@@ -548,182 +548,172 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         /* Invoegen default config voor rolnaam */
         Configuratie cfg = null;
+     
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+            
+        cfg = new Configuratie();
+        cfg.setProperty("useCookies");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
 
-        Session sess = null;
-        Transaction tx = null;
+        sess.save(cfg);
 
-        try {
-            sess = HibernateUtil.getSessionFactory().openSession();
-            tx = sess.beginTransaction();
+        cfg = new Configuratie();
+        cfg.setProperty("multipleActiveThemas");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
 
-            cfg = new Configuratie();
-            cfg.setProperty("useCookies");
-            cfg.setPropval("true");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("dataframepopupHandle");
+        cfg.setPropval("null");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("multipleActiveThemas");
-            cfg.setPropval("true");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
+        cfg = new Configuratie();
+        cfg.setProperty("showLeftPanel");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("autoRedirect");
+        cfg.setPropval("2");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("dataframepopupHandle");
-            cfg.setPropval("null");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("useSortableFunction");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("showLeftPanel");
-            cfg.setPropval("false");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("layerDelay");
+        cfg.setPropval("5000");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("autoRedirect");
-            cfg.setPropval("2");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Integer");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("refreshDelay");
+        cfg.setPropval("1000");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("useSortableFunction");
-            cfg.setPropval("false");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("minBboxZoeken");
+        cfg.setPropval("1000");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("layerDelay");
-            cfg.setPropval("5000");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Integer");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("zoekConfigIds");
+        cfg.setPropval("\"-1\"");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("refreshDelay");
-            cfg.setPropval("1000");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Integer");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("maxResults");
+        cfg.setPropval("25");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("minBboxZoeken");
-            cfg.setPropval("1000");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Integer");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("usePopup");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("zoekConfigIds");
-            cfg.setPropval("\"-1\"");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.String");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("useDivPopup");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("maxResults");
-            cfg.setPropval("25");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Integer");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("usePanelControls");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("usePopup");
-            cfg.setPropval("false");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("expandAll");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("useDivPopup");
-            cfg.setPropval("false");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("tolerance");
+        cfg.setPropval("1");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("usePanelControls");
-            cfg.setPropval("true");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("useInheritCheckbox");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("expandAll");
-            cfg.setPropval("true");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("showLegendInTree");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("tolerance");
-            cfg.setPropval("1");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Integer");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("useMouseOverTabs");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("useInheritCheckbox");
-            cfg.setPropval("true");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("layoutAdminData");
+        cfg.setPropval("admindata1");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("showLegendInTree");
-            cfg.setPropval("true");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("tabs");
+        cfg.setPropval("\"themas\",\"legenda\",\"zoeken\"");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("useMouseOverTabs");
-            cfg.setPropval("true");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("planSelectieIds");
+        cfg.setPropval("-1");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("layoutAdminData");
-            cfg.setPropval("admindata1");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.String");
-            sess.save(cfg);
+        cfg = new Configuratie();
+        cfg.setProperty("hideAdvancedButtons");
+        cfg.setPropval("true");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
 
-            cfg = new Configuratie();
-            cfg.setProperty("tabs");
-            cfg.setPropval("\"themas\",\"legenda\",\"zoeken\"");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.String");
-            sess.save(cfg);
-
-            cfg = new Configuratie();
-            cfg.setProperty("planSelectieIds");
-            cfg.setPropval("-1");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.String");
-            sess.save(cfg);
-
-            cfg = new Configuratie();
-            cfg.setProperty("hideAdvancedButtons");
-            cfg.setPropval("true");
-            cfg.setSetting(rol);
-            cfg.setType("java.lang.Boolean");
-            sess.save(cfg);
-
-            tx.commit();
-
-        } catch (Exception ex) {
-            logger.error("Fout bij opslaan default config: " + ex.getLocalizedMessage());
-            tx.rollback();
-        }
+        sess.flush();
     }
 }

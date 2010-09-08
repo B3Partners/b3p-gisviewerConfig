@@ -22,11 +22,11 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
     protected static final String ERROR_ROLE = "error.role";
     protected static final String ERROR_REMOVE_ROLE = "error.remove.role";
 
-    protected static final String SUCCES = "success";
-
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         /* heeft de gebruiker op het pijltje geklikt om een item
          * te verplaatsen ? */
@@ -35,8 +35,6 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         if (moveAction != null && !moveAction.equals("")) {
             handleMoveAction(moveAction);
         }
-
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         /* huidige kaartenbalie rollen ophalen */
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
@@ -58,6 +56,7 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
             rollenPrio.setType("java.lang.String");
 
             sess.saveOrUpdate(rollenPrio);
+
             sess.flush();
         }
 
@@ -102,6 +101,8 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
             return getAlternateForward(mapping, request);
         }
 
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
         String nieuwe_rol = (String) dynaForm.get("nieuwe_rol");
 
         ConfigKeeper configKeeper = new ConfigKeeper();
@@ -126,8 +127,6 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         }
 
         rollenPrio.setPropval(rollen);
-
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         sess.saveOrUpdate(rollenPrio);
         sess.flush();
 
@@ -141,6 +140,8 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
     @Override
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         String rol = (String) request.getParameter("delete");
 
@@ -175,8 +176,8 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
             strRollen = strRollen.substring(0, lastComma);
         }
 
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         rollenPrio.setPropval(strRollen);
+
         sess.saveOrUpdate(rollenPrio);
         sess.flush();
 
@@ -219,6 +220,9 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
     }
 
     private void handleMoveAction(String action) {
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        
         String splitChar = "@@";
 
         String[] arr = action.split(splitChar);
@@ -267,12 +271,9 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
             str = str.substring(0, lastComma);
         }
 
-        Session sess = HibernateUtil.getSessionFactory().openSession();
-
         rollenPrio.setPropval(str);
-
+ 
         sess.saveOrUpdate(rollenPrio);
-
         sess.flush();
     }
 }
