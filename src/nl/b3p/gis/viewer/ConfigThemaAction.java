@@ -20,7 +20,10 @@ import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
+import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 
 public class ConfigThemaAction extends ViewerCrudAction {
 
@@ -57,7 +60,15 @@ public class ConfigThemaAction extends ViewerCrudAction {
 
     protected Themas getFirstThema() {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
         List cs = sess.createQuery("from Themas order by naam").setMaxResults(1).list();
+//        Criteria criteria = sess.createCriteria(Themas.class).addOrder(Order.asc("naam"));
+//        if(HibernateUtil.hibernateDialect!=null && HibernateUtil.hibernateDialect.contains("Oracle")) {
+//            criteria.add(Restrictions.sqlRestriction("rownum <= 1"));
+//	} else {
+//            criteria.setMaxResults(1);
+//        }
+//        List cs = criteria.list();
         if (cs != null && cs.size() > 0) {
             return (Themas) cs.get(0);
         }
