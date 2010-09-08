@@ -14,19 +14,19 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 public class ConfigRolPrioAction extends ViewerCrudAction {
 
     private static final Log logger = LogFactory.getLog(ConfigRolPrioAction.class);
+    
     protected static final String ERROR_ROLE = "error.role";
     protected static final String ERROR_REMOVE_ROLE = "error.remove.role";
+
+    protected static final String SUCCES = "success";
 
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
-
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         /* heeft de gebruiker op het pijltje geklikt om een item
          * te verplaatsen ? */
@@ -35,6 +35,8 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         if (moveAction != null && !moveAction.equals("")) {
             handleMoveAction(moveAction);
         }
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         /* huidige kaartenbalie rollen ophalen */
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
@@ -265,10 +267,12 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
             str = str.substring(0, lastComma);
         }
 
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        rollenPrio.setPropval(str);
-        sess.saveOrUpdate(rollenPrio);
-        sess.flush();
+        Session sess = HibernateUtil.getSessionFactory().openSession();
 
+        rollenPrio.setPropval(str);
+
+        sess.saveOrUpdate(rollenPrio);
+
+        sess.flush();
     }
 }
