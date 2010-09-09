@@ -178,14 +178,20 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         return mapping.findForward(STEP3);
     }
     public ActionForward step3(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        ZoekConfiguratie zc= getAndSetZoekConfiguratie(request);
+        ZoekConfiguratie zc = getAndSetZoekConfiguratie(request);
         Bron bron=null;
         String featureType=null;
         String naam=null;
+
         if (zc!=null){
             bron=zc.getBron();
             featureType=zc.getFeatureType();
-            naam=zc.getNaam();
+
+            if ( zc.getNaam() == null || zc.getNaam().equals("") )
+                naam= FormUtils.nullIfEmpty(request.getParameter("naam"));
+            else
+                naam= zc.getNaam();
+
         }else{
             bron=getAndSetBron(request);
             featureType=FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
