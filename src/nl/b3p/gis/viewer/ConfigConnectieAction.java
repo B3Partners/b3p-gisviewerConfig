@@ -36,6 +36,7 @@ import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
+import org.geotools.data.DataStore;
 import org.hibernate.Session;
 
 /**
@@ -67,6 +68,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         return null;
     }
 
+    @Override
     protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
         super.createLists(form, request);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
@@ -80,18 +82,26 @@ public class ConfigConnectieAction extends ViewerCrudAction {
 
         while (iter.hasNext()) {
             Bron b = (Bron) iter.next();
+            DataStore ds = null;
 
             try {
-                if (b.toDatastore() != null)
+                ds = b.toDatastore();
+
+                if (ds != null)
                     validBronIds.add(b.getId());
+
             } catch (Exception e) {
                 log.debug("", e);
+            } finally {
+                if (ds != null)
+                    ds.dispose();
             }
         }
 
         request.setAttribute("validBronIds", validBronIds);
     }
 
+    @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Bron c = getConnectie(dynaForm, false);
         if (c == null) {
