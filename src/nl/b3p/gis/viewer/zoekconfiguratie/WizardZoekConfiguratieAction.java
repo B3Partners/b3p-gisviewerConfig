@@ -91,7 +91,9 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         // Is dit nog nodig?
 //        bronnen=filterConnecties(bronnen);
         request.setAttribute("bronnen", bronnen);
-        return super.unspecified(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return mapping.findForward(SUCCESS);
     }
     @Override
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {

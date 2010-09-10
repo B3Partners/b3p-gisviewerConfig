@@ -88,7 +88,9 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         String[] rollen = rollenPrio.getPropval().split(",");
         request.setAttribute("rollen", rollen);
 
-        return super.unspecified(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return mapping.findForward(SUCCESS);
     }
 
     @Override
@@ -134,7 +136,9 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         String[] arr = rollenPrio.getPropval().split(",");
         request.setAttribute("rollen", arr);
 
-        return super.save(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     @Override
@@ -188,8 +192,10 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         String[] arr = rollenPrio.getPropval().split(",");
         request.setAttribute("rollen", arr);
 
-        return super.delete(mapping, dynaForm, request, response);
-
+        dynaForm.initialize(mapping);
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     public ActionForward config(ActionMapping mapping, DynaValidatorForm dynaForm,

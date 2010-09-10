@@ -191,7 +191,10 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             td = getFirstThemaData(t);
         }
         populateThemaDataForm(td, dynaForm, request);
-        return super.unspecified(mapping, dynaForm, request, response);
+
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return mapping.findForward(SUCCESS);
     }
 
     public ActionForward change(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -201,7 +204,10 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         }
         ThemaData td = getFirstThemaData(t);
         populateThemaDataForm(td, dynaForm, request);
-        return super.unspecified(mapping, dynaForm, request, response);
+
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return mapping.findForward(SUCCESS);
     }
 
     public ActionForward create(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -215,8 +221,9 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             val = Integer.toString(t.getId());
         }
         dynaForm.set("themaID", val);
+
         prepareMethod(dynaForm, request, EDIT, LIST);
-        addDefaultMessage(mapping, request);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);
     }
 
@@ -230,7 +237,9 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             td = getFirstThemaData(t);
         }
         populateThemaDataForm(td, dynaForm, request);
-        return super.edit(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     public ActionForward save(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -270,7 +279,9 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         sess.refresh(t);
         populateThemaDataForm(t, dynaForm, request);
 
-        return super.save(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     public ActionForward createAllThemaData(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -394,8 +405,9 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         td = getFirstThemaData(t);
         dynaForm.initialize(mapping);
         populateThemaDataForm(td, dynaForm, request);
+        
         prepareMethod(dynaForm, request, LIST, EDIT);
-        addDefaultMessage(mapping, request);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);
     }
 

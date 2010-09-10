@@ -59,7 +59,10 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
             request.setAttribute(ConfigZoekConfiguratieAction.ZOEKCONFIGURATIEID,request.getParameter(ConfigZoekConfiguratieAction.ZOEKCONFIGURATIEID));
         }
         createLists(request);
-        return super.unspecified(mapping, dynaForm, request, response);
+
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return mapping.findForward(SUCCESS);
     }
 
     @Override
@@ -69,7 +72,9 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         sess.saveOrUpdate(attr);
         sess.flush();        
         request.setAttribute("doClose", true);
-        return super.save(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     public void createLists(HttpServletRequest request) throws IOException, Exception {

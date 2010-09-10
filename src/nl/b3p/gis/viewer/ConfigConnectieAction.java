@@ -98,7 +98,10 @@ public class ConfigConnectieAction extends ViewerCrudAction {
             c = getFirstConnectie();
         }
         populateConnectieForm(c, dynaForm, request);
-        return super.unspecified(mapping, dynaForm, request, response);
+        
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return mapping.findForward(SUCCESS);
     }
 
     public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -107,7 +110,9 @@ public class ConfigConnectieAction extends ViewerCrudAction {
             c = getFirstConnectie();
         }
         populateConnectieForm(c, dynaForm, request);
-        return super.edit(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     public ActionForward save(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -147,7 +152,9 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         sess.refresh(c);
         populateConnectieForm(c, dynaForm, request);
 
-        return super.save(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -171,7 +178,10 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         sess.delete(c);
         sess.flush();
 
-        return super.delete(mapping, dynaForm, request, response);
+        dynaForm.initialize(mapping);
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     private void populateConnectieForm(Bron c, DynaValidatorForm dynaForm, HttpServletRequest request) {

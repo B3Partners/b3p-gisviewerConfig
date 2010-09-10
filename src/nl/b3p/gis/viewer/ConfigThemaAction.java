@@ -1,7 +1,6 @@
 package nl.b3p.gis.viewer;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -20,10 +19,7 @@ import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
-import org.hibernate.Criteria;
 import org.hibernate.Session;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
 
 public class ConfigThemaAction extends ViewerCrudAction {
 
@@ -149,7 +145,10 @@ public class ConfigThemaAction extends ViewerCrudAction {
             t = getFirstThema();
         }
         populateThemasForm(t, dynaForm, request);
-        return super.unspecified(mapping, dynaForm, request, response);
+
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return mapping.findForward(SUCCESS);
     }
 
     @Override
@@ -159,7 +158,9 @@ public class ConfigThemaAction extends ViewerCrudAction {
             t = getFirstThema();
         }
         populateThemasForm(t, dynaForm, request);
-        return super.edit(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     @Override
@@ -201,7 +202,9 @@ public class ConfigThemaAction extends ViewerCrudAction {
 
 
         populateThemasForm(t, dynaForm, request);
-        return super.save(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     @Override
@@ -226,7 +229,10 @@ public class ConfigThemaAction extends ViewerCrudAction {
         sess.delete(t);
         sess.flush();
 
-        return super.delete(mapping, dynaForm, request, response);
+        dynaForm.initialize(mapping);
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     private void populateThemasForm(Themas t, DynaValidatorForm dynaForm, HttpServletRequest request) {

@@ -105,7 +105,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         dynaForm.set("rolnaam", rolnaam);
 
-        return super.unspecified(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return mapping.findForward(SUCCESS);
     }
 
     @Override
@@ -213,7 +215,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_tab4", cfg_tab4);
         dynaForm.set("cfg_tab5", cfg_tab5);
 
-        return super.save(mapping, dynaForm, request, response);
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
     }
 
     private void writeZoekenIdConfig(DynaValidatorForm form, String rolnaam) {
