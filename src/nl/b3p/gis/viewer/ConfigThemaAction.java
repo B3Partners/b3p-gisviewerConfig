@@ -1,5 +1,6 @@
 package nl.b3p.gis.viewer;
 
+import nl.b3p.gis.utils.ConfigListsUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,13 +59,6 @@ public class ConfigThemaAction extends ViewerCrudAction {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         List cs = sess.createQuery("from Themas order by naam").setMaxResults(1).list();
-//        Criteria criteria = sess.createCriteria(Themas.class).addOrder(Order.asc("naam"));
-//        if(HibernateUtil.hibernateDialect!=null && HibernateUtil.hibernateDialect.contains("Oracle")) {
-//            criteria.add(Restrictions.sqlRestriction("rownum <= 1"));
-//	} else {
-//            criteria.setMaxResults(1);
-//        }
-//        List cs = criteria.list();
         if (cs != null && cs.size() > 0) {
             return (Themas) cs.get(0);
         }
