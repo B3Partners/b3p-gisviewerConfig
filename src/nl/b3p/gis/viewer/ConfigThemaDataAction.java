@@ -342,18 +342,20 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         }
         // kijken of oude themadata verwijderd moet worden omdat bijbehorend attribuut niet meer bestaat
         // kijken of er een Extra data veld is of nog moet aangemaakt worden.
-        boolean extraBestaat = false;
-        boolean nietBasisregels = false;
+        boolean extraVeldBestaatAl = false;
+        boolean erIsEenBasisRegel = false;
+
         for (ThemaData td : bestaandeObjecten) {
             if (!td.isBasisregel()) {
-                nietBasisregels = true;
+                erIsEenBasisRegel = true;
             }
             if (td.getCommando() != null && td.getCommando().toLowerCase().startsWith("viewerdata.do?aanvullendeinfo=t")) {
-                extraBestaat = true;
+                extraVeldBestaatAl = true;
             }
             if (td.getKolomnaam() == null) {
                 continue;
             }
+
             QName dbkolom = DataStoreUtil.convertFullnameToQName(td.getKolomnaam());
             boolean bestaatNog = false;
             for (String attribute : attributes) {
@@ -363,6 +365,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                     break;
                 }
             }
+
             if (!bestaatNog) {
                 Themas tdt = td.getThema();
                 tdt.getThemaData().remove(td);
@@ -370,12 +373,14 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                 sess.flush();
             }
         }
+
         if (attributes.size() > DEFAULTBASISCOLUMNS) {
-            if (!extraBestaat && nietBasisregels) {
+            if (!extraVeldBestaatAl) {
                 ThemaData td = createDefaultExtraThemaData(t);
                 sess.saveOrUpdate(td);
             }
         }
+
         return unspecified(mapping, dynaForm, request, response);
     }
 
