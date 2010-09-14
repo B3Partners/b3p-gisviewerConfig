@@ -107,6 +107,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+
+        request.setAttribute("header_Rolnaam", rolnaam);
+
         return mapping.findForward(SUCCESS);
     }
 
@@ -214,6 +217,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_tab3", cfg_tab3);
         dynaForm.set("cfg_tab4", cfg_tab4);
         dynaForm.set("cfg_tab5", cfg_tab5);
+
+        request.setAttribute("header_Rolnaam", rolnaam);
 
         prepareMethod(dynaForm, request, LIST, EDIT);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
