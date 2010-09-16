@@ -8,6 +8,7 @@ import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.viewer.db.Configuratie;
 import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
+import nl.b3p.zoeker.configuratie.Bron;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.ActionForward;
@@ -21,6 +22,8 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
     
     protected static final String ERROR_ROLE = "error.role";
     protected static final String ERROR_REMOVE_ROLE = "error.remove.role";
+
+    protected static final String INFO_RIGHTS_SYNCED = "info.rights.synced";
 
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
@@ -87,6 +90,16 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
         /* rollen klaarzetten voor form */
         String[] rollen = rollenPrio.getPropval().split(",");
         request.setAttribute("rollen", rollen);
+
+        /* Reset rechten */
+        String reset = (String) request.getParameter("reset");
+
+        if (reset != null && reset.equals("1")) {
+            Bron.flushWfsCache();
+
+            addAlternateMessage(mapping, request, INFO_RIGHTS_SYNCED);
+            return getAlternateForward(mapping, request);
+        }
 
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
