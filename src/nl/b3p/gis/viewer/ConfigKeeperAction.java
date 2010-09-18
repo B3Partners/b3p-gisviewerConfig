@@ -72,16 +72,14 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         /* dropdown voor i-tool goedzetten
         geen, paneel of popup */
-        if (!usePopup && !useDivPopup && !usePanelControls) {
-            dynaForm.set("cfg_objectInfo", "geen");
-        }
-
-        if (!usePopup && !useDivPopup && usePanelControls) {
-            dynaForm.set("cfg_objectInfo", "paneel");
-        }
-
-        if (usePopup && useDivPopup && !usePanelControls) {
+        if (usePopup != null && usePopup) {
             dynaForm.set("cfg_objectInfo", "popup");
+        } else {
+            if (usePanelControls != null && usePanelControls) {
+                dynaForm.set("cfg_objectInfo", "paneel");
+            } else {
+                dynaForm.set("cfg_objectInfo", "geen");
+            }
         }
 
         /* vullen box voor zoek ingangen */

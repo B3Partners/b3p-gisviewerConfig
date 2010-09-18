@@ -294,7 +294,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             return unspecified(mapping, dynaForm, request, response);
         }
 
-        GisPrincipal user = (GisPrincipal) request.getUserPrincipal();
+        GisPrincipal user = GisPrincipal.getGisPrincipal(request);
         Name geomName = DataStoreUtil.getThemaGeomName(t, user);
         String geomPropname =  "";
         if (geomName!=null && geomName.getLocalPart()!=null) {
