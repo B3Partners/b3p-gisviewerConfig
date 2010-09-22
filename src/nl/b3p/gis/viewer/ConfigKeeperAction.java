@@ -62,7 +62,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showLegendInTree = (Boolean) map.get("showLegendInTree");
         Boolean useMouseOverTabs = (Boolean) map.get("useMouseOverTabs");
         String layoutAdminData = (String) map.get("layoutAdminData");
-        Boolean hideAdvancedButtons = (Boolean) map.get("hideAdvancedButtons");
+        Boolean showRedliningTools = (Boolean) map.get("showRedliningTools");
+        Boolean showBufferTool = (Boolean) map.get("showBufferTool");
+        Boolean showSelectBulkTool = (Boolean) map.get("showSelectBulkTool");
+        Boolean showNeedleTool = (Boolean) map.get("showNeedleTool");
 
         /* Tabbladen vullen */
         fillTabbladenConfig(dynaForm, map);
@@ -99,7 +102,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showLegendInTree", showLegendInTree);
         dynaForm.set("cfg_useMouseOverTabs", useMouseOverTabs);
         dynaForm.set("cfg_layoutAdminData", layoutAdminData);
-        dynaForm.set("cfg_hideAdvancedButtons", hideAdvancedButtons);
+        dynaForm.set("cfg_showRedliningTools", showRedliningTools);
+        dynaForm.set("cfg_showBufferTool", showBufferTool);
+        dynaForm.set("cfg_showSelectBulkTool", showSelectBulkTool);
+        dynaForm.set("cfg_showNeedleTool", showNeedleTool);
+
 
         dynaForm.set("rolnaam", rolnaam);
 
@@ -169,8 +176,17 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("layoutAdminData", rolnaam);
         writeString(dynaForm, "cfg_layoutAdminData", c);
 
-        c = configKeeper.getConfiguratie("hideAdvancedButtons", rolnaam);
-        writeBoolean(dynaForm, "cfg_hideAdvancedButtons", c);
+        c = configKeeper.getConfiguratie("showRedliningTools", rolnaam);
+        writeBoolean(dynaForm, "cfg_showRedliningTools", c);
+
+        c = configKeeper.getConfiguratie("showBufferTool", rolnaam);
+        writeBoolean(dynaForm, "cfg_showBufferTool", c);
+
+        c = configKeeper.getConfiguratie("showSelectBulkTool", rolnaam);
+        writeBoolean(dynaForm, "cfg_showSelectBulkTool", c);
+
+        c = configKeeper.getConfiguratie("showNeedleTool", rolnaam);
+        writeBoolean(dynaForm, "cfg_showNeedleTool", c);
 
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, rolnaam);
@@ -715,8 +731,29 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         sess.save(cfg);
 
         cfg = new Configuratie();
-        cfg.setProperty("hideAdvancedButtons");
-        cfg.setPropval("true");
+        cfg.setProperty("showRedliningTools");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("showBufferTool");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("showSelectBulkTool");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("showNeedleTool");
+        cfg.setPropval("false");
         cfg.setSetting(rol);
         cfg.setType("java.lang.Boolean");
         sess.save(cfg);
