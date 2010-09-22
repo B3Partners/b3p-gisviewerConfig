@@ -1,5 +1,6 @@
 package nl.b3p.gis.viewer;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
@@ -8,7 +9,6 @@ import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.viewer.db.Configuratie;
 import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
-import nl.b3p.zoeker.configuratie.Bron;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.ActionForward;
@@ -18,7 +18,7 @@ import org.hibernate.Session;
 
 public class ConfigRolPrioAction extends ViewerCrudAction {
 
-    private static final Log logger = LogFactory.getLog(ConfigRolPrioAction.class);
+    private static final Log log = LogFactory.getLog(ConfigRolPrioAction.class);
     
     protected static final String ERROR_ROLE = "error.role";
     protected static final String ERROR_REMOVE_ROLE = "error.remove.role";
@@ -39,7 +39,10 @@ public class ConfigRolPrioAction extends ViewerCrudAction {
 
         /* huidige kaartenbalie rollen ophalen */
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
-        Set roles = user.getRoles();
+        Set roles = new HashSet();
+        if (user!=null) {
+            roles = user.getRoles();
+        }
 
         /* rollen uit config database ophalen */
         ConfigKeeper configKeeper = new ConfigKeeper();
