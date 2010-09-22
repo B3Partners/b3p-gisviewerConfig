@@ -1,15 +1,4 @@
-CREATE TABLE configuratie
-(
-  "id" serial NOT NULL,
-  "property" character varying(255),
-  "propval" character varying,
-  "setting" character varying(255),
-  soort character varying(255)
-);
-ALTER TABLE configuratie ADD CONSTRAINT configuratie_id_pk PRIMARY KEY (id);
-
 insert into configuratie (property, propval, setting, soort) values ('rollenPrio', 'beheerder,gebruiker', 'rollen', 'java.lang.String');
-
 insert into configuratie (property, propval, setting, soort) values ('useCookies', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, soort) values ('multipleActiveThemas', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, soort) values ('dataframepopupHandle', 'null', 'default', 'java.lang.Boolean');
@@ -32,4 +21,7 @@ insert into configuratie (property, propval, setting, soort) values ('useMouseOv
 insert into configuratie (property, propval, setting, soort) values ('layoutAdminData', 'admindata1', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, soort) values ('tabs', '"themas","legenda","zoeken"', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, soort) values ('planSelectieIds', '-1', 'default', 'java.lang.String');
-insert into configuratie (property, propval, setting, soort) values ('hideAdvancedButtons', 'true', 'default', 'java.lang.Boolean');
+insert into configuratie (property, propval, setting, soort) values ('showRedliningTools', 'false', 'default', 'java.lang.Boolean');
+insert into configuratie (property, propval, setting, soort) values ('showBufferTool', 'false', 'default', 'java.lang.Boolean');
+insert into configuratie (property, propval, setting, soort) values ('showSelectBulkTool', 'false', 'default', 'java.lang.Boolean');
+insert into configuratie (property, propval, setting, soort) values ('showNeedleTool', 'false', 'default', 'java.lang.Boolean');
