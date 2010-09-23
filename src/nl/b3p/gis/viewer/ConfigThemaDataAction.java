@@ -58,7 +58,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
     private static final Log log = LogFactory.getLog(ConfigThemaAction.class);
     protected static final String CHANGE = "change";
     protected static final String CREATEALLTHEMADATA = "createAllThemaData";
-    private int DEFAULTBASISCOLUMNS = 6;
+    private int DEFAULTBASISCOLUMNS = 0;
 
     protected Map getActionMethodPropertiesMap() {
         Map map = super.getActionMethodPropertiesMap();
@@ -322,7 +322,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             if (!bestaatAl) {
                 ThemaData td = new ThemaData();
                 if (attributes.size() <= DEFAULTBASISCOLUMNS) {
-                    td.setBasisregel(true);
+                    td.setBasisregel(false);
                 } else {
                     td.setBasisregel(false);
                 }
@@ -346,7 +346,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         boolean erIsEenBasisRegel = false;
 
         for (ThemaData td : bestaandeObjecten) {
-            if (!td.isBasisregel()) {
+            if (td.isBasisregel()) {
                 erIsEenBasisRegel = true;
             }
             if (td.getCommando() != null && td.getCommando().toLowerCase().startsWith("viewerdata.do?aanvullendeinfo=t")) {
@@ -497,7 +497,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         ThemaData td = new ThemaData();
         td.setLabel("Extra");
-        td.setBasisregel(true);
+        td.setBasisregel(false);
         td.setKolombreedte(50);
         td.setWaardeType((WaardeTypen) sess.get(WaardeTypen.class, WaardeTypen.STRING));
         td.setDataType((DataTypen) sess.get(DataTypen.class, DataTypen.URL));
