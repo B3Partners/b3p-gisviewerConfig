@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
@@ -18,6 +19,7 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
 import org.hibernate.Session;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -81,23 +83,60 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
             }
         }
 
-        //request.setAttribute("tree", createJasonObject(rootClusterMap, actieveClusters));
-        request.setAttribute("tree", null);
+        /* opbouwen cluster boom */
+        request.setAttribute("tree", createJasonObject().toString());
     }
 
-    protected JSONObject createJasonObject(Map rootClusterMap, List actieveClusters) throws JSONException {
-        JSONObject root = new JSONObject().put("id", "root").put("type", "root").put("title", "root");
-        if (rootClusterMap == null || rootClusterMap.isEmpty()) {
-            return root;
-        }
+    protected JSONObject createJasonObject() throws JSONException, Exception {
+        JSONObject root = new JSONObject();
+
+        root.put("id", "0");
+        root.put("title", "root");
+        root.put("name", "root");
+
+        List ctl = SpatialUtil.getValidClusters();
+        Map rootClusterMap = getClusterMap(ctl, null);
         List clusterMaps = (List) rootClusterMap.get("subclusters");
-        if (clusterMaps == null || clusterMaps.isEmpty()) {
-            return root;
+       
+        root.put("children", getSubClusters(clusterMaps, null));
+        
+        return root;
+    }
+
+    private JSONArray getSubClusters(List subClusters, JSONArray clusterArray) throws JSONException {
+        if (subClusters == null) {
+            return clusterArray;
         }
 
-        //root.put("children", getSubClusters(clusterMaps, null, actieveClusters));
+        Iterator it = subClusters.iterator();
+        while (it.hasNext()) {
+            Map clMap = (Map) it.next();
 
-        return root;
+            Clusters cluster = (Clusters) clMap.get("cluster");
+
+            JSONObject jsonCluster = new JSONObject();
+
+            jsonCluster.put("id", cluster.getId().intValue());
+            jsonCluster.put("title", cluster.getNaam());
+            jsonCluster.put("name", cluster.getNaam());
+          
+            List subsubclusterMaps = (List) clMap.get("subclusters");
+
+            if (subsubclusterMaps != null && !subsubclusterMaps.isEmpty()) {
+                JSONArray childrenArray = new JSONArray();
+
+                childrenArray = getSubClusters(subsubclusterMaps, childrenArray);
+                jsonCluster.put("children", childrenArray);
+            }
+
+            if (clusterArray == null) {
+                clusterArray = new JSONArray();
+            }
+            
+            clusterArray.put(jsonCluster);
+        }
+
+        return clusterArray;
     }
 
     private Map getClusterMap(List clusterlist, Clusters rootCluster) throws JSONException, Exception {
@@ -121,9 +160,6 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
             }
         }
 
-        if (((subclusters == null || subclusters.isEmpty()))) {
-            return null;
-        }
         Map clusterNode = new HashMap();
         clusterNode.put("subclusters", subclusters);
         clusterNode.put("cluster", rootCluster);
@@ -131,6 +167,7 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
         return clusterNode;
     }
 
+    @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Clusters c = getCluster(dynaForm, false);
         if (c == null) {
@@ -143,6 +180,7 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
         return mapping.findForward(SUCCESS);
     }
 
+    @Override
     public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Clusters c = getCluster(dynaForm, false);
         if (c == null) {
@@ -154,6 +192,7 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
         return getDefaultForward(mapping, request);
     }
 
+    @Override
     public ActionForward save(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         if (!isTokenValid(request)) {
@@ -196,6 +235,7 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
         return getDefaultForward(mapping, request);
     }
 
+    @Override
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         if (!isTokenValid(request)) {
@@ -249,13 +289,14 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
         dynaForm.set("omschrijving", c.getOmschrijving());
         dynaForm.set("belangnr", FormUtils.IntToString(c.getBelangnr()));
         dynaForm.set("metadatalink",c.getMetadatalink());
-        dynaForm.set("default_cluster", new Boolean(c.isDefault_cluster()));
-        dynaForm.set("hide_legend", new Boolean(c.isHide_legend()));
-        dynaForm.set("hide_tree", new Boolean(c.isHide_tree()));
-        dynaForm.set("background_cluster", new Boolean(c.isBackground_cluster()));
-        dynaForm.set("extra_level", new Boolean(c.isExtra_level()));
-        dynaForm.set("callable", new Boolean(c.isCallable()));
-        dynaForm.set("default_visible", new Boolean (c.isDefault_visible()));
+        dynaForm.set("default_cluster", c.isDefault_cluster());
+        dynaForm.set("hide_legend", c.isHide_legend());
+        dynaForm.set("hide_tree", c.isHide_tree());
+        dynaForm.set("background_cluster", c.isBackground_cluster());
+        dynaForm.set("extra_level", c.isExtra_level());
+        dynaForm.set("callable", c.isCallable());
+        dynaForm.set("default_visible", c.isDefault_visible());
+
         String val = "";
         if (c.getParent() != null) {
             val = Integer.toString(c.getParent().getId().intValue());
