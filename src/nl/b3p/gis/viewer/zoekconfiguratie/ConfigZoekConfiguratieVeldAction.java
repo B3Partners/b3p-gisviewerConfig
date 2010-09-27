@@ -122,14 +122,30 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
     }
     
     private Attribuut populateObject(DynaValidatorForm dynaForm,HttpServletRequest request){
-        Attribuut attr= getAttribuut(request, true);
+        Attribuut attr = getAttribuut(request, true);
         attr.setAttribuutnaam(dynaForm.getString("attribuutnaam"));
         attr.setLabel(dynaForm.getString("label"));
         attr.setNaam(dynaForm.getString("naam"));
+
         if (FormUtils.nullIfEmpty(dynaForm.getString("type"))!=null)
             attr.setType(new Integer(dynaForm.getString("type")));
+
         if (FormUtils.nullIfEmpty(dynaForm.getString("volgorde"))!=null)
             attr.setVolgorde(new Integer(dynaForm.getString("volgorde")));
+
+        if (FormUtils.nullIfEmpty(dynaForm.getString("inputtype"))!=null) {
+            if (attr instanceof ZoekAttribuut)
+                ((ZoekAttribuut)attr).setInputtype(new Integer(dynaForm.getString("inputtype")));
+        }
+
+        if (FormUtils.nullIfEmpty(dynaForm.getString("inputsize"))!=null) {
+            if (attr instanceof ZoekAttribuut)
+                ((ZoekAttribuut)attr).setInputsize(new Integer(dynaForm.getString("inputsize")));
+        }
+
+        if (FormUtils.nullIfEmpty(dynaForm.getString("inputsize"))!=null)
+            //attr.setType(new Integer(dynaForm.getString("inputsize")));
+
         //zet de zoekconfiguratie als het object nieuw is
         if (attr.getId()==null){
             ZoekConfiguratie zc= getZoekConfiguratie(request);
@@ -154,6 +170,19 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
 
         if (a.getVolgorde() != null) {
             dynaForm.set("volgorde", a.getVolgorde().toString());
+        }
+
+        if (a instanceof ZoekAttribuut) {
+            ZoekAttribuut za = (ZoekAttribuut)a;
+
+            Integer inputtype = za.getInputtype();
+            Integer inputsize = za.getInputsize();
+
+            if (inputtype != null)
+                dynaForm.set("inputtype", inputtype.toString());
+
+            if (inputsize != null)
+                dynaForm.set("inputsize", inputsize.toString());
         }
 
         dynaForm.set("attribuutnaam", a.getAttribuutnaam());
