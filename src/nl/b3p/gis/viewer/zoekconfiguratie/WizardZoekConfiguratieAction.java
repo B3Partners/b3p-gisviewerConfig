@@ -88,8 +88,6 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         List bronnen=sess.createCriteria(Bron.class).list();
-        // Is dit nog nodig?
-//        bronnen=filterConnecties(bronnen);
         request.setAttribute("bronnen", bronnen);
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
@@ -330,17 +328,4 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         return tips;
     }
 
-    // Is dit nog nodig??
-    private List filterConnecties(List bronnen) {
-        List returnValue=new ArrayList();
-        Iterator it=bronnen.iterator();
-        while(it.hasNext()){
-            Object o = it.next();
-//            if (o instanceof Connecties){
-//            }else{
-                returnValue.add(o);
-//            }
-        }
-        return returnValue;
-    }
 }
