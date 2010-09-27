@@ -119,6 +119,10 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
 
             request.setAttribute("attribuutNamen", attributen);
         }
+
+        Session sess =  HibernateUtil.getSessionFactory().getCurrentSession();
+        List zoekConfigs = sess.createQuery("from ZoekConfiguratie").list();
+        request.setAttribute("inputZoekConfigList", zoekConfigs);
     }
     
     private Attribuut populateObject(DynaValidatorForm dynaForm,HttpServletRequest request){
@@ -143,8 +147,23 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
                 ((ZoekAttribuut)attr).setInputsize(new Integer(dynaForm.getString("inputsize")));
         }
 
-        if (FormUtils.nullIfEmpty(dynaForm.getString("inputsize"))!=null)
-            //attr.setType(new Integer(dynaForm.getString("inputsize")));
+        if (FormUtils.nullIfEmpty(dynaForm.getString("inputzoekconfiguratie")) != null) {
+            if (attr instanceof ZoekAttribuut) {
+                Integer inputZoekConfigId = new Integer(dynaForm.getString("inputzoekconfiguratie"));
+                Session sess =  HibernateUtil.getSessionFactory().getCurrentSession();
+                List zoekConfigs = sess.createQuery("from ZoekConfiguratie where id = :id")
+                        .setParameter("id", inputZoekConfigId)
+                        .list();
+                if (zoekConfigs.size() == 1)
+                    ((ZoekAttribuut)attr).setInputzoekconfiguratie((ZoekConfiguratie)zoekConfigs.get(0));
+            }
+        }
+
+        if (FormUtils.nullIfEmpty(dynaForm.getString("inputzoekconfiguratie")) == null) {
+            if (attr instanceof ZoekAttribuut) {
+                ((ZoekAttribuut)attr).setInputzoekconfiguratie(null);
+            }
+        }
 
         //zet de zoekconfiguratie als het object nieuw is
         if (attr.getId()==null){
@@ -177,12 +196,17 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
 
             Integer inputtype = za.getInputtype();
             Integer inputsize = za.getInputsize();
+            ZoekConfiguratie zc = za.getInputzoekconfiguratie();
 
             if (inputtype != null)
                 dynaForm.set("inputtype", inputtype.toString());
 
             if (inputsize != null)
                 dynaForm.set("inputsize", inputsize.toString());
+
+            if (zc != null) {
+                dynaForm.set("inputzoekconfiguratie", zc.getId().toString());
+            }
         }
 
         dynaForm.set("attribuutnaam", a.getAttribuutnaam());
