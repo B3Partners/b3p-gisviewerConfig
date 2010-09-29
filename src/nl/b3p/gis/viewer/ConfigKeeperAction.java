@@ -13,7 +13,6 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 public class ConfigKeeperAction extends ViewerCrudAction {
 
@@ -45,6 +44,28 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             map = configKeeper.getConfigMap(rolnaam);
         }
 
+        populateForm(dynaForm, request, map, rolnaam);
+
+        request.setAttribute("header_Rolnaam", rolnaam);
+ 
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+
+        return mapping.findForward(SUCCESS);
+    }
+
+    protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
+        request.setAttribute("tabValues", CONFIGKEEPER_TABS);
+        request.setAttribute("tabLabels", LABELS_VOOR_TABS);
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        List zoekconfigs = sess.createQuery("from ZoekConfiguratie order by naam").list();
+        request.setAttribute("zoekConfigs", zoekconfigs);
+
+    }
+
+    public void populateForm(DynaValidatorForm dynaForm, HttpServletRequest request, Map map, String rolnaam) {
+
         Boolean useCookies = (Boolean) map.get("useCookies");
         Boolean usePopup = (Boolean) map.get("usePopup");
         Boolean useDivPopup = (Boolean) map.get("useDivPopup");
@@ -67,13 +88,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showSelectBulkTool = (Boolean) map.get("showSelectBulkTool");
         Boolean showNeedleTool = (Boolean) map.get("showNeedleTool");
 
-        /* Tabbladen vullen */
-        fillTabbladenConfig(dynaForm, map);
+        /* vullen box voor zoek ingangen */
+        fillZoekConfigBox(dynaForm, request, zoekConfigIds);
+        fillPlanSelectieBox(dynaForm, request, planSelectieIds);
 
-        request.setAttribute("tabValues", CONFIGKEEPER_TABS);
-        request.setAttribute("tabLabels", LABELS_VOOR_TABS);
-
-        /* dropdown voor i-tool goedzetten
+         /* dropdown voor i-tool goedzetten
         geen, paneel of popup */
         if (usePopup != null && usePopup) {
             dynaForm.set("cfg_objectInfo", "popup");
@@ -84,12 +103,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
                 dynaForm.set("cfg_objectInfo", "geen");
             }
         }
-
-        /* vullen box voor zoek ingangen */
-        fillZoekConfigBox(dynaForm, request, zoekConfigIds);
-        fillPlanSelectieBox(dynaForm, request, planSelectieIds);
-
-        /* overige settings klaarzetten voor formulier */
+        
+       /* overige settings klaarzetten voor formulier */
         dynaForm.set("cfg_useCookies", useCookies);
         dynaForm.set("cfg_autoRedirect", autoRedirect);
         dynaForm.set("cfg_tolerance", tolerance);
@@ -107,15 +122,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showSelectBulkTool", showSelectBulkTool);
         dynaForm.set("cfg_showNeedleTool", showNeedleTool);
 
-
         dynaForm.set("rolnaam", rolnaam);
+        
+        /* Tabbladen vullen */
+        fillTabbladenConfig(dynaForm, map);
 
-        prepareMethod(dynaForm, request, EDIT, LIST);
-        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
-
-        request.setAttribute("header_Rolnaam", rolnaam);
-
-        return mapping.findForward(SUCCESS);
     }
 
     @Override
@@ -125,12 +136,22 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String rolnaam = (String) dynaForm.get("rolnaam");
 
         if (!isTokenValid(request)) {
-
+            prepareMethod(dynaForm, request, EDIT, LIST);
             addAlternateMessage(mapping, request, TOKEN_ERROR_KEY);
-            return getAlternateForward(mapping, request);
+            return this.getAlternateForward(mapping, request);
         }
 
-        /* opslaan I-tool dropdown */
+        populateObject(dynaForm, rolnaam);
+        
+        request.setAttribute("header_Rolnaam", rolnaam);
+
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        return getDefaultForward(mapping, request);
+    }
+
+    public void populateObject(DynaValidatorForm dynaForm, String rolnaam) {
+       /* opslaan I-tool dropdown */
         writeObjectInfoDisplayMethod(dynaForm, rolnaam);
 
         /* opslaan overige settings */
@@ -191,52 +212,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, rolnaam);
         writePlanSelectieIdConfig(dynaForm, rolnaam);
-
-        /* opnieuw vullen box voor zoekconfigs */
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List zoekconfigs = sess.createQuery("from ZoekConfiguratie order by naam").list();
-
-        request.setAttribute("zoekConfigs", zoekconfigs);
-
-        /* opnieuwe klaarzetten zoekinganen */
-        String cfg_zoekenid1 = (String) dynaForm.get("cfg_zoekenid1");
-        String cfg_zoekenid2 = (String) dynaForm.get("cfg_zoekenid2");
-        String cfg_zoekenid3 = (String) dynaForm.get("cfg_zoekenid3");
-        String cfg_zoekenid4 = (String) dynaForm.get("cfg_zoekenid4");
-
-        dynaForm.set("cfg_zoekenid1", cfg_zoekenid1);
-        dynaForm.set("cfg_zoekenid2", cfg_zoekenid2);
-        dynaForm.set("cfg_zoekenid3", cfg_zoekenid3);
-        dynaForm.set("cfg_zoekenid4", cfg_zoekenid4);
-
-        String cfg_planselectieid1 = (String) dynaForm.get("cfg_planselectieid1");
-        String cfg_planselectieid2 = (String) dynaForm.get("cfg_planselectieid2");
-
-        dynaForm.set("cfg_planselectieid1", cfg_planselectieid1);
-        dynaForm.set("cfg_planselectieid2", cfg_planselectieid2);
-
-        /* vullen dropdowns voor tabbladen */
-        request.setAttribute("tabValues", CONFIGKEEPER_TABS);
-        request.setAttribute("tabLabels", LABELS_VOOR_TABS);
-
-        /* opnieuw vullen box voor tabs */
-        String cfg_tab1 = (String) dynaForm.get("cfg_tab1");
-        String cfg_tab2 = (String) dynaForm.get("cfg_tab2");
-        String cfg_tab3 = (String) dynaForm.get("cfg_tab3");
-        String cfg_tab4 = (String) dynaForm.get("cfg_tab4");
-        String cfg_tab5 = (String) dynaForm.get("cfg_tab5");
-
-        dynaForm.set("cfg_tab1", cfg_tab1);
-        dynaForm.set("cfg_tab2", cfg_tab2);
-        dynaForm.set("cfg_tab3", cfg_tab3);
-        dynaForm.set("cfg_tab4", cfg_tab4);
-        dynaForm.set("cfg_tab5", cfg_tab5);
-
-        request.setAttribute("header_Rolnaam", rolnaam);
-
-        prepareMethod(dynaForm, request, LIST, EDIT);
-        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
-        return getDefaultForward(mapping, request);
     }
 
     private void writeZoekenIdConfig(DynaValidatorForm form, String rolnaam) {
@@ -503,11 +478,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
     private void fillZoekConfigBox(DynaValidatorForm dynaForm,
             HttpServletRequest request, String ids) {
-
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List zoekconfigs = sess.createQuery("from ZoekConfiguratie order by naam").list();
-
-        request.setAttribute("zoekConfigs", zoekconfigs);
 
         if (ids == null) {
             return;
