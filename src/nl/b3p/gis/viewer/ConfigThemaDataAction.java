@@ -480,17 +480,12 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         } catch (NumberFormatException ex) {
             log.error("Illegal dataTypeID", ex);
         }
-        try {
-            wId = Integer.parseInt(dynaForm.getString("waardeTypeID"));
-        } catch (NumberFormatException ex) {
-            log.error("Illegal waardeTypeID", ex);
-        }
+        
         Themas t = (Themas) sess.get(Themas.class, new Integer(tId));
         td.setThema(t);
         DataTypen d = (DataTypen) sess.get(DataTypen.class, new Integer(dId));
         td.setDataType(d);
-        WaardeTypen w = (WaardeTypen) sess.get(WaardeTypen.class, new Integer(wId));
-        td.setWaardeType(w);
+        
     }
 
     protected ThemaData createDefaultExtraThemaData(Themas t) {
