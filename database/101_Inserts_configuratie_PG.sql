@@ -25,3 +25,4 @@ insert into configuratie (property, propval, setting, soort) values ('showRedlin
 insert into configuratie (property, propval, setting, soort) values ('showBufferTool', 'false', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, soort) values ('showSelectBulkTool', 'false', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, soort) values ('showNeedleTool', 'false', 'default', 'java.lang.Boolean');
+insert into configuratie (property, propval, setting, soort) values ('seperateIntoBackgroundAndNormalLayers', 'false', 'default', 'java.lang.Boolean');
