@@ -24,11 +24,6 @@ import org.hibernate.Session;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
 
-/**
- * B3partners B.V. http://www.b3partners.nl
- * @author Roy Braam
- * Created on 31-mei-2010, 12:29:12
- */
 public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
 
     private static final Log logger = LogFactory.getLog(ConfigZoekConfiguratieAction.class);

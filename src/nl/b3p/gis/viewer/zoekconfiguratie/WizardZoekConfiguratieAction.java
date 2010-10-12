@@ -63,6 +63,8 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
     public static final String STEP3 = "step3";
     public static final String STEP4 = "step4";
 
+    protected static final String ERROR_ZOEKVELD_RELATION = "error.zoekveld.relation";
+
     @Override
     protected Map getActionMethodPropertiesMap() {
         Map map = super.getActionMethodPropertiesMap();
@@ -97,28 +99,69 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
     @Override
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         if (FormUtils.nullIfEmpty(request.getParameter(ZOEKCONFIGURATIEID)) != null) {
+
             Integer id = new Integer(request.getParameter(ZOEKCONFIGURATIEID));
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
             Object zc = sess.get(ZoekConfiguratie.class, id);
+
             if (zc != null) {
-                List childs = sess.createQuery("from ZoekConfiguratie z where z.parentZoekConfiguratie=:zc").setParameter("zc", zc).list();
-                if (childs.size() > 0) {
-                    String message = "Kan Zoekconfiguratie niet verwijderen er zijn nog relaties met de volgende Zoekconfiguratie(s): ";
-                    for (int i = 0; i < childs.size(); i++) {
-                        if (i != 0) {
-                            message += ", ";
-                        }
-                        message += childs.get(i).toString();
+                ZoekConfiguratie zoekConfiguratie = (ZoekConfiguratie)zc;
+
+                String message = "";
+
+                /* controleren of er een zoekconfig bestaat die de te verwijderen zoekconfig
+                 gekoppeld heeft als vervolgzoeker */
+                List parents = sess.createQuery("from ZoekConfiguratie z where z.parentZoekConfiguratie=:zc").setParameter("zc", zc).list();
+                
+                if (parents != null && parents.size() > 0) {
+                    message += "De zoekconfiguratie(s) ";
+
+                    Iterator iter = parents.iterator();
+                    while (iter.hasNext()) {
+                        ZoekConfiguratie zoekConfig = (ZoekConfiguratie) iter.next();
+
+                        message += " : " + zoekConfig.getNaam();
                     }
-                    addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, message);
+
+                    message += ", hebben de " + zoekConfiguratie.getNaam() + " zoeker nog als vervolgzoeker ingesteld. ";
+                }
+
+                /* controleren of er een zoekconfig bestaat die de te verwijderen zoekconfig
+                 gekoppeld heeft via een zoekveld input */
+                List velden = sess.createQuery("from ZoekAttribuut zv where zv.zoekConfiguratie != :zcId1 AND "
+                        + "zv.inputzoekconfiguratie = :zcId2")
+                        .setParameter("zcId1", zc)
+                        .setParameter("zcId2", zc)
+                        .list();
+
+                if (velden != null && velden.size() > 0) {
+                    message += "In de zoekconfiguratie(s) ";
+
+                    Iterator iter = velden.iterator();
+                    while (iter.hasNext()) {
+                        ZoekAttribuut za = (ZoekAttribuut) iter.next();
+
+                        message += " : " + za.getZoekConfiguratie().getNaam();
+                    }
+
+                    message += ", wordt de " + zoekConfiguratie.getNaam() + " zoeker nog als input voor een zoekveld gebruikt.";
+                }
+
+                int size = parents.size() + velden.size();
+
+                if (size > 0) {
+                    addAlternateMessage(mapping, request, ERROR_ZOEKVELD_RELATION, message);               
                 } else {
                     sess.delete(zc);
+                    sess.flush();
                 }
-                sess.flush();
-            } else {
+                
+            } else { // zc is null
                 addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "Kan opgegeven zoekconfiguratie niet vinden.");
             }
         }
+
         return mapping.findForward("wizardDone");
     }
 

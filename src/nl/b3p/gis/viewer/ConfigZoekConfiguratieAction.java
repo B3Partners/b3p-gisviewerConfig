@@ -30,21 +30,19 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.struts.validator.DynaValidatorForm;
 import org.hibernate.Session;
 
-/**
- * B3partners B.V. http://www.b3partners.nl
- * @author Roy Braam
- * Created on 31-mei-2010, 12:29:12
- */
 public class ConfigZoekConfiguratieAction extends ViewerCrudAction {
 
-    private static final Log log = LogFactory.getLog(ConfigZoekConfiguratieAction.class);
-    public static final String ZOEKCONFIGURATIEID="zoekConfiguratieId";
+    private static final Log logger = LogFactory.getLog(ConfigZoekConfiguratieAction.class);
+
+    public static final String ZOEKCONFIGURATIEID = "zoekConfiguratieId";
 
     @Override
-    public void createLists(DynaValidatorForm dynaForm,HttpServletRequest request){
-        Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
-        List zoekConfiguraties=sess.createQuery("from ZoekConfiguratie").list();
+    public void createLists(DynaValidatorForm dynaForm,HttpServletRequest request) {
+        
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        List zoekConfiguraties = sess.createQuery("from ZoekConfiguratie order by NAAM").list();
         request.setAttribute("zoekConfiguraties", zoekConfiguraties);
+        
     }
 
 }
