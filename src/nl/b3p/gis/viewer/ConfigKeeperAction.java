@@ -87,7 +87,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showBufferTool = (Boolean) map.get("showBufferTool");
         Boolean showSelectBulkTool = (Boolean) map.get("showSelectBulkTool");
         Boolean showNeedleTool = (Boolean) map.get("showNeedleTool");      
-        Boolean seperateIntoBackgroundAndNormalLayers = (Boolean) map.get("seperateIntoBackgroundAndNormalLayers");
+        String layerGrouping = (String) map.get("layerGrouping");
 
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
@@ -122,7 +122,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showBufferTool", showBufferTool);
         dynaForm.set("cfg_showSelectBulkTool", showSelectBulkTool);
         dynaForm.set("cfg_showNeedleTool", showNeedleTool);
-        dynaForm.set("cfg_seperateIntoBackgroundAndNormalLayers", seperateIntoBackgroundAndNormalLayers);
+        dynaForm.set("cfg_layerGrouping", layerGrouping);
 
         dynaForm.set("rolnaam", rolnaam);
         
@@ -210,9 +210,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("showNeedleTool", rolnaam);
         writeBoolean(dynaForm, "cfg_showNeedleTool", c);
-        
-        c = configKeeper.getConfiguratie("seperateIntoBackgroundAndNormalLayers", rolnaam);
-        writeBoolean(dynaForm, "cfg_seperateIntoBackgroundAndNormalLayers", c);
+
+        c = configKeeper.getConfiguratie("layerGrouping", rolnaam);
+        writeString(dynaForm, "cfg_layerGrouping", c);
 
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, rolnaam);
@@ -734,10 +734,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         sess.save(cfg);
         
         cfg = new Configuratie();
-        cfg.setProperty("seperateIntoBackgroundAndNormalLayers");
-        cfg.setPropval("false");
+        cfg.setProperty("layerGrouping");
+        cfg.setPropval("lg_forebackground");
         cfg.setSetting(rol);
-        cfg.setType("java.lang.Boolean");
+        cfg.setType("java.lang.String");
         sess.save(cfg);
         
         sess.flush();

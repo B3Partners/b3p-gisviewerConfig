@@ -25,4 +25,4 @@ insert into configuratie (id, property, propval, setting, soort) values (configu
 insert into configuratie (id, property, propval, setting, soort) values (configuratie_id_seq.nextval, 'showBufferTool', 'false', 'default', 'java.lang.Boolean');
 insert into configuratie (id, property, propval, setting, soort) values (configuratie_id_seq.nextval, 'showSelectBulkTool', 'false', 'default', 'java.lang.Boolean');
 insert into configuratie (id, property, propval, setting, soort) values (configuratie_id_seq.nextval, 'showNeedleTool', 'false', 'default', 'java.lang.Boolean');
-insert into configuratie (id, property, propval, setting, soort) values (configuratie_id_seq.nextval, 'seperateIntoBackgroundAndNormalLayers', 'false', 'default', 'java.lang.Boolean');
+insert into configuratie (id, property, propval, setting, soort) values (configuratie_id_seq.nextval, 'layerGrouping', 'lg_forebackground', 'default', 'java.lang.String');
