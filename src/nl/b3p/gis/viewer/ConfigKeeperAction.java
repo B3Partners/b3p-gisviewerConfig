@@ -88,6 +88,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showSelectBulkTool = (Boolean) map.get("showSelectBulkTool");
         Boolean showNeedleTool = (Boolean) map.get("showNeedleTool");      
         String layerGrouping = (String) map.get("layerGrouping");
+        String popupWidth = (String) map.get("popupWidth");
+        String popupHeight = (String) map.get("popupHeight");
+        String popupLeft = (String) map.get("popupLeft");
+        String popupTop = (String) map.get("popupTop");
+        String defaultdataframehoogte = (String) map.get("defaultdataframehoogte");
 
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
@@ -123,6 +128,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showSelectBulkTool", showSelectBulkTool);
         dynaForm.set("cfg_showNeedleTool", showNeedleTool);
         dynaForm.set("cfg_layerGrouping", layerGrouping);
+        dynaForm.set("cfg_popupWidth", popupWidth);
+        dynaForm.set("cfg_popupHeight", popupHeight);
+        dynaForm.set("cfg_popupLeft", popupLeft);
+        dynaForm.set("cfg_popupTop", popupTop);
+        dynaForm.set("cfg_defaultdataframehoogte", defaultdataframehoogte);
 
         dynaForm.set("rolnaam", rolnaam);
         
@@ -213,6 +223,21 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("layerGrouping", rolnaam);
         writeString(dynaForm, "cfg_layerGrouping", c);
+
+        c = configKeeper.getConfiguratie("popupWidth", rolnaam);
+        writeString(dynaForm, "cfg_popupWidth", c);
+
+        c = configKeeper.getConfiguratie("popupHeight", rolnaam);
+        writeString(dynaForm, "cfg_popupHeight", c);
+
+        c = configKeeper.getConfiguratie("popupLeft", rolnaam);
+        writeString(dynaForm, "cfg_popupLeft", c);
+
+        c = configKeeper.getConfiguratie("popupTop", rolnaam);
+        writeString(dynaForm, "cfg_popupTop", c);
+
+        c = configKeeper.getConfiguratie("defaultdataframehoogte", rolnaam);
+        writeString(dynaForm, "cfg_defaultdataframehoogte", c);
 
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, rolnaam);
@@ -736,6 +761,41 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         cfg = new Configuratie();
         cfg.setProperty("layerGrouping");
         cfg.setPropval("lg_forebackground");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("popupWidth");
+        cfg.setPropval("90%");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("popupHeight");
+        cfg.setPropval("20%");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("popupLeft");
+        cfg.setPropval("5%");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("popupTop");
+        cfg.setPropval("75%");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("defaultdataframehoogte");
+        cfg.setPropval("150");
         cfg.setSetting(rol);
         cfg.setType("java.lang.String");
         sess.save(cfg);

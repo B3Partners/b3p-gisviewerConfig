@@ -25,4 +25,9 @@ insert into configuratie (property, propval, setting, soort) values ('showRedlin
 insert into configuratie (property, propval, setting, soort) values ('showBufferTool', 'false', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, soort) values ('showSelectBulkTool', 'false', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, soort) values ('showNeedleTool', 'false', 'default', 'java.lang.Boolean');
-insert into configuratie (property, propval, setting, soort) values ('seperateIntoBackgroundAndNormalLayers', 'false', 'default', 'java.lang.Boolean');
+insert into configuratie (property, propval, setting, soort) values ('layerGrouping', 'lg_forebackground', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, soort) values ('popupWidth', '90%', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, soort) values ('popupHeight', '20%', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, soort) values ('popupLeft', '5%', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, soort) values ('popupTop', '75%', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, soort) values ('defaultdataframehoogte', '150', 'default', 'java.lang.String');
