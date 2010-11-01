@@ -19,11 +19,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private static final Log logger = LogFactory.getLog(ConfigKeeperAction.class);
     private static final String[] CONFIGKEEPER_TABS = {
         "leeg", "themas", "legenda", "zoeken", "informatie", "gebieden",
-        "analyse", "planselectie"
+        "analyse", "planselectie", "meldingen"
     };
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Info", "Gebieden",
-        "Analyse", "Plannen"
+        "Analyse", "Plannen", "Meldingen"
     };
 
     @Override
