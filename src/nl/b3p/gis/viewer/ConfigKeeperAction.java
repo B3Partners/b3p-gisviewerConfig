@@ -19,11 +19,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private static final Log logger = LogFactory.getLog(ConfigKeeperAction.class);
     private static final String[] CONFIGKEEPER_TABS = {
         "leeg", "themas", "legenda", "zoeken", "informatie", "gebieden",
-        "analyse", "planselectie", "meldingen"
+        "analyse", "planselectie", "meldingen", "vergunningen", "voorzieningen"
     };
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Info", "Gebieden",
-        "Analyse", "Plannen", "Meldingen"
+        "Analyse", "Plannen", "Meldingen", "Vergunningen", "Voorzieningen"
     };
 
     @Override
@@ -97,6 +97,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
         fillPlanSelectieBox(dynaForm, request, planSelectieIds);
+
+        String voorzieningConfigIds = (String) map.get("voorzieningConfigIds");
+        String voorzieningConfigStraal = (String) map.get("voorzieningConfigStraal");
+        String voorzieningConfigTypes = (String) map.get("voorzieningConfigTypes");
+        fillVoorzieningConfigBox(dynaForm, request, voorzieningConfigIds, voorzieningConfigStraal, voorzieningConfigTypes);
 
          /* dropdown voor i-tool goedzetten
         geen, paneel of popup */
@@ -242,6 +247,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, rolnaam);
         writePlanSelectieIdConfig(dynaForm, rolnaam);
+        writeVoorzieningIdConfig(dynaForm, rolnaam);
     }
 
     private void writeZoekenIdConfig(DynaValidatorForm form, String rolnaam) {
@@ -281,6 +287,98 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         configTabs.setPropval(strBeheerTabs);
         configTabs.setType("java.lang.String");
         sess.merge(configTabs);
+        sess.flush();
+    }
+    
+    private void writeVoorzieningIdConfig(DynaValidatorForm form, String rolnaam) {
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        ConfigKeeper configKeeper = new ConfigKeeper();
+        int lastComma = -1;
+
+        Configuratie configTabs = configKeeper.getConfiguratie("voorzieningConfigIds", rolnaam);
+        String strBeheerTabs = "";
+
+        if (!form.get("cfg_voorzieningid1").equals("leeg")) {
+            strBeheerTabs += form.get("cfg_voorzieningid1") + ",";
+        }
+
+        if (!form.get("cfg_voorzieningid2").equals("leeg")) {
+            strBeheerTabs += form.get("cfg_voorzieningid2") + ",";
+        }
+
+        if (!form.get("cfg_voorzieningid3").equals("leeg")) {
+            strBeheerTabs += form.get("cfg_voorzieningid3") + ",";
+        }
+
+        lastComma = strBeheerTabs.lastIndexOf(",");
+
+        if (lastComma > 1) {
+            strBeheerTabs = strBeheerTabs.substring(0, lastComma);
+        }
+
+        strBeheerTabs = "\"" + strBeheerTabs + "\"";
+
+        configTabs.setPropval(strBeheerTabs);
+        configTabs.setType("java.lang.String");
+        sess.merge(configTabs);
+        sess.flush();
+        
+        
+        Configuratie configStraal = configKeeper.getConfiguratie("voorzieningConfigStraal", rolnaam);
+        String straal = "";
+        if (!form.get("cfg_voorzieningstraal").equals("leeg")) {
+            straal = form.get("cfg_voorzieningstraal") + "";
+        }
+        straal = "\"" + straal + "\"";
+
+        configStraal.setPropval(straal);
+        configStraal.setType("java.lang.String");
+        sess.merge(configStraal);
+        sess.flush();
+
+
+        int lastTypComma = -1;
+
+        Configuratie configType = configKeeper.getConfiguratie("voorzieningConfigTypes", rolnaam);
+        String strTypeTabs = "";
+
+        if (!form.get("cfg_voorzieningtype1").equals("leeg")) {
+            strTypeTabs += form.get("cfg_voorzieningtype1") + ",";
+        }
+
+        if (!form.get("cfg_voorzieningtype2").equals("leeg")) {
+            strTypeTabs += form.get("cfg_voorzieningtype2") + ",";
+        }
+
+        if (!form.get("cfg_voorzieningtype3").equals("leeg")) {
+            strTypeTabs += form.get("cfg_voorzieningtype3") + ",";
+        }
+
+        if (!form.get("cfg_voorzieningtype4").equals("leeg")) {
+            strTypeTabs += form.get("cfg_voorzieningtype4") + ",";
+        }
+
+        if (!form.get("cfg_voorzieningtype5").equals("leeg")) {
+            strTypeTabs += form.get("cfg_voorzieningtype5") + ",";
+        }
+
+        if (!form.get("cfg_voorzieningtype6").equals("leeg")) {
+            strTypeTabs += form.get("cfg_voorzieningtype6") + ",";
+        }
+
+        lastTypComma = strTypeTabs.lastIndexOf(",");
+
+        if (lastComma > 1) {
+            strTypeTabs = strTypeTabs.substring(0, lastTypComma);
+        }
+
+        strTypeTabs = "\"" + strTypeTabs + "\"";
+
+        configType.setPropval(strTypeTabs);
+        configType.setType("java.lang.String");
+        sess.merge(configType);
         sess.flush();
     }
 
@@ -565,6 +663,81 @@ public class ConfigKeeperAction extends ViewerCrudAction {
                 dynaForm.set("cfg_planselectieid2", items[1].replaceAll("\"", ""));
             }
         }
+    }
+
+    private void fillVoorzieningConfigBox(DynaValidatorForm dynaForm,
+            HttpServletRequest request, String ids, String voorzieningConfigStraal, String voorzieningConfigTypes) {
+
+        if (ids == null) {
+            return;
+        }
+
+        String[] items = ids.replaceAll("\"", "").split(",");
+
+        if (items.length > 0) {
+            if ((items[0] != null) || items[0].equals("")) {
+                dynaForm.set("cfg_voorzieningid1", items[0].replaceAll("\"", ""));
+            }
+        }
+
+        if (items.length > 1) {
+            if ((items[1] != null) || items[1].equals("")) {
+                dynaForm.set("cfg_voorzieningid2", items[1].replaceAll("\"", ""));
+            }
+        }
+
+        if (items.length > 2) {
+            if ((items[2] != null) || items[2].equals("")) {
+                dynaForm.set("cfg_voorzieningid3", items[2].replaceAll("\"", ""));
+            }
+        }
+
+        if(voorzieningConfigStraal != null){
+            dynaForm.set("cfg_voorzieningstraal", voorzieningConfigStraal.replaceAll("\"", ""));
+        }
+
+        if (voorzieningConfigTypes == null) {
+            return;
+        }
+
+        String[] typeItems = voorzieningConfigTypes.replaceAll("\"", "").split(",");
+
+        if (typeItems.length > 0) {
+            if ((typeItems[0] != null) || typeItems[0].equals("")) {
+                dynaForm.set("cfg_voorzieningtype1", typeItems[0].replaceAll("\"", ""));
+            }
+        }
+
+        if (typeItems.length > 1) {
+            if ((typeItems[1] != null) || typeItems[1].equals("")) {
+                dynaForm.set("cfg_voorzieningtype2", typeItems[1].replaceAll("\"", ""));
+            }
+        }
+
+        if (typeItems.length > 2) {
+            if ((typeItems[2] != null) || typeItems[2].equals("")) {
+                dynaForm.set("cfg_voorzieningtype3", typeItems[2].replaceAll("\"", ""));
+            }
+        }
+        
+        if (typeItems.length > 3) {
+            if ((typeItems[3] != null) || typeItems[3].equals("")) {
+                dynaForm.set("cfg_voorzieningtype4", typeItems[3].replaceAll("\"", ""));
+            }
+        }
+
+        if (typeItems.length > 4) {
+            if ((typeItems[4] != null) || typeItems[4].equals("")) {
+                dynaForm.set("cfg_voorzieningtype5", typeItems[4].replaceAll("\"", ""));
+            }
+        }
+
+        if (typeItems.length > 5) {
+            if ((typeItems[5] != null) || typeItems[5].equals("")) {
+                dynaForm.set("cfg_voorzieningtype6", typeItems[5].replaceAll("\"", ""));
+            }
+        }
+
     }
 
     private void writeDefaultConfigForRole(String rol) {
