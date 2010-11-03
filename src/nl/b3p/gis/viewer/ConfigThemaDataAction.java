@@ -1,25 +1,3 @@
-/*
- * B3P Gisviewer is an extension to Flamingo MapComponents making
- * it a complete webbased GIS viewer and configuration tool that
- * works in cooperation with B3P Kaartenbalie.
- *
- * Copyright 2006, 2007, 2008 B3Partners BV
- * 
- * This file is part of B3P Gisviewer.
- * 
- * B3P Gisviewer is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * B3P Gisviewer is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with B3P Gisviewer.  If not, see <http://www.gnu.org/licenses/>.
- */
 package nl.b3p.gis.viewer;
 
 import nl.b3p.gis.geotools.DataStoreUtil;
@@ -31,8 +9,8 @@ import javax.xml.namespace.QName;
 import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.viewer.db.DataTypen;
+import nl.b3p.gis.viewer.db.Gegevensbron;
 import nl.b3p.gis.viewer.db.ThemaData;
-import nl.b3p.gis.viewer.db.Themas;
 import nl.b3p.gis.viewer.db.WaardeTypen;
 import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
@@ -55,11 +33,13 @@ import org.opengis.feature.type.Name;
  */
 public class ConfigThemaDataAction extends ViewerCrudAction {
 
-    private static final Log log = LogFactory.getLog(ConfigThemaAction.class);
+    private static final Log logger = LogFactory.getLog(ConfigThemaAction.class);
+
     protected static final String CHANGE = "change";
     protected static final String CREATEALLTHEMADATA = "createAllThemaData";
     private int DEFAULTBASISCOLUMNS = 0;
 
+    @Override
     protected Map getActionMethodPropertiesMap() {
         Map map = super.getActionMethodPropertiesMap();
 
@@ -87,72 +67,77 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         return td;
     }
 
-    protected ThemaData getFirstThemaData(Themas t) {
-        if (t == null) {
+    protected ThemaData getFirstThemaData(Gegevensbron gb) {
+        if (gb == null) {
             return null;
         }
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        Query q = sess.createQuery("from ThemaData where thema.id = :themaID order by dataorder, label");
-        List cs = q.setParameter("themaID", t.getId()).setMaxResults(1).list();
+        Query q = sess.createQuery("from ThemaData where gegevensbron = :gb order by dataorder, label");
+        List cs = q.setParameter("gb", gb).setMaxResults(1).list();
         if (cs != null && cs.size() > 0) {
             return (ThemaData) cs.get(0);
         }
         ThemaData td = new ThemaData();
-        td.setThema(t);
+        //td.setThema(t);
+        td.setGegevensbron(gb);
         return td;
     }
+    
+    protected Gegevensbron getGegevensbron(DynaValidatorForm form, boolean createNew) {
+        Integer id = FormUtils.StringToInteger(form.getString("gegevensbronID"));
+        Gegevensbron gb = null;
 
-    protected Themas getThema(DynaValidatorForm form, boolean createNew) {
-        Integer id = FormUtils.StringToInteger(form.getString("themaID"));
-        Themas t = null;
         if (id == null && createNew) {
-            t = new Themas();
+            gb = new Gegevensbron();
         } else if (id != null) {
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-            t = (Themas) sess.get(Themas.class, id);
+            gb = (Gegevensbron) sess.get(Gegevensbron.class, id);
         }
-        return t;
+
+        return gb;
     }
 
-    protected Themas getFirstThema() {
+    protected Gegevensbron getFirstGegevensbron() {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List cs = sess.createQuery("from Themas order by naam").setMaxResults(1).list();
+        List cs = sess.createQuery("from Gegevensbron order by naam").setMaxResults(1).list();
         if (cs != null && cs.size() > 0) {
-            return (Themas) cs.get(0);
+            return (Gegevensbron) cs.get(0);
         }
         return null;
     }
 
+    @Override
     protected void createLists(DynaValidatorForm dynaForm, HttpServletRequest request) throws Exception {
         super.createLists(dynaForm, request);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        request.setAttribute("listThemas", sess.createQuery("from Themas where code in ('1', '2') order by naam").list());
+        request.setAttribute("listThemas", sess.createQuery("from Gegevensbron order by naam").list());
         request.setAttribute("listWaardeTypen", sess.createQuery("from WaardeTypen order by naam").list());
         request.setAttribute("listDataTypen", sess.createQuery("from DataTypen order by naam").list());
-        Themas t = null;
+        Gegevensbron gb = null;
         ThemaData td = getThemaData(dynaForm, false);
         if (td == null) {
-            t = getThema(dynaForm, false);
-            if (t == null) {
-                t = getFirstThema();
+            gb = getGegevensbron(dynaForm, false);
+            if (gb == null) {
+                gb = getFirstGegevensbron();
             }
         } else {
-            t = td.getThema();
+            gb = td.getGegevensbron();
         }
-        if (t == null) {
+        if (gb == null) {
             return;
         }
 
-        List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(t, false);
+        List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(gb, false);
         request.setAttribute("listThemaData", bestaandeObjecten);
 
-        Bron b = t.getConnectie(request);
-        List<String> attributes = DataStoreUtil.getAttributeNames(b, t);
+        Bron b = gb.getBron(request);
+       
+        List<String> attributes = DataStoreUtil.getAttributeNames(b, gb);
         request.setAttribute("listAdminTableColumns", attributes);
 
-        if (t.getConnectie() != null)
-            request.setAttribute("connectieType", t.getConnectie().getType());
+        if (gb.getBron() != null)
+            request.setAttribute("connectieType", gb.getBron().getType());
         else
             request.setAttribute("connectieType", Bron.TYPE_EMPTY);
 
@@ -177,19 +162,20 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             }
         }
         request.setAttribute("listUglyThemaData", uglyThemaData);
-
-
     }
 
+    @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         ThemaData td = getThemaData(dynaForm, false);
         if (td == null) {
-            Themas t = getThema(dynaForm, false);
-            if (t == null) {
-                t = getFirstThema();
+            Gegevensbron gb = getGegevensbron(dynaForm, false);
+            if (gb == null) {
+                gb = getFirstGegevensbron();
             }
-            td = getFirstThemaData(t);
+
+            td = getFirstThemaData(gb);
         }
+
         populateThemaDataForm(td, dynaForm, request);
 
         prepareMethod(dynaForm, request, EDIT, LIST);
@@ -198,11 +184,11 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
     }
 
     public ActionForward change(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Themas t = getThema(dynaForm, false);
-        if (t == null) {
-            t = getFirstThema();
+        Gegevensbron gb = getGegevensbron(dynaForm, false);
+        if (gb == null) {
+            gb = getFirstGegevensbron();
         }
-        ThemaData td = getFirstThemaData(t);
+        ThemaData td = getFirstThemaData(gb);
         populateThemaDataForm(td, dynaForm, request);
 
         prepareMethod(dynaForm, request, EDIT, LIST);
@@ -210,31 +196,33 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         return mapping.findForward(SUCCESS);
     }
 
+    @Override
     public ActionForward create(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Themas t = getThema(dynaForm, false);
-        if (t == null) {
-            t = getFirstThema();
+        Gegevensbron gb = getGegevensbron(dynaForm, false);
+        if (gb == null) {
+            gb = getFirstGegevensbron();
         }
         dynaForm.initialize(mapping);
         String val = "";
-        if (t != null) {
-            val = Integer.toString(t.getId());
+        if (gb != null) {
+            val = Integer.toString(gb.getId());
         }
-        dynaForm.set("themaID", val);
+        dynaForm.set("gegevensbronID", val);
 
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);
     }
 
+    @Override
     public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Themas t = getThema(dynaForm, false);
-        if (t == null) {
-            t = getFirstThema();
+        Gegevensbron gb = getGegevensbron(dynaForm, false);
+        if (gb == null) {
+            gb = getFirstGegevensbron();
         }
         ThemaData td = getThemaData(dynaForm, false);
         if (td == null) {
-            td = getFirstThemaData(t);
+            td = getFirstThemaData(gb);
         }
         populateThemaDataForm(td, dynaForm, request);
         prepareMethod(dynaForm, request, EDIT, LIST);
@@ -242,6 +230,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         return getDefaultForward(mapping, request);
     }
 
+    @Override
     public ActionForward save(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         if (!isTokenValid(request)) {
@@ -285,23 +274,23 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
     }
 
     public ActionForward createAllThemaData(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Themas t = getThema(dynaForm, false);
+        Gegevensbron gb = getGegevensbron(dynaForm, false);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        Bron b = t.getConnectie(request);
-        List<String> attributes = DataStoreUtil.getAttributeNames(b, t);
+        Bron b = gb.getBron(request);
+        List<String> attributes = DataStoreUtil.getAttributeNames(b, gb);
         if (attributes == null) {
             return unspecified(mapping, dynaForm, request, response);
         }
 
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
-        Name geomName = DataStoreUtil.getThemaGeomName(t, user);
+        Name geomName = DataStoreUtil.getThemaGeomName(gb, user);
         String geomPropname =  "";
         if (geomName!=null && geomName.getLocalPart()!=null) {
             geomPropname = geomName.getLocalPart();
         }
 
-        List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(t, false);
+        List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(gb, false);
         for (String attribute : attributes) {
              QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
             if (attributeName==null || attributeName.getLocalPart().compareTo(geomPropname) == 0) {
@@ -333,7 +322,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                 }
                 td.setLabel(netteNaam);
                 td.setKolomnaam(attributeName.getLocalPart());
-                td.setThema(t);
+                td.setGegevensbron(gb);
                 td.setWaardeType((WaardeTypen) sess.get(WaardeTypen.class, WaardeTypen.STRING));
                 sess.saveOrUpdate(td);
             } else {
@@ -367,8 +356,8 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             }
 
             if (!bestaatNog) {
-                Themas tdt = td.getThema();
-                tdt.getThemaData().remove(td);
+                Gegevensbron tgb = td.getGegevensbron();
+                tgb.getThemaData().remove(td);
                 sess.delete(td);
                 sess.flush();
             }
@@ -376,7 +365,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
 
         if (attributes.size() > DEFAULTBASISCOLUMNS) {
             if (!extraVeldBestaatAl) {
-                ThemaData td = createDefaultExtraThemaData(t);
+                ThemaData td = createDefaultExtraThemaData(gb);
                 sess.saveOrUpdate(td);
             }
         }
@@ -384,6 +373,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         return unspecified(mapping, dynaForm, request, response);
     }
 
+    @Override
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         if (!isTokenValid(request)) {
@@ -402,12 +392,12 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             return getAlternateForward(mapping, request);
         }
 
-        Themas t = td.getThema();
-        t.getThemaData().remove(td);
+        Gegevensbron gb = td.getGegevensbron();
+        gb.getThemaData().remove(td);
         sess.delete(td);
         sess.flush();
 
-        td = getFirstThemaData(t);
+        td = getFirstThemaData(gb);
         dynaForm.initialize(mapping);
         populateThemaDataForm(td, dynaForm, request);
         
@@ -429,11 +419,11 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         dynaForm.set("eenheid", td.getEenheid());
         dynaForm.set("omschrijving", td.getOmschrijving());
         String val = "";
-        if (td.getThema() != null) {
-            val = Integer.toString(td.getThema().getId());
+        if (td.getGegevensbron() != null) {
+            val = Integer.toString(td.getGegevensbron().getId());
         }
-        dynaForm.set("themaID", val);
-        dynaForm.set("basisregel", new Boolean(td.isBasisregel()));
+        dynaForm.set("gegevensbronID", val);
+        dynaForm.set("basisregel", td.isBasisregel());
         dynaForm.set("voorbeelden", td.getVoorbeelden());
         dynaForm.set("kolombreedte", FormUtils.IntToString(td.getKolombreedte()));
         val = "";
@@ -471,24 +461,24 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         int tId = 0, dId = 0, wId = 0;
         try {
-            tId = Integer.parseInt(dynaForm.getString("themaID"));
+            tId = Integer.parseInt(dynaForm.getString("gegevensbronID"));
         } catch (NumberFormatException ex) {
-            log.error("Illegal themaID", ex);
+            logger.error("Illegal gegevensbronID", ex);
         }
         try {
             dId = Integer.parseInt(dynaForm.getString("dataTypeID"));
         } catch (NumberFormatException ex) {
-            log.error("Illegal dataTypeID", ex);
+            logger.error("Illegal dataTypeID", ex);
         }
         
-        Themas t = (Themas) sess.get(Themas.class, new Integer(tId));
-        td.setThema(t);
+        Gegevensbron gb = (Gegevensbron) sess.get(Gegevensbron.class, new Integer(tId));
+        td.setGegevensbron(gb);
         DataTypen d = (DataTypen) sess.get(DataTypen.class, new Integer(dId));
         td.setDataType(d);
         
     }
 
-    protected ThemaData createDefaultExtraThemaData(Themas t) {
+    protected ThemaData createDefaultExtraThemaData(Gegevensbron gb) {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         ThemaData td = new ThemaData();
         td.setLabel("Extra");
@@ -497,7 +487,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         td.setWaardeType((WaardeTypen) sess.get(WaardeTypen.class, WaardeTypen.STRING));
         td.setDataType((DataTypen) sess.get(DataTypen.class, DataTypen.URL));
         td.setCommando("viewerdata.do?aanvullendeinfo=t&");
-        td.setThema(t);
+        td.setGegevensbron(gb);
         return td;
     }
 }

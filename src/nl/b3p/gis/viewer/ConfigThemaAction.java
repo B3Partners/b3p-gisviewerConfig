@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.viewer.db.Clusters;
+import nl.b3p.gis.viewer.db.Gegevensbron;
 import nl.b3p.gis.viewer.db.Themas;
 import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
@@ -73,16 +74,16 @@ public class ConfigThemaAction extends ViewerCrudAction {
         request.setAttribute("allThemas", sess.createQuery("from Themas order by naam").list());
         request.setAttribute("allClusters", sess.createQuery("from Clusters where default_cluster=:defaultCluster order by naam").setBoolean("defaultCluster", false).list());
         request.setAttribute("listValidGeoms", SpatialUtil.VALID_GEOMS);
-        request.setAttribute("listConnecties", sess.createQuery("from Bron order by naam").list());
+        request.setAttribute("listBronnen", sess.createQuery("from Gegevensbron order by naam").list());
 
         Themas t = getThema(dynaForm, false);
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
         Integer cId = new Integer(-1);
 
         try {
-            cId = new Integer(dynaForm.getString("connectie"));
+            cId = new Integer(dynaForm.getString("gegevensbron"));
         } catch (NumberFormatException nfe) {
-            logger.debug("No connection id found in form, input: " + dynaForm.getString("connectie"));
+            logger.debug("No gegevensbron id found in form, input: " + dynaForm.getString("gegevensbron"));
         }
 
         if (user != null) {
@@ -106,30 +107,6 @@ public class ConfigThemaAction extends ViewerCrudAction {
         }
 
         request.setAttribute("listTables", tns);
-
-        String adminTable = null;
-        String spatialTable = null;
-
-        adminTable = FormUtils.nullIfEmpty(dynaForm.getString("admin_tabel"));
-        spatialTable = FormUtils.nullIfEmpty(dynaForm.getString("spatial_tabel"));
-
-        if (adminTable == null && t != null) {
-            adminTable = t.getAdmin_tabel();
-        }
-
-        if (spatialTable == null && t != null) {
-            spatialTable = t.getSpatial_tabel();
-        }
-
-        if (adminTable != null) {
-            List atc = ConfigListsUtil.getPossibleAttributes(b, adminTable);
-            request.setAttribute("listAdminTableColumns", atc);
-        }
-
-        if (spatialTable != null) {
-            List stc = ConfigListsUtil.getPossibleAttributes(b, spatialTable);
-            request.setAttribute("listSpatialTableColumns", stc);
-        }
     }
 
     @Override
@@ -238,16 +215,15 @@ public class ConfigThemaAction extends ViewerCrudAction {
         dynaForm.set("naam", t.getNaam());
         dynaForm.set("metadatalink", t.getMetadata_link());
 
-        String valConnectie = "-1";
-        String adminTable = t.getAdmin_tabel();
-        if (adminTable != null && adminTable.length() > 0) {
-            // adminTable kan alleen een waarde hebben, als er een connectie is.
-            valConnectie = "0";
-            if (t.getConnectie() != null) {
-                valConnectie = Integer.toString(t.getConnectie().getId());
-            }
+        String valBron = "-1";
+
+        Gegevensbron gb = t.getGegevensbron();
+        if (gb != null) {
+            valBron = Integer.toString(gb.getId());
         }
-        dynaForm.set("connectie", valConnectie);
+        
+        dynaForm.set("gegevensbron", valBron);
+
         dynaForm.set("belangnr", FormUtils.IntToString(t.getBelangnr()));
         String valCluster = "";
         if (t.getCluster() != null) {
@@ -255,22 +231,8 @@ public class ConfigThemaAction extends ViewerCrudAction {
         }
         dynaForm.set("clusterID", valCluster);
         dynaForm.set("opmerkingen", t.getOpmerkingen());
-        dynaForm.set("analyse_thema", new Boolean(t.isAnalyse_thema()));
-        dynaForm.set("locatie_thema", new Boolean(t.isLocatie_thema()));
-
-        dynaForm.set("admin_tabel_opmerkingen", t.getAdmin_tabel_opmerkingen());
-        dynaForm.set("admin_tabel", t.getAdmin_tabel());
-        dynaForm.set("admin_pk", t.getAdmin_pk());
-        dynaForm.set("admin_pk_complex", new Boolean(t.isAdmin_pk_complex()));
-        dynaForm.set("admin_spatial_ref", t.getAdmin_spatial_ref());
-
-        dynaForm.set("admin_query", t.getAdmin_query());        
-
-        dynaForm.set("spatial_tabel_opmerkingen", t.getSpatial_tabel_opmerkingen());
-        dynaForm.set("spatial_tabel", t.getSpatial_tabel());
-        dynaForm.set("spatial_pk", t.getSpatial_pk());
-        dynaForm.set("spatial_pk_complex", new Boolean(t.isSpatial_pk_complex()));
-        dynaForm.set("spatial_admin_ref", t.getSpatial_admin_ref());
+        dynaForm.set("analyse_thema", t.isAnalyse_thema());
+        dynaForm.set("locatie_thema", t.isLocatie_thema());
         dynaForm.set("wms_url", t.getWms_url());
         dynaForm.set("wms_layers", t.getWms_layers());
         dynaForm.set("wms_layers_real", t.getWms_layers_real());
@@ -281,9 +243,9 @@ public class ConfigThemaAction extends ViewerCrudAction {
         dynaForm.set("thema_maptip", t.getMaptipstring());
         dynaForm.set("update_frequentie_in_dagen", FormUtils.IntegerToString(t.getUpdate_frequentie_in_dagen()));
         dynaForm.set("view_geomtype", t.getView_geomtype());
-        dynaForm.set("visible", new Boolean(t.isVisible()));
+        dynaForm.set("visible", t.isVisible());
         dynaForm.set("sldattribuut",t.getSldattribuut());
-        dynaForm.set("uitgebreid", new Boolean(t.isUitgebreid()));
+        dynaForm.set("uitgebreid", t.isUitgebreid());
         dynaForm.set("layoutadmindata",t.getLayoutadmindata());
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
@@ -296,17 +258,20 @@ public class ConfigThemaAction extends ViewerCrudAction {
         t.setCode(FormUtils.nullIfEmpty(dynaForm.getString("themaCode")));
         t.setNaam(FormUtils.nullIfEmpty(dynaForm.getString("naam")));
         t.setMetadata_link(FormUtils.nullIfEmpty(dynaForm.getString("metadatalink")));
-        Bron conn = null;
-        int connId = -1;
+
+        Gegevensbron gb = null;
+        int bronId = -1;
+
         try {
-            connId = Integer.parseInt(dynaForm.getString("connectie"));
+            bronId = Integer.parseInt(dynaForm.getString("gegevensbron"));
         } catch (NumberFormatException nfe) {
-            logger.debug("No connection id found in form, input: " + dynaForm.getString("connectie"));
+            logger.debug("No gegevensbron id found in form, input: " + dynaForm.getString("gegevensbron"));
         }
-        if (connId > 0) {
-            conn = (Bron) sess.get(Bron.class, connId);
+        if (bronId > 0) {
+            gb = (Gegevensbron) sess.get(Gegevensbron.class, bronId);
         }
-        t.setConnectie(conn);
+        t.setGegevensbron(gb);
+
         if (dynaForm.getString("belangnr") != null && dynaForm.getString("belangnr").length() > 0) {
             t.setBelangnr(Integer.parseInt(dynaForm.getString("belangnr")));
         }
@@ -315,19 +280,6 @@ public class ConfigThemaAction extends ViewerCrudAction {
         t.setAnalyse_thema(b == null ? false : b.booleanValue());
         b = (Boolean) dynaForm.get("locatie_thema");
         t.setLocatie_thema(b == null ? false : b.booleanValue());
-        t.setAdmin_tabel_opmerkingen(FormUtils.nullIfEmpty(dynaForm.getString("admin_tabel_opmerkingen")));
-        t.setAdmin_tabel(FormUtils.nullIfEmpty(dynaForm.getString("admin_tabel")));
-        t.setAdmin_pk(FormUtils.nullIfEmpty(dynaForm.getString("admin_pk")));
-        b = (Boolean) dynaForm.get("admin_pk_complex");
-        t.setAdmin_pk_complex(b == null ? false : b.booleanValue());
-        t.setAdmin_spatial_ref(FormUtils.nullIfEmpty(dynaForm.getString("admin_spatial_ref")));
-        t.setAdmin_query(FormUtils.nullIfEmpty(dynaForm.getString("admin_query")));
-        t.setSpatial_tabel_opmerkingen(FormUtils.nullIfEmpty(dynaForm.getString("spatial_tabel_opmerkingen")));
-        t.setSpatial_tabel(FormUtils.nullIfEmpty(dynaForm.getString("spatial_tabel")));
-        t.setSpatial_pk(FormUtils.nullIfEmpty(dynaForm.getString("spatial_pk")));
-        b = (Boolean) dynaForm.get("spatial_pk_complex");
-        t.setSpatial_pk_complex(b == null ? false : b.booleanValue());
-        t.setSpatial_admin_ref(FormUtils.nullIfEmpty(dynaForm.getString("spatial_admin_ref")));
         t.setMaptipstring(FormUtils.nullIfEmpty(dynaForm.getString("thema_maptip")));
         t.setWms_url(FormUtils.nullIfEmpty(dynaForm.getString("wms_url")));
         //komma separated layers

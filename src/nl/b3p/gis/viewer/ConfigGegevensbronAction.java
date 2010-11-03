@@ -263,7 +263,7 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
             if (parentId > 0) {
                 int rootId = getRootParentId(parentId);
 
-                if (gb.getId() == rootId) {
+                if (gb.getId() != null && gb.getId() == rootId) {
                     prepareMethod(dynaForm, request, LIST, EDIT);
                     addAlternateMessage(mapping, request, ERROR_ISPARENT);
 
@@ -321,7 +321,7 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
 
         /* indien nog themas of children dan niet wissen, levert
          * ConstraintViolationException op */
-        int themaSize = 0; //gb.getThemas().size();
+        int themaSize = gb.getThemas().size();
         int childrenSize = gb.getChildren().size();
 
         if (themaSize > 0) {
