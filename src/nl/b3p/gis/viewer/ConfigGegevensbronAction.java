@@ -249,23 +249,26 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
             return getAlternateForward(mapping, request);
         }
 
-        int numberOfChildren = gb.getChildren().size();
+        /* check of parent verplaatst wordt naar onderliggende gegevensbron */
+        String parentIdString = FormUtils.nullIfEmpty(dynaForm.getString("parentID"));
 
-        /* indien gegevensbron childs heeft dan mag het niet onder een
-         * child gehangen worden */
-        if (numberOfChildren > 0) {
-            int parentId = -1;
+        if (parentIdString != null) {
+            int parentId = 0;
             try {
                 parentId = Integer.parseInt(dynaForm.getString("parentID"));
-            } catch (NumberFormatException nfe) {
-                logger.debug("No parent id found in form, input: " + dynaForm.getString("parentID"));
+            } catch (NumberFormatException ex) {
+                logger.error("Illegal parent id", ex);
             }
 
             if (parentId > 0) {
-                prepareMethod(dynaForm, request, LIST, EDIT);
-                addAlternateMessage(mapping, request, ERROR_ISPARENT);
+                int rootId = getRootParentId(parentId);
 
-                return getAlternateForward(mapping, request);
+                if (gb.getId() == rootId) {
+                    prepareMethod(dynaForm, request, LIST, EDIT);
+                    addAlternateMessage(mapping, request, ERROR_ISPARENT);
+
+                    return getAlternateForward(mapping, request);
+                }
             }
         }
 
@@ -283,6 +286,18 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
         prepareMethod(dynaForm, request, LIST, EDIT);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);
+    }
+
+    private int getRootParentId(int id) {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        Gegevensbron gb = (Gegevensbron) sess.get(Gegevensbron.class, id);
+
+        if (gb.getParent() != null) {
+            return getRootParentId(gb.getParent().getId());
+        }
+
+        return gb.getId();
     }
 
     @Override
