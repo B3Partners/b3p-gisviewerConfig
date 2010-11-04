@@ -218,6 +218,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         String valBron = "-1";
 
         Gegevensbron gb = t.getGegevensbron();
+
         if (gb != null) {
             valBron = Integer.toString(gb.getId());
         }
@@ -248,9 +249,18 @@ public class ConfigThemaAction extends ViewerCrudAction {
         dynaForm.set("uitgebreid", t.isUitgebreid());
         dynaForm.set("layoutadmindata",t.getLayoutadmindata());
 
+        /*
+        Integer gbId = -1;
+
+        if (gb != null) {
+            gbId = gb.getId();
+        }
+
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List themadataobjecten = sess.createQuery("select kolomnaam from ThemaData where thema = :thema").setEntity("thema", t).list();
+        List themadataobjecten = sess.createQuery("select kolomnaam from ThemaData where gegevensbron = :gbId").setParameter("gbId", gbId).list();
+
         dynaForm.set("themadataobjecten", themadataobjecten.toArray(new String[themadataobjecten.size()]));
+        */
     }
 
     private void populateThemasObject(DynaValidatorForm dynaForm, Themas t, HttpServletRequest request) {
