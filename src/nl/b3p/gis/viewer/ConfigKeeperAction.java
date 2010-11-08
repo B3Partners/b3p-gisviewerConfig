@@ -450,6 +450,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             strTypeTabs += form.get("cfg_vergunningtype2") + ",";
         }
 
+        if (!form.get("cfg_vergunningtype3").equals("leeg")) {
+            strTypeTabs += form.get("cfg_vergunningtype3") + ",";
+        }
+
         lastTypComma = strTypeTabs.lastIndexOf(",");
 
         if (lastComma > 1) {
@@ -868,6 +872,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         if (typeItems.length > 1) {
             if ((typeItems[1] != null) || typeItems[1].equals("")) {
                 dynaForm.set("cfg_vergunningtype2", typeItems[1].replaceAll("\"", ""));
+            }
+        }
+
+        if (typeItems.length > 2) {
+            if ((typeItems[2] != null) || typeItems[2].equals("")) {
+                dynaForm.set("cfg_vergunningtype3", typeItems[2].replaceAll("\"", ""));
             }
         }
 
