@@ -1,5 +1,6 @@
 package nl.b3p.gis.viewer;
 
+import java.util.ArrayList;
 import nl.b3p.gis.geotools.DataStoreUtil;
 import java.util.List;
 import java.util.Map;
@@ -441,6 +442,12 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         if (td.getDataorder() != null) {
             dynaForm.set("dataorder", FormUtils.IntToString(td.getDataorder()));
         }
+
+        /* zetten bulk basisregel vinkjes */
+        String[] arr = new String[1];
+        arr[0] = "1133";
+
+        dynaForm.set("basisregels", arr);
     }
 
     private void populateThemaDataObject(DynaValidatorForm dynaForm, ThemaData td, HttpServletRequest request) {
