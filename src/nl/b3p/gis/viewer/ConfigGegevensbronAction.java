@@ -79,16 +79,20 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
         Bron b = null;
 
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
-        Integer cId = new Integer(-1);
 
-        try {
-            cId = new Integer(form.getString("bron"));
-        } catch (NumberFormatException nfe) {
-            logger.debug("No bron id found in form, input: " + form.getString("bron"));
+        String tmp = (String) form.getString("bron");
+        Integer bronId = null;
+
+        if (tmp != null) {
+            try {
+                bronId = new Integer(tmp);
+            } catch (NumberFormatException nfe) {
+                logger.debug("NumberFormatException: No bronid found in Gegevensbron form.");
+            }
         }
 
         try {
-            b = ConfigListsUtil.getBron(sess, user, cId);
+            b = ConfigListsUtil.getBron(sess, user, bronId);
             tns = ConfigListsUtil.getPossibleFeatures(b);
         } catch (Exception e) {
             logger.error("", e);
