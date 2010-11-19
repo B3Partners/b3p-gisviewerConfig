@@ -47,7 +47,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         populateForm(dynaForm, request, map, rolnaam);
 
         request.setAttribute("header_Rolnaam", rolnaam);
- 
+
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
 
@@ -61,6 +61,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         List zoekconfigs = sess.createQuery("from ZoekConfiguratie order by naam").list();
         request.setAttribute("zoekConfigs", zoekconfigs);
+        List meldingGegevensbronnen = sess.createQuery("from Gegevensbron order by naam").list();
+        request.setAttribute("meldingGegevensbronnen", meldingGegevensbronnen);
 
     }
 
@@ -86,7 +88,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showRedliningTools = (Boolean) map.get("showRedliningTools");
         Boolean showBufferTool = (Boolean) map.get("showBufferTool");
         Boolean showSelectBulkTool = (Boolean) map.get("showSelectBulkTool");
-        Boolean showNeedleTool = (Boolean) map.get("showNeedleTool");      
+        Boolean showNeedleTool = (Boolean) map.get("showNeedleTool");
         String layerGrouping = (String) map.get("layerGrouping");
         String popupWidth = (String) map.get("popupWidth");
         String popupHeight = (String) map.get("popupHeight");
@@ -107,7 +109,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String vergunningConfigStraal = (String) map.get("vergunningConfigStraal");
         fillVergunningConfigBox(dynaForm, request, vergunningConfigIds, vergunningConfigStraal);
 
-         /* dropdown voor i-tool goedzetten
+        fillMeldingenBox(dynaForm, request, map);
+
+        /* dropdown voor i-tool goedzetten
         geen, paneel of popup */
         if (usePopup != null && usePopup) {
             dynaForm.set("cfg_objectInfo", "popup");
@@ -118,8 +122,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
                 dynaForm.set("cfg_objectInfo", "geen");
             }
         }
-        
-       /* overige settings klaarzetten voor formulier */
+
+        /* overige settings klaarzetten voor formulier */
         dynaForm.set("cfg_useCookies", useCookies);
         dynaForm.set("cfg_autoRedirect", autoRedirect);
         dynaForm.set("cfg_tolerance", tolerance);
@@ -144,7 +148,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_defaultdataframehoogte", defaultdataframehoogte);
 
         dynaForm.set("rolnaam", rolnaam);
-        
+
         /* Tabbladen vullen */
         fillTabbladenConfig(dynaForm, map);
 
@@ -163,7 +167,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         populateObject(dynaForm, rolnaam);
-        
+
         request.setAttribute("header_Rolnaam", rolnaam);
 
         prepareMethod(dynaForm, request, LIST, EDIT);
@@ -172,7 +176,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     }
 
     public void populateObject(DynaValidatorForm dynaForm, String rolnaam) {
-       /* opslaan I-tool dropdown */
+        /* opslaan I-tool dropdown */
         writeObjectInfoDisplayMethod(dynaForm, rolnaam);
 
         /* opslaan overige settings */
@@ -253,6 +257,57 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         writePlanSelectieIdConfig(dynaForm, rolnaam);
         writeVoorzieningIdConfig(dynaForm, rolnaam);
         writeVergunningIdConfig(dynaForm, rolnaam);
+
+        writeMeldingConfig(dynaForm, rolnaam);
+
+    }
+
+    private void writeMeldingConfig(DynaValidatorForm dynaForm, String rolnaam) {
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        ConfigKeeper configKeeper = new ConfigKeeper();
+
+        Configuratie config = configKeeper.getConfiguratie("meldingWelkomtekst", rolnaam);
+        writeString(dynaForm, "cfg_meldingwelkomtekst", config);
+
+        config = configKeeper.getConfiguratie("meldingPrefix", rolnaam);
+        writeString(dynaForm, "cfg_meldingprefix", config);
+
+        config = configKeeper.getConfiguratie("meldingType", rolnaam);
+        writeString(dynaForm, "cfg_meldingtype", config);
+
+        config = configKeeper.getConfiguratie("meldingStatus", rolnaam);
+        writeString(dynaForm, "cfg_meldingstatus", config);
+
+        config = configKeeper.getConfiguratie("meldingLayoutEmailMelder", rolnaam);
+        writeString(dynaForm, "cfg_meldinglayoutemailmelder", config);
+
+        config = configKeeper.getConfiguratie("meldingNaam", rolnaam);
+        writeString(dynaForm, "cfg_meldingnaam", config);
+
+        config = configKeeper.getConfiguratie("meldingEmail", rolnaam);
+        writeString(dynaForm, "cfg_meldingemail", config);
+
+        config = configKeeper.getConfiguratie("meldingEmailmelder", rolnaam);
+        writeBoolean(dynaForm, "cfg_meldingemailmelder", config);
+
+        config = configKeeper.getConfiguratie("meldingEmailBehandelaar", rolnaam);
+        writeBoolean(dynaForm, "cfg_meldingemailbehandelaar", config);
+
+        config = configKeeper.getConfiguratie("meldingLayoutEmailBehandelaar", rolnaam);
+        writeString(dynaForm, "cfg_meldinglayoutemailbehandelaar", config);
+
+        config = configKeeper.getConfiguratie("meldingGegevensbron", rolnaam);
+        writeInteger(dynaForm, "cfg_meldinggegevensbron", config);
+
+        config = configKeeper.getConfiguratie("meldingObjectSoort", rolnaam);
+        writeString(dynaForm, "cfg_meldingobjectsoort", config);
+
+        config = configKeeper.getConfiguratie("meldingTekentoolIcoon", rolnaam);
+        writeString(dynaForm, "cfg_meldingtekentoolicoon", config);
+
+        sess.flush();
     }
 
     private void writeZoekenIdConfig(DynaValidatorForm form, String rolnaam) {
@@ -294,7 +349,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         sess.merge(configTabs);
         sess.flush();
     }
-    
+
     private void writeVoorzieningIdConfig(DynaValidatorForm form, String rolnaam) {
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
@@ -329,8 +384,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         configTabs.setType("java.lang.String");
         sess.merge(configTabs);
         sess.flush();
-        
-        
+
+
         Configuratie configStraal = configKeeper.getConfiguratie("voorzieningConfigStraal", rolnaam);
         String straal = "";
         if (!form.get("cfg_voorzieningstraal").equals("leeg")) {
@@ -525,7 +580,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private void writeBoolean(DynaValidatorForm form, String field, Configuratie c) {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        if (form.get(field) != null && form.get(field).toString().length()>0) {
+        if (form.get(field) != null && form.get(field).toString().length() > 0) {
             c.setPropval("true");
         } else {
             c.setPropval("false");
@@ -566,7 +621,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
     private void fillTabbladenConfig(DynaValidatorForm dynaForm, Map map) {
         String tabs = (String) map.get("tabs");
-        if (tabs==null) {
+        if (tabs == null) {
             return;
         }
         String[] items = tabs.split(",");
@@ -756,7 +811,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             }
         }
 
-        if(voorzieningConfigStraal != null){
+        if (voorzieningConfigStraal != null) {
             dynaForm.set("cfg_voorzieningstraal", voorzieningConfigStraal.replaceAll("\"", ""));
         }
 
@@ -845,19 +900,37 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             }
         }
 
-        if(vergunningConfigStraal != null){
+        if (vergunningConfigStraal != null) {
             dynaForm.set("cfg_vergunningstraal", vergunningConfigStraal.replaceAll("\"", ""));
         }
 
+    }
+
+    private void fillMeldingenBox(DynaValidatorForm dynaForm,
+            HttpServletRequest request, Map map) {
+
+        dynaForm.set("cfg_meldingwelkomtekst", (String) map.get("meldingWelkomtekst"));
+        dynaForm.set("cfg_meldingprefix", (String) map.get("meldingPrefix"));
+        dynaForm.set("cfg_meldingtype", (String) map.get("meldingType"));
+        dynaForm.set("cfg_meldingstatus", (String) map.get("meldingStatus"));
+        dynaForm.set("cfg_meldingemailmelder", (Boolean) map.get("meldingEmailMelder"));
+        dynaForm.set("cfg_meldinglayoutemailmelder", (String) map.get("meldingLayoutEmailMelder"));
+        dynaForm.set("cfg_meldingnaam", (String) map.get("meldingNaam"));
+        dynaForm.set("cfg_meldingemail", (String) map.get("meldingEmail"));
+        dynaForm.set("cfg_meldingemailbehandelaar", (Boolean) map.get("meldingEmailBehandelaar"));
+        dynaForm.set("cfg_meldinglayoutemailbehandelaar", (String) map.get("meldingLayoutEmailBehandelaar"));
+        dynaForm.set("cfg_meldinggegevensbron", (Integer) map.get("meldingGegevensbron"));
+        dynaForm.set("cfg_meldingobjectsoort", (String) map.get("meldingObjectSoort"));
+        dynaForm.set("cfg_meldingtekentoolicoon", (String) map.get("meldingTekentoolIcoon"));
     }
 
     private void writeDefaultConfigForRole(String rol) {
 
         /* Invoegen default config voor rolnaam */
         Configuratie cfg = null;
-     
+
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-            
+
         cfg = new Configuratie();
         cfg.setProperty("useCookies");
         cfg.setPropval("true");
@@ -1041,7 +1114,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         cfg.setSetting(rol);
         cfg.setType("java.lang.Boolean");
         sess.save(cfg);
-        
+
         cfg = new Configuratie();
         cfg.setProperty("layerGrouping");
         cfg.setPropval("lg_forebackground");
@@ -1083,7 +1156,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         cfg.setSetting(rol);
         cfg.setType("java.lang.String");
         sess.save(cfg);
-        
+
         sess.flush();
     }
 }
