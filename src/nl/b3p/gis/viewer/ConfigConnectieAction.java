@@ -81,7 +81,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
                 logger.debug("Kon tijdens bewerken van bron " + b.getNaam() + " de GetCapabilities niet ophalen.");
 
             } catch (Exception e) {
-                logger.error("", e);
+                logger.error("Exception for bron: "+b.getId()+" URL: "+b.getUrl(), e);
             } finally {
                 if (ds != null)
                     ds.dispose();
