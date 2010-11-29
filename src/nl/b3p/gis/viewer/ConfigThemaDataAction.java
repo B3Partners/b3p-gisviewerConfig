@@ -285,7 +285,12 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         }
 
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
-        Name geomName = DataStoreUtil.getThemaGeomName(gb, user);
+        Name geomName = null;
+        try {
+            geomName = DataStoreUtil.getThemaGeomName(gb, user);
+        } catch (Exception ex) {
+            logger.debug("",ex);
+        }
         String geomPropname =  "";
         if (geomName!=null && geomName.getLocalPart()!=null) {
             geomPropname = geomName.getLocalPart();
