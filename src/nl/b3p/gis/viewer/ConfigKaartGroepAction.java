@@ -307,9 +307,13 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
 
         c.setNaam(FormUtils.nullIfEmpty(dynaForm.getString("naam")));
         c.setOmschrijving(FormUtils.nullIfEmpty(dynaForm.getString("omschrijving")));
+
         if (dynaForm.getString("belangnr") != null && dynaForm.getString("belangnr").length() > 0) {
             c.setBelangnr(Integer.parseInt(dynaForm.getString("belangnr")));
+        } else {
+            c.setBelangnr(0);
         }
+
         c.setMetadatalink(FormUtils.nullIfEmpty(dynaForm.getString("metadatalink")));
         Boolean b = (Boolean) dynaForm.get("default_cluster");
         c.setDefault_cluster(b == null ? false : b.booleanValue());

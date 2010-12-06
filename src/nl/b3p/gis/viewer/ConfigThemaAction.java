@@ -284,6 +284,8 @@ public class ConfigThemaAction extends ViewerCrudAction {
 
         if (dynaForm.getString("belangnr") != null && dynaForm.getString("belangnr").length() > 0) {
             t.setBelangnr(Integer.parseInt(dynaForm.getString("belangnr")));
+        } else {
+            t.setBelangnr(0);
         }
         t.setOpmerkingen(FormUtils.nullIfEmpty(dynaForm.getString("opmerkingen")));
         Boolean b = (Boolean) dynaForm.get("analyse_thema");

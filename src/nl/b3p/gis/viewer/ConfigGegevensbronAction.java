@@ -68,7 +68,7 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        List gegevensbronnen = sess.createQuery("from Gegevensbron order by naam").list();
+        List gegevensbronnen = sess.createQuery("from Gegevensbron order by volgordenr, naam").list();
         request.setAttribute("alleGegevensbronnen", gegevensbronnen);
 
         List bronnen = sess.createQuery("from Bron order by naam").list();
@@ -127,7 +127,7 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
         root.put("name", "root");
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List ctl = sess.createQuery("from Gegevensbron order by naam").list();
+        List ctl = sess.createQuery("from Gegevensbron order by volgordenr, naam").list();
 
         Map rootGbMap = getGegevensbronMap(ctl, null);
         List gbMaps = (List) rootGbMap.get("subbronnen");
@@ -381,6 +381,9 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
         dynaForm.set("admin_fk", gb.getAdmin_fk());
         dynaForm.set("admin_query", gb.getAdmin_query());
         dynaForm.set("admin_tabel_opmerkingen", gb.getAdmin_tabel_opmerkingen());
+
+        if (gb.getVolgordenr() != null)
+            dynaForm.set("volgordenr", FormUtils.IntToString(gb.getVolgordenr()));
     }
 
     private void populateGegevensbronObject(DynaValidatorForm dynaForm, Gegevensbron gb, HttpServletRequest request) {
@@ -417,6 +420,12 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
             gb.setParent(m);
         } else {
             gb.setParent(null);
+        }
+
+        if (dynaForm.getString("volgordenr") != null && dynaForm.getString("volgordenr").length() > 0) {
+            gb.setVolgordenr(Integer.parseInt(dynaForm.getString("volgordenr")));
+        } else {
+            gb.setVolgordenr(null);
         }
 
         gb.setAdmin_fk(FormUtils.nullIfEmpty(dynaForm.getString("admin_fk")));
