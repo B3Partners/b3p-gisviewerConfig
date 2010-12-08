@@ -19,11 +19,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private static final Log logger = LogFactory.getLog(ConfigKeeperAction.class);
     private static final String[] CONFIGKEEPER_TABS = {
         "leeg", "themas", "legenda", "zoeken", "informatie", "gebieden",
-        "analyse", "planselectie", "meldingen", "vergunningen", "voorzieningen"
+        "analyse", "planselectie", "meldingen", "vergunningen", "voorzieningen",
+        "redlining"
     };
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Info", "Gebieden",
-        "Analyse", "Plannen", "Meldingen", "Vergunningen", "Voorzieningen"
+        "Analyse", "Plannen", "Meldingen", "Vergunningen", "Voorzieningen",
+        "Redlining"
     };
 
     @Override
@@ -54,6 +56,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         return mapping.findForward(SUCCESS);
     }
 
+    @Override
     protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
         request.setAttribute("tabValues", CONFIGKEEPER_TABS);
         request.setAttribute("tabLabels", LABELS_VOOR_TABS);
