@@ -10,7 +10,6 @@ insert into configuratie (property, propval, setting, soort) values ('refreshDel
 insert into configuratie (property, propval, setting, soort) values ('minBboxZoeken', '1000', 'default', 'java.lang.Integer');
 insert into configuratie (property, propval, setting, soort) values ('zoekConfigIds', '"-1"', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, soort) values ('maxResults', '25', 'default', 'java.lang.Integer');
-insert into configuratie (property, propval, setting, soort) values ('usePopup', 'false', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, soort) values ('useDivPopup', 'false', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, soort) values ('usePanelControls', 'true', 'default', 'java.lang.Boolean');
 insert into configuratie (property, propval, setting, soort) values ('expandAll', 'true', 'default', 'java.lang.Boolean');
@@ -31,3 +30,6 @@ insert into configuratie (property, propval, setting, soort) values ('popupHeigh
 insert into configuratie (property, propval, setting, soort) values ('popupLeft', '5%', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, soort) values ('popupTop', '75%', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, soort) values ('defaultdataframehoogte', '150', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, soort) values ('viewerType', 'flamingo', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, soort) values ('viewerTemplate', 'standalone', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, soort) values ('objectInfoType', 'paneel', 'default', 'java.lang.String');

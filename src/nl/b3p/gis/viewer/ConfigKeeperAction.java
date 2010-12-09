@@ -99,6 +99,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String popupTop = (String) map.get("popupTop");
         String defaultdataframehoogte = (String) map.get("defaultdataframehoogte");
 
+        String viewerType = (String) map.get("viewerType");
+        String viewerTemplate = (String) map.get("viewerTemplate");
+
+        String objectInfoType = (String) map.get("objectInfoType");
+
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
         fillPlanSelectieBox(dynaForm, request, planSelectieIds);
@@ -113,18 +118,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         fillVergunningConfigBox(dynaForm, request, vergunningConfigIds, vergunningConfigStraal);
 
         fillMeldingenBox(dynaForm, request, map);
-
-        /* dropdown voor i-tool goedzetten
-        geen, paneel of popup */
-        if (usePopup != null && usePopup) {
-            dynaForm.set("cfg_objectInfo", "popup");
-        } else {
-            if (usePanelControls != null && usePanelControls) {
-                dynaForm.set("cfg_objectInfo", "paneel");
-            } else {
-                dynaForm.set("cfg_objectInfo", "geen");
-            }
-        }
 
         /* overige settings klaarzetten voor formulier */
         dynaForm.set("cfg_useCookies", useCookies);
@@ -149,6 +142,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_popupLeft", popupLeft);
         dynaForm.set("cfg_popupTop", popupTop);
         dynaForm.set("cfg_defaultdataframehoogte", defaultdataframehoogte);
+
+        dynaForm.set("cfg_viewerType", viewerType);
+        dynaForm.set("cfg_viewerTemplate", viewerTemplate);
+        dynaForm.set("cfg_objectInfoType", objectInfoType);
 
         dynaForm.set("rolnaam", rolnaam);
 
@@ -179,8 +176,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     }
 
     public void populateObject(DynaValidatorForm dynaForm, String rolnaam) {
-        /* opslaan I-tool dropdown */
-        writeObjectInfoDisplayMethod(dynaForm, rolnaam);
 
         /* opslaan overige settings */
         ConfigKeeper configKeeper = new ConfigKeeper();
@@ -255,6 +250,15 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("defaultdataframehoogte", rolnaam);
         writeString(dynaForm, "cfg_defaultdataframehoogte", c);
 
+        c = configKeeper.getConfiguratie("viewerType", rolnaam);
+        writeString(dynaForm, "cfg_viewerType", c);
+
+        c = configKeeper.getConfiguratie("viewerTemplate", rolnaam);
+        writeString(dynaForm, "cfg_viewerTemplate", c);
+
+        c = configKeeper.getConfiguratie("objectInfoType", rolnaam);
+        writeString(dynaForm, "cfg_objectInfoType", c);
+
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, rolnaam);
         writePlanSelectieIdConfig(dynaForm, rolnaam);
@@ -262,7 +266,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         writeVergunningIdConfig(dynaForm, rolnaam);
 
         writeMeldingConfig(dynaForm, rolnaam);
-
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String rolnaam) {
@@ -672,59 +675,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             }
         } else {
             dynaForm.set("cfg_tab5", CONFIGKEEPER_TABS[0]);
-        }
-    }
-
-    private void writeObjectInfoDisplayMethod(DynaValidatorForm form, String rolnaam) {
-
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-
-        ConfigKeeper configKeeper = new ConfigKeeper();
-
-        Configuratie usePopup = configKeeper.getConfiguratie("usePopup", rolnaam);
-        usePopup.setType("java.lang.Boolean");
-        Configuratie useDivPopup = configKeeper.getConfiguratie("useDivPopup", rolnaam);
-        useDivPopup.setType("java.lang.Boolean");
-        Configuratie usePanelControls = configKeeper.getConfiguratie("usePanelControls", rolnaam);
-        usePanelControls.setType("java.lang.Boolean");
-
-        // geen, paneel, popup
-        String cfg_objectInfo = (String) form.get("cfg_objectInfo");
-
-        if (cfg_objectInfo.equals("geen")) {
-            usePopup.setPropval("false");
-            useDivPopup.setPropval("false");
-            usePanelControls.setPropval("false");
-
-            sess.merge(usePopup);
-            sess.merge(useDivPopup);
-            sess.merge(usePanelControls);
-
-            sess.flush();
-        }
-
-        if (cfg_objectInfo.equals("paneel")) {
-            usePopup.setPropval("false");
-            useDivPopup.setPropval("false");
-            usePanelControls.setPropval("true");
-
-            sess.merge(usePopup);
-            sess.merge(useDivPopup);
-            sess.merge(usePanelControls);
-
-            sess.flush();
-        }
-
-        if (cfg_objectInfo.equals("popup")) {
-            usePopup.setPropval("true");
-            useDivPopup.setPropval("true");
-            usePanelControls.setPropval("false");
-
-            sess.merge(usePopup);
-            sess.merge(useDivPopup);
-            sess.merge(usePanelControls);
-
-            sess.flush();
         }
     }
 
@@ -1156,6 +1106,27 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         cfg = new Configuratie();
         cfg.setProperty("defaultdataframehoogte");
         cfg.setPropval("150");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+        
+        cfg = new Configuratie();
+        cfg.setProperty("viewerType");
+        cfg.setPropval("flamingo");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("viewerTemplate");
+        cfg.setPropval("standalone");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("objectInfoType");
+        cfg.setPropval("paneel");
         cfg.setSetting(rol);
         cfg.setType("java.lang.String");
         sess.save(cfg);
