@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.viewer.db.Configuratie;
 import nl.b3p.gis.viewer.services.HibernateUtil;
@@ -27,6 +28,60 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         "Analyse", "Plannen", "Meldingen", "Vergunningen", "Voorzieningen",
         "Redlining"
     };
+    
+    protected static final String RESET_ROLINSTELLINGEN = "resetRolInstellingen";
+
+    @Override
+    protected Map getActionMethodPropertiesMap() {
+        Map map = super.getActionMethodPropertiesMap();
+
+        ExtendedMethodProperties crudProp = null;
+
+        crudProp = new ExtendedMethodProperties(RESET_ROLINSTELLINGEN);
+        crudProp.setDefaultForwardName(SUCCESS);
+        map.put(RESET_ROLINSTELLINGEN, crudProp);
+
+        return map;
+    }
+
+    public ActionForward resetRolInstellingen(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        if (!isTokenValid(request)) {
+            prepareMethod(dynaForm, request, EDIT, LIST);
+            addAlternateMessage(mapping, request, TOKEN_ERROR_KEY);
+            return this.getAlternateForward(mapping, request);
+        }
+
+        String rolnaam = (String) request.getParameter("rolnaam");
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        int query = sess.createQuery("delete from Configuratie where setting = :rolnaam)")
+                .setParameter("rolnaam", rolnaam)
+                .executeUpdate();
+
+        sess.flush();
+
+        if (query > 0) {
+            writeDefaultConfigForRole(rolnaam);
+            logger.debug("Rolinstellingen zijn gereset voor de rol " + rolnaam);
+        }
+
+        ConfigKeeper configKeeper = new ConfigKeeper();
+
+        Map map = null;
+        map = configKeeper.getConfigMap(rolnaam);
+
+        if (map.size() > 1) {
+            populateForm(dynaForm, request, map, rolnaam);
+        }
+
+        request.setAttribute("header_Rolnaam", rolnaam);
+
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+
+        return getDefaultForward(mapping, request);
+    }
 
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
@@ -172,6 +227,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         prepareMethod(dynaForm, request, LIST, EDIT);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        
         return getDefaultForward(mapping, request);
     }
 
@@ -568,7 +624,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         if (!form.get("cfg_tab5").equals("leeg")) {
-            strBeheerTabs += "\"" + form.get("cfg_tab5") + "\",";
+            strBeheerTabs += "\"" + form.get("cfg_tab5");
         }
 
         lastComma = strBeheerTabs.lastIndexOf(",");
