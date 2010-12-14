@@ -207,6 +207,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* Tabbladen vullen */
         fillTabbladenConfig(dynaForm, map);
 
+        /* redlining config items */
+        dynaForm.set("cfg_redlininggegevensbron", (Integer) map.get("redliningGegevensbron"));
+
     }
 
     @Override
@@ -322,6 +325,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         writeVergunningIdConfig(dynaForm, rolnaam);
 
         writeMeldingConfig(dynaForm, rolnaam);
+
+        c = configKeeper.getConfiguratie("redliningGegevensbron", rolnaam);
+        writeInteger(dynaForm, "cfg_redlininggegevensbron", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String rolnaam) {
