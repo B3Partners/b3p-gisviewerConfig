@@ -295,6 +295,7 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
         dynaForm.set("extra_level", c.isExtra_level());
         dynaForm.set("callable", c.isCallable());
         dynaForm.set("default_visible", c.isDefault_visible());
+        dynaForm.set("exclusive_childs", c.isExclusive_childs());
 
         String val = "";
         if (c.getParent() != null) {
@@ -329,6 +330,8 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
         c.setCallable(b == null ? false : b.booleanValue());
         b = (Boolean) dynaForm.get("default_visible");
         c.setDefault_visible(b == null ? false : b.booleanValue());
+        b = (Boolean) dynaForm.get("exclusive_childs");
+        c.setExclusive_childs(b == null ? false : b.booleanValue());
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         String parentID = FormUtils.nullIfEmpty(dynaForm.getString("parentID"));

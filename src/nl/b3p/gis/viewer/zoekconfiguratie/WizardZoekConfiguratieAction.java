@@ -228,7 +228,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         request.setAttribute("zoekConfiguraties", zoekconfiguraties);
         return mapping.findForward(STEP3);
     }
-
+    /*Zoekingang velden*/
     public ActionForward step3(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         ZoekConfiguratie zc = getAndSetZoekConfiguratie(request);
         Bron bron = null;
