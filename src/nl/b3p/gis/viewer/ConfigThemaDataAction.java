@@ -83,7 +83,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         td.setGegevensbron(gb);
         return td;
     }
-    
+
     protected Gegevensbron getGegevensbron(DynaValidatorForm form, boolean createNew) {
         Integer id = FormUtils.StringToInteger(form.getString("gegevensbronID"));
         Gegevensbron gb = null;
@@ -133,32 +133,61 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         request.setAttribute("listThemaData", bestaandeObjecten);
 
         Bron b = gb.getBron(request);
-       
+
         List<String> attributes = DataStoreUtil.getAttributeNames(b, gb);
         request.setAttribute("listAdminTableColumns", attributes);
 
-        if (gb.getBron() != null)
+        if (gb.getBron() != null) {
             request.setAttribute("connectieType", gb.getBron().getType());
-        else
+        } else {
             request.setAttribute("connectieType", Bron.TYPE_EMPTY);
+        }
 
-        StringBuilder uglyThemaData =  new StringBuilder();
+        StringBuilder uglyThemaData = new StringBuilder();
         for (ThemaData tdi : bestaandeObjecten) {
-            if (tdi.getKolomnaam() == null) {
-                continue;
-            }
-            QName dbkolom = DataStoreUtil.convertFullnameToQName(tdi.getKolomnaam());
             boolean bestaatNog = false;
-            for (String attribute : attributes) {
-                QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
-                if (attributeName.getLocalPart().compareTo(dbkolom.getLocalPart()) == 0) {
-                    bestaatNog = true;
-                    break;
+            if (tdi.getKolomnaam() == null) {
+                bestaatNog=true;
+            }else{
+                QName dbkolom = DataStoreUtil.convertFullnameToQName(tdi.getKolomnaam());
+
+                for (String attribute : attributes) {
+                    QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
+                    if (attributeName.getLocalPart().compareTo(dbkolom.getLocalPart()) == 0) {
+                        bestaatNog = true;
+                        break;
+                    }
                 }
+            }
+            //als alles tot hier goed is dan nog controleren of het commando nog wel gebouwd kan worden.
+            if (bestaatNog) {
+                String commando = null;
+                //alleen voor commando met een "[" er in
+                if (tdi.getDataType().getId() == DataTypen.QUERY && tdi.getCommando() != null && tdi.getCommando().indexOf("[")>=0) {
+                    commando = tdi.getCommando();
+                }
+                if (commando != null) {
+                    for (String attribute : attributes) {
+                        if (commando.indexOf("[" + attribute + "]") != -1) {
+                            commando = commando.replaceAll("\\[" + attribute + "\\]", "");
+                        }
+                        //als alle commando velden zijn gevonden dan breaken.
+                        if (commando.indexOf("[") == -1) {
+                            break;
+                        }
+                    }
+                    if (commando != null && commando.indexOf("[") >= 0) {
+                        bestaatNog = false;
+                    }
+                }
+            }else{
+                uglyThemaData.append("[");
+                uglyThemaData.append(tdi.getId()+":KOLOMNAAM");
+                uglyThemaData.append("]");
             }
             if (!bestaatNog) {
                 uglyThemaData.append("[");
-                uglyThemaData.append(tdi.getKolomnaam());
+                uglyThemaData.append(tdi.getId()+":COMMANDO");
                 uglyThemaData.append("]");
             }
         }
@@ -289,17 +318,17 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         try {
             geomName = DataStoreUtil.getThemaGeomName(gb, user);
         } catch (Exception ex) {
-            logger.debug("",ex);
+            logger.debug("", ex);
         }
-        String geomPropname =  "";
-        if (geomName!=null && geomName.getLocalPart()!=null) {
+        String geomPropname = "";
+        if (geomName != null && geomName.getLocalPart() != null) {
             geomPropname = geomName.getLocalPart();
         }
 
         List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(gb, false);
         for (String attribute : attributes) {
-             QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
-            if (attributeName==null || attributeName.getLocalPart().compareTo(geomPropname) == 0) {
+            QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
+            if (attributeName == null || attributeName.getLocalPart().compareTo(geomPropname) == 0) {
                 // geometry column not added
                 continue;
             }
@@ -406,7 +435,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         td = getFirstThemaData(gb);
         dynaForm.initialize(mapping);
         populateThemaDataForm(td, dynaForm, request);
-        
+
         prepareMethod(dynaForm, request, LIST, EDIT);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);
@@ -482,12 +511,12 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         } catch (NumberFormatException ex) {
             logger.error("Illegal dataTypeID", ex);
         }
-        
+
         Gegevensbron gb = (Gegevensbron) sess.get(Gegevensbron.class, new Integer(tId));
         td.setGegevensbron(gb);
         DataTypen d = (DataTypen) sess.get(DataTypen.class, new Integer(dId));
         td.setDataType(d);
-        
+
     }
 
     protected ThemaData createDefaultExtraThemaData(Gegevensbron gb) {
