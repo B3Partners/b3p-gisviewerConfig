@@ -21,12 +21,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private static final String[] CONFIGKEEPER_TABS = {
         "leeg", "themas", "legenda", "zoeken", "informatie", "gebieden",
         "analyse", "planselectie", "meldingen", "vergunningen", "voorzieningen",
-        "redlining"
+        "redlining","cms"
     };
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Info", "Gebieden",
         "Analyse", "Plannen", "Meldingen", "Vergunningen", "Voorzieningen",
-        "Redlining"
+        "Redlining","CMS"
     };
     
     protected static final String RESET_ROLINSTELLINGEN = "resetRolInstellingen";
@@ -630,7 +630,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         if (!form.get("cfg_tab5").equals("leeg")) {
-            strBeheerTabs += "\"" + form.get("cfg_tab5");
+            strBeheerTabs += "\"" + form.get("cfg_tab5")+ "\",";
         }
 
         lastComma = strBeheerTabs.lastIndexOf(",");
