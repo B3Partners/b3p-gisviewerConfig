@@ -34,3 +34,4 @@ insert into configuratie (property, propval, setting, soort) values ('viewerType
 insert into configuratie (property, propval, setting, soort) values ('viewerTemplate', 'standalone', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, soort) values ('objectInfoType', 'paneel', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, soort) values ('treeOrder', 'alphabet', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, soort) values ('tabWidth', '288', 'default', 'java.lang.Integer');
