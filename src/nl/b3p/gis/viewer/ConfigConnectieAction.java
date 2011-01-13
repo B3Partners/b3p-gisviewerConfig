@@ -33,7 +33,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
     protected static final String FK_PARENTBRON_ERROR_KEY = "error.fk.parentbron";
     
     protected Bron getConnectie(DynaValidatorForm form, boolean createNew) {
-        Integer id = FormUtils.StringToInteger(form.getString("id"));
+        Integer id = FormUtils.StringToInteger(form.getString("bronId"));
         Bron c = null;
         if (id == null && createNew) {
             c = new Bron();
@@ -250,7 +250,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         if (c == null) {
             return;
         }
-        dynaForm.set("id", Integer.toString(c.getId()));
+        dynaForm.set("bronId", Integer.toString(c.getId().intValue()));
         dynaForm.set("naam", c.getNaam());
         dynaForm.set("url", c.getUrl());
         dynaForm.set("gebruikersnaam", c.getGebruikersnaam());
@@ -260,8 +260,8 @@ public class ConfigConnectieAction extends ViewerCrudAction {
     }
 
     private void populateConnectieObject(DynaValidatorForm dynaForm, Bron c, HttpServletRequest request) {
-        if (FormUtils.nullIfEmpty(dynaForm.getString("id"))!=null){
-            c.setId(new Integer (dynaForm.getString("id")));
+        if (FormUtils.nullIfEmpty(dynaForm.getString("bronId"))!=null){
+            c.setId(new Integer (dynaForm.getString("bronId")));
         }
         c.setNaam(FormUtils.nullIfEmpty(dynaForm.getString("naam")));
         c.setUrl(FormUtils.nullIfEmpty(dynaForm.getString("url")));

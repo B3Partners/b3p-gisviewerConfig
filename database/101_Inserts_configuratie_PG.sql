@@ -33,3 +33,4 @@ insert into configuratie (property, propval, setting, soort) values ('defaultdat
 insert into configuratie (property, propval, setting, soort) values ('viewerType', 'flamingo', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, soort) values ('viewerTemplate', 'standalone', 'default', 'java.lang.String');
 insert into configuratie (property, propval, setting, soort) values ('objectInfoType', 'paneel', 'default', 'java.lang.String');
+insert into configuratie (property, propval, setting, soort) values ('treeOrder', 'alphabet', 'default', 'java.lang.String');

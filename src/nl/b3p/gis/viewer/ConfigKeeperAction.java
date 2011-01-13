@@ -1207,6 +1207,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         cfg.setType("java.lang.String");
         sess.save(cfg);
 
+        cfg = new Configuratie();
+        cfg.setProperty("defaultdataframehoogte");
+        cfg.setPropval("150");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
         sess.flush();
     }
 }

@@ -33,3 +33,4 @@ insert into configuratie (id, property, propval, setting, soort) values (configu
 insert into configuratie (id, property, propval, setting, soort) values (configuratie_id_seq.nextval, 'viewerType', 'flamingo', 'default', 'java.lang.String');
 insert into configuratie (id, property, propval, setting, soort) values (configuratie_id_seq.nextval, 'viewerTemplate', 'standalone', 'default', 'java.lang.String');
 insert into configuratie (id, property, propval, setting, soort) values (configuratie_id_seq.nextval, 'objectInfoType', 'paneel', 'default', 'java.lang.String');
+insert into configuratie (id, property, propval, setting, soort) values (configuratie_id_seq.nextval, 'treeOrder', 'alphabet', 'default', 'java.lang.String');
