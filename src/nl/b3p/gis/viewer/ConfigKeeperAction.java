@@ -159,6 +159,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         String objectInfoType = (String) map.get("objectInfoType");
 
+        String treeOrder = (String) map.get("treeOrder");
+
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
         fillPlanSelectieBox(dynaForm, request, planSelectieIds);
@@ -201,6 +203,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_viewerType", viewerType);
         dynaForm.set("cfg_viewerTemplate", viewerTemplate);
         dynaForm.set("cfg_objectInfoType", objectInfoType);
+
+        dynaForm.set("cfg_treeOrder", treeOrder);
 
         dynaForm.set("rolnaam", rolnaam);
 
@@ -317,6 +321,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("objectInfoType", rolnaam);
         writeString(dynaForm, "cfg_objectInfoType", c);
+
+        c = configKeeper.getConfiguratie("treeOrder", rolnaam);
+        writeString(dynaForm, "cfg_treeOrder", c);
 
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, rolnaam);
@@ -1189,6 +1196,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         cfg = new Configuratie();
         cfg.setProperty("objectInfoType");
         cfg.setPropval("paneel");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("treeOrder");
+        cfg.setPropval("volgorde");
         cfg.setSetting(rol);
         cfg.setType("java.lang.String");
         sess.save(cfg);
