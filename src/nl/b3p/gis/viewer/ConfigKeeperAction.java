@@ -161,6 +161,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         String treeOrder = (String) map.get("treeOrder");
 
+        Integer tabWidth = (Integer) map.get("tabWidth");
+
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
         fillPlanSelectieBox(dynaForm, request, planSelectieIds);
@@ -205,6 +207,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_objectInfoType", objectInfoType);
 
         dynaForm.set("cfg_treeOrder", treeOrder);
+
+        dynaForm.set("cfg_tabWidth", tabWidth);
 
         dynaForm.set("rolnaam", rolnaam);
 
@@ -324,6 +328,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("treeOrder", rolnaam);
         writeString(dynaForm, "cfg_treeOrder", c);
+
+        c = configKeeper.getConfiguratie("tabWidth", rolnaam);
+        writeInteger(dynaForm, "cfg_tabWidth", c);
 
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, rolnaam);
@@ -1208,10 +1215,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         sess.save(cfg);
 
         cfg = new Configuratie();
-        cfg.setProperty("defaultdataframehoogte");
-        cfg.setPropval("150");
+        cfg.setProperty("tabWidth");
+        cfg.setPropval("288");
         cfg.setSetting(rol);
-        cfg.setType("java.lang.String");
+        cfg.setType("java.lang.Integer");
         sess.save(cfg);
 
         sess.flush();
