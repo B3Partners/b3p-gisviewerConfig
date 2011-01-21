@@ -378,7 +378,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
                 if (ResultaatAttribuut.GEOMETRY_TYPE == ra.getType()) {
                     geometryExists = true;
                 } //kijk of er velden zijn die als resultaat worden getoond.
-                else if (ResultaatAttribuut.TOON_TYPE == ra.getType()) {
+                else if (ResultaatAttribuut.TOON_TYPE == ra.getType() || ResultaatAttribuut.ALLEEN_TOON_TYPE == ra.getType()) {
                     toonExists = true;
                 }
             }
