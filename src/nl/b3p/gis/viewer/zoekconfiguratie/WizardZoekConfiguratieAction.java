@@ -92,6 +92,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         List bronnen = sess.createCriteria(Bron.class).list();
         request.setAttribute("bronnen", bronnen);
         prepareMethod(dynaForm, request, EDIT, LIST);
+
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return mapping.findForward(SUCCESS);
     }
@@ -151,7 +152,9 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
                 int size = parents.size() + velden.size();
 
                 if (size > 0) {
-                    addAlternateMessage(mapping, request, ERROR_ZOEKVELD_RELATION, message);               
+                    addAlternateMessage(mapping, request, ERROR_ZOEKVELD_RELATION, message);
+
+                    return step2(mapping, dynaForm, request, response);
                 } else {
                     sess.delete(zc);
                     sess.flush();
@@ -177,6 +180,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         Bron bron = getAndSetBron(request);
         String[] types = ZoekConfiguratieListUtil.getTypeNames(bron, true);
         request.setAttribute("featureTypes", types);
+
         return mapping.findForward(STEP2);
     }
 
@@ -205,19 +209,12 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             featureType = FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
         }
         request.setAttribute(FEATURETYPE, featureType);
-        //controleer of de ZoekConfiguratie niet corrupt is.
-        if (zc != null && (bron == null || featureType == null)) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De zoekconfiguratie die u wilt bewerken is onjuist geoconfigureerd en kan niet worden bewerkt. U kunt wel een nieuwe zoekconfiguratie aanmaken.");
+
+        if (zc != null && bron == null || featureType == null) {
+            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De geselecteerde zoekconfiguratie is ongeldig.");
             return unspecified(mapping, dynaForm, request, response);
         }
-        //controleer of er een bron en featuretype is.
-        if (bron == null) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "We zijn vergeten welke bron u geselecteerd heeft, selecteer opnieuw een bron.");
-            return unspecified(mapping, dynaForm, request, response);
-        } else if (featureType == null) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "U dient featureType/tabel te selecteren.");
-            return step1(mapping, dynaForm, request, response);
-        }
+        
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         //maak een lijst met mogelijke zoekconfiguraties (om als parent te kiezen)zonder zichzelf
         String queryString = "from ZoekConfiguratie";
@@ -233,35 +230,22 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         ZoekConfiguratie zc = getAndSetZoekConfiguratie(request);
         Bron bron = null;
         String featureType = null;
-        String naam = null;
+
+        String naam = FormUtils.nullIfEmpty(request.getParameter("naam"));
+
+        if (naam == null || naam.equals("")) {
+            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "U dient een naam op te geven voor deze configuratie");
+            return step2(mapping, dynaForm, request, response);
+        }
 
         if (zc != null) {
             bron = zc.getBron();
             featureType = zc.getFeatureType();
-            if (zc.getNaam() == null || zc.getNaam().equals("")) {
-                naam = FormUtils.nullIfEmpty(request.getParameter("naam"));
-            } else {
-                naam = zc.getNaam();
-            }
         } else {
             bron = getAndSetBron(request);
             featureType = FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
-            naam = FormUtils.nullIfEmpty(request.getParameter("naam"));
         }
-        if (zc != null && (bron == null || featureType == null)) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De zoekconfiguratie die u wilt bewerken is onjuist geoconfigureerd en kan niet worden bewerkt. U kan wel een nieuwe zoekconfiguratie aanmaken.");
-            return unspecified(mapping, dynaForm, request, response);
-        }
-        if (bron == null) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "We zijn vergeten welke bron u geselecteerd heeft, selecteer opnieuw een bron.");
-            return unspecified(mapping, dynaForm, request, response);
-        } else if (featureType == null) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "U dient featureType/tabel te selecteren.");
-            return step1(mapping, dynaForm, request, response);
-        } else if (naam == null) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "U dient een naam op te geven voor deze configuratie");
-            return step2(mapping, dynaForm, request, response);
-        }
+
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         //maak de zoekconfiguratie als die nog niet bestaat
         if (zc == null) {
