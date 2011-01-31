@@ -208,6 +208,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             bron = getAndSetBron(request);
             featureType = FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
         }
+        
         request.setAttribute(FEATURETYPE, featureType);
 
         if (zc != null && bron == null || featureType == null) {
@@ -230,20 +231,36 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         ZoekConfiguratie zc = getAndSetZoekConfiguratie(request);
         Bron bron = null;
         String featureType = null;
-
-        String naam = FormUtils.nullIfEmpty(request.getParameter("naam"));
-
-        if (naam == null || naam.equals("")) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "U dient een naam op te geven voor deze configuratie");
-            return step2(mapping, dynaForm, request, response);
-        }
+        String naam = null;
 
         if (zc != null) {
             bron = zc.getBron();
             featureType = zc.getFeatureType();
+            if (zc.getNaam() == null || zc.getNaam().equals("")) {
+                naam = FormUtils.nullIfEmpty(request.getParameter("naam"));
+            } else {
+                naam = zc.getNaam();
+            }
         } else {
             bron = getAndSetBron(request);
             featureType = FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
+            naam = FormUtils.nullIfEmpty(request.getParameter("naam"));
+        }
+
+        if (zc != null && (bron == null || featureType == null)) {
+            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De zoekingang is ongeldig.");
+            return unspecified(mapping, dynaForm, request, response);
+        }
+
+        if (bron == null) {
+            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De zoekingang heeft geen bron. Selecteer een bron.");
+            return unspecified(mapping, dynaForm, request, response);
+        } else if (featureType == null) {
+            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De zoekingang heeft geen tabel/feature. Selecteer een tabel/feature.");
+            return step1(mapping, dynaForm, request, response);
+        } else if (naam == null) {
+            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "Geef een naam op voor deze zoekingang.");
+            return step2(mapping, dynaForm, request, response);
         }
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
