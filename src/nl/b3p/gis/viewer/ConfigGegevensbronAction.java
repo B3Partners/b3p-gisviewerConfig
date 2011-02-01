@@ -94,8 +94,10 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
         try {
             b = ConfigListsUtil.getBron(sess, user, bronId);
             tns = ConfigListsUtil.getPossibleFeatures(b);
+        } catch (RuntimeException uhe) {
+            logger.error("Gegevensbron " + b.getNaam() + " has an unknown host. Connection url: " + b.getUrl());
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("Exception occured creating gegevensbron list: " + e);
         }
 
         request.setAttribute("listTables", tns);
