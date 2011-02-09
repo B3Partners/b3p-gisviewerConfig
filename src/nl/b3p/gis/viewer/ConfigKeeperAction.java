@@ -147,6 +147,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showBufferTool = (Boolean) map.get("showBufferTool");
         Boolean showSelectBulkTool = (Boolean) map.get("showSelectBulkTool");
         Boolean showNeedleTool = (Boolean) map.get("showNeedleTool");
+        Boolean showPrintTool = (Boolean) map.get("showPrintTool");
         String layerGrouping = (String) map.get("layerGrouping");
         String popupWidth = (String) map.get("popupWidth");
         String popupHeight = (String) map.get("popupHeight");
@@ -195,6 +196,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showBufferTool", showBufferTool);
         dynaForm.set("cfg_showSelectBulkTool", showSelectBulkTool);
         dynaForm.set("cfg_showNeedleTool", showNeedleTool);
+        dynaForm.set("cfg_showPrintTool", showPrintTool);
         dynaForm.set("cfg_layerGrouping", layerGrouping);
         dynaForm.set("cfg_popupWidth", popupWidth);
         dynaForm.set("cfg_popupHeight", popupHeight);
@@ -298,6 +300,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("showNeedleTool", rolnaam);
         writeBoolean(dynaForm, "cfg_showNeedleTool", c);
+
+        c = configKeeper.getConfiguratie("showPrintTool", rolnaam);
+        writeBoolean(dynaForm, "cfg_showPrintTool", c);
 
         c = configKeeper.getConfiguratie("layerGrouping", rolnaam);
         writeString(dynaForm, "cfg_layerGrouping", c);
@@ -1139,6 +1144,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         cfg = new Configuratie();
         cfg.setProperty("showNeedleTool");
+        cfg.setPropval("false");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Boolean");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("showPrintTool");
         cfg.setPropval("false");
         cfg.setSetting(rol);
         cfg.setType("java.lang.Boolean");
