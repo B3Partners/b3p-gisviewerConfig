@@ -27,7 +27,6 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.opengis.feature.type.Name;
 
-
 /**
  *
  * @author Chris
@@ -35,9 +34,9 @@ import org.opengis.feature.type.Name;
 public class ConfigThemaDataAction extends ViewerCrudAction {
 
     private static final Log logger = LogFactory.getLog(ConfigThemaAction.class);
-
     protected static final String CHANGE = "change";
     protected static final String CREATEALLTHEMADATA = "createAllThemaData";
+    protected static final String UPDATEBASISREGELS = "updateBasisregels";
     private int DEFAULTBASISCOLUMNS = 0;
 
     @Override
@@ -53,6 +52,11 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         crudProp = new ExtendedMethodProperties(CREATEALLTHEMADATA);
         crudProp.setDefaultForwardName(SUCCESS);
         map.put(CREATEALLTHEMADATA, crudProp);
+
+        crudProp = new ExtendedMethodProperties(UPDATEBASISREGELS);
+        crudProp.setDefaultForwardName(SUCCESS);
+        map.put(UPDATEBASISREGELS, crudProp);
+
         return map;
     }
 
@@ -143,12 +147,16 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             request.setAttribute("connectieType", Bron.TYPE_EMPTY);
         }
 
+        ArrayList<Integer> basisregels = new ArrayList<Integer>();
         StringBuilder uglyThemaData = new StringBuilder();
         for (ThemaData tdi : bestaandeObjecten) {
+            if (tdi.isBasisregel()) {
+                basisregels.add(tdi.getId());
+            }
             boolean bestaatNog = false;
             if (tdi.getKolomnaam() == null) {
-                bestaatNog=true;
-            }else{
+                bestaatNog = true;
+            } else {
                 QName dbkolom = DataStoreUtil.convertFullnameToQName(tdi.getKolomnaam());
 
                 for (String attribute : attributes) {
@@ -163,7 +171,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             if (bestaatNog) {
                 String commando = null;
                 //alleen voor commando met een "[" er in
-                if (tdi.getDataType().getId() == DataTypen.QUERY && tdi.getCommando() != null && tdi.getCommando().indexOf("[")>=0) {
+                if (tdi.getDataType().getId() == DataTypen.QUERY && tdi.getCommando() != null && tdi.getCommando().indexOf("[") >= 0) {
                     commando = tdi.getCommando();
                 }
                 if (commando != null) {
@@ -180,18 +188,20 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                         bestaatNog = false;
                     }
                 }
-            }else{
+            } else {
                 uglyThemaData.append("[");
-                uglyThemaData.append(tdi.getId()+":KOLOMNAAM");
+                uglyThemaData.append(tdi.getId() + ":KOLOMNAAM");
                 uglyThemaData.append("]");
             }
             if (!bestaatNog) {
                 uglyThemaData.append("[");
-                uglyThemaData.append(tdi.getId()+":COMMANDO");
+                uglyThemaData.append(tdi.getId() + ":COMMANDO");
                 uglyThemaData.append("]");
             }
         }
         request.setAttribute("listUglyThemaData", uglyThemaData);
+        dynaForm.set("basisregels", basisregels.toArray(new Integer[basisregels.size()]));
+
     }
 
     @Override
@@ -301,6 +311,37 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         prepareMethod(dynaForm, request, LIST, EDIT);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);
+    }
+
+    public ActionForward updateBasisregels(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        Integer[] basisregels = (Integer[]) dynaForm.get("basisregels");
+        logger.debug("zet basisregel aan voor id's: " + basisregels);
+
+        Gegevensbron gb = getGegevensbron(dynaForm, false);
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(gb, false);
+        for (ThemaData td : bestaandeObjecten) {
+            if (td.getKolomnaam() == null) {
+                continue;
+            }
+            boolean isBasis = false;
+            for (Integer bs : basisregels) {
+                if (bs!=null && bs.compareTo(td.getId())==0) {
+                    isBasis = true;
+                    break;
+                }
+            }
+            if (isBasis) {
+                td.setBasisregel(true);
+            } else {
+                td.setBasisregel(false);
+            }
+            sess.saveOrUpdate(td);
+            sess.flush();
+        }
+
+        return unspecified(mapping, dynaForm, request, response);
     }
 
     public ActionForward createAllThemaData(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -477,11 +518,6 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             dynaForm.set("dataorder", FormUtils.IntToString(td.getDataorder()));
         }
 
-        /* zetten bulk basisregel vinkjes */
-        String[] arr = new String[1];
-        arr[0] = "1133";
-
-        dynaForm.set("basisregels", arr);
     }
 
     private void populateThemaDataObject(DynaValidatorForm dynaForm, ThemaData td, HttpServletRequest request) {
