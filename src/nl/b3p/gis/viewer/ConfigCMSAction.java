@@ -136,10 +136,10 @@ public class ConfigCMSAction extends ViewerCrudAction {
         sess.refresh(tb);
         populateTekstblokForm(tb, dynaForm, request);
 
-        prepareMethod(dynaForm, request, LIST, EDIT);
+        prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
-
-        return getDefaultForward(mapping, request);
+        
+        return mapping.findForward(SUCCESS);
     }
 
     @Override
@@ -179,10 +179,10 @@ public class ConfigCMSAction extends ViewerCrudAction {
         }
 
         dynaForm.initialize(mapping);
-        prepareMethod(dynaForm, request, LIST, EDIT);
+        prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
 
-        return getDefaultForward(mapping, request);
+        return mapping.findForward(SUCCESS);
     }
 
     private void populateTekstblokForm(Tekstblok tb, DynaValidatorForm dynaForm, HttpServletRequest request) {
