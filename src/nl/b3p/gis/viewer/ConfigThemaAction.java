@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.viewer.db.Clusters;
@@ -44,8 +45,13 @@ public class ConfigThemaAction extends ViewerCrudAction {
 
     }
 
-    protected Themas getThema(DynaValidatorForm form, boolean createNew) {
+    protected Themas getThema(DynaValidatorForm form, boolean createNew, Integer sessionThemaId) {
         Integer id = FormUtils.StringToInteger(form.getString("themaID"));
+
+        if (sessionThemaId != null) {
+            id = sessionThemaId;
+        }
+
         Themas t = null;
         if (id == null && createNew) {
             t = new Themas();
@@ -76,7 +82,17 @@ public class ConfigThemaAction extends ViewerCrudAction {
         request.setAttribute("listValidGeoms", SpatialUtil.VALID_GEOMS);
         request.setAttribute("listBronnen", sess.createQuery("from Gegevensbron order by naam").list());
 
-        Themas t = getThema(dynaForm, false);
+        HttpSession session = request.getSession(true);
+        Integer sessionThemaId = (Integer) session.getAttribute("sessionThemaId");
+
+        Themas t = null;
+
+        if (sessionThemaId != null) {
+            t = getThema(dynaForm, false, sessionThemaId);
+        } else {
+            t = getThema(dynaForm, false, null);
+        }
+
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
         Integer cId = new Integer(-1);
 
@@ -111,7 +127,17 @@ public class ConfigThemaAction extends ViewerCrudAction {
 
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Themas t = getThema(dynaForm, false);
+        HttpSession session = request.getSession(true);
+        Integer sessionThemaId = (Integer) session.getAttribute("sessionThemaId");
+        
+        Themas t = null;
+        
+        if (sessionThemaId != null) {
+            t = getThema(dynaForm, false, sessionThemaId);
+        } else {
+            t = getThema(dynaForm, false, null);
+        }
+
         if (t == null) {
             t = getFirstThema();
         }
@@ -124,11 +150,20 @@ public class ConfigThemaAction extends ViewerCrudAction {
 
     @Override
     public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Themas t = getThema(dynaForm, false);
+        Themas t = getThema(dynaForm, false, null);
+
         if (t == null) {
             t = getFirstThema();
         }
+
+        if (t != null) {
+            /* themadid in session plaatsen */
+            HttpSession session = request.getSession(true);
+            session.setAttribute("sessionThemaId", t.getId());
+        }
+
         populateThemasForm(t, dynaForm, request);
+
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);
@@ -154,7 +189,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
             return getAlternateForward(mapping, request);
         }
 
-        Themas t = getThema(dynaForm, true);
+        Themas t = getThema(dynaForm, true, null);
         if (t == null) {
             prepareMethod(dynaForm, request, LIST, EDIT);
             addAlternateMessage(mapping, request, NOTFOUND_ERROR_KEY);
@@ -190,7 +225,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         // nieuwe default actie op delete zetten
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        Themas t = getThema(dynaForm, false);
+        Themas t = getThema(dynaForm, false, null);
         if (t == null) {
             prepareMethod(dynaForm, request, LIST, EDIT);
             addAlternateMessage(mapping, request, NOTFOUND_ERROR_KEY);
