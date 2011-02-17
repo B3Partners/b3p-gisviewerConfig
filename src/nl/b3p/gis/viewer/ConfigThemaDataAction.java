@@ -315,16 +315,12 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
 
     public ActionForward updateBasisregels(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Integer[] basisregels = (Integer[]) dynaForm.get("basisregels");
-        logger.debug("zet basisregel aan voor id's: " + basisregels);
 
         Gegevensbron gb = getGegevensbron(dynaForm, false);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(gb, false);
         for (ThemaData td : bestaandeObjecten) {
-            if (td.getKolomnaam() == null) {
-                continue;
-            }
             boolean isBasis = false;
             for (Integer bs : basisregels) {
                 if (bs!=null && bs.compareTo(td.getId())==0) {
@@ -332,11 +328,13 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                     break;
                 }
             }
+
             if (isBasis) {
                 td.setBasisregel(true);
             } else {
                 td.setBasisregel(false);
             }
+
             sess.saveOrUpdate(td);
             sess.flush();
         }
