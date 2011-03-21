@@ -119,9 +119,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         List zoekconfigs = sess.createQuery("from ZoekConfiguratie order by naam").list();
         request.setAttribute("zoekConfigs", zoekconfigs);
+
         List meldingGegevensbronnen = sess.createQuery("from Gegevensbron order by naam").list();
         request.setAttribute("meldingGegevensbronnen", meldingGegevensbronnen);
 
+        List redliningKaartlagen = sess.createQuery("from Themas order by naam").list();
+        request.setAttribute("redliningKaartlagen", redliningKaartlagen);
     }
 
     public void populateForm(DynaValidatorForm dynaForm, HttpServletRequest request, Map map, String rolnaam) {
@@ -219,7 +222,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         /* redlining config items */
         dynaForm.set("cfg_redlininggegevensbron", (Integer) map.get("redliningGegevensbron"));
-
+        dynaForm.set("cfg_redliningkaartlaagid", (Integer) map.get("redliningkaartlaagid"));
     }
 
     @Override
@@ -347,6 +350,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("redliningGegevensbron", rolnaam);
         writeInteger(dynaForm, "cfg_redlininggegevensbron", c);
+
+        c = configKeeper.getConfiguratie("redliningkaartlaagid", rolnaam);
+        writeInteger(dynaForm, "cfg_redliningkaartlaagid", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String rolnaam) {
