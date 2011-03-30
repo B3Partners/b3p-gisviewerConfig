@@ -973,7 +973,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         cfg = new Configuratie();
         cfg.setProperty("useCookies");
-        cfg.setPropval("true");
+        cfg.setPropval("false");
         cfg.setSetting(rol);
         cfg.setType("java.lang.Boolean");
 
@@ -1080,14 +1080,14 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         cfg = new Configuratie();
         cfg.setProperty("tolerance");
-        cfg.setPropval("1");
+        cfg.setPropval("4");
         cfg.setSetting(rol);
         cfg.setType("java.lang.Integer");
         sess.save(cfg);
 
         cfg = new Configuratie();
         cfg.setProperty("useInheritCheckbox");
-        cfg.setPropval("true");
+        cfg.setPropval("false");
         cfg.setSetting(rol);
         cfg.setType("java.lang.Boolean");
         sess.save(cfg);
@@ -1157,14 +1157,14 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         cfg = new Configuratie();
         cfg.setProperty("showPrintTool");
-        cfg.setPropval("false");
+        cfg.setPropval("true");
         cfg.setSetting(rol);
         cfg.setType("java.lang.Boolean");
         sess.save(cfg);
 
         cfg = new Configuratie();
         cfg.setProperty("layerGrouping");
-        cfg.setPropval("lg_forebackground");
+        cfg.setPropval("lg_cluster");
         cfg.setSetting(rol);
         cfg.setType("java.lang.String");
         sess.save(cfg);
@@ -1220,7 +1220,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         cfg = new Configuratie();
         cfg.setProperty("objectInfoType");
-        cfg.setPropval("paneel");
+        cfg.setPropval("popup");
         cfg.setSetting(rol);
         cfg.setType("java.lang.String");
         sess.save(cfg);
