@@ -240,13 +240,13 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         }
 
         /* Eerstvolgende bron klaarzetten voor formulier */
-        Bron bron = getConnectie(dynaForm, false);
-        if (bron == null) {
-            bron = getFirstConnectie();
+        Bron bron = getFirstConnectie();
+        if (bron != null) {
+            populateConnectieForm(bron, dynaForm, request);
+        } else {
+            dynaForm.initialize(mapping);
         }
-        populateConnectieForm(bron, dynaForm, request);
 
-        //dynaForm.initialize(mapping);
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         

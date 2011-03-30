@@ -345,7 +345,13 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
         sess.delete(gb);
         sess.flush();
 
-        dynaForm.initialize(mapping);
+        Gegevensbron gBron = getFirstGegevensbron();
+        if (gBron != null) {
+            populateGegevensbronForm(gBron, dynaForm, request);
+        } else {
+            dynaForm.initialize(mapping);
+        }
+
         prepareMethod(dynaForm, request, LIST, EDIT);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);

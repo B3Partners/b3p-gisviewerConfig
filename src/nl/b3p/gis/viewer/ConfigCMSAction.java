@@ -178,7 +178,13 @@ public class ConfigCMSAction extends ViewerCrudAction {
             return getAlternateForward(mapping, request);
         }
 
-        dynaForm.initialize(mapping);
+        Tekstblok tekstBlok = getFirstTekstblok();
+
+        if (tekstBlok != null)
+            populateTekstblokForm(tekstBlok, dynaForm, request);
+        else
+            dynaForm.initialize(mapping);
+        
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
 
