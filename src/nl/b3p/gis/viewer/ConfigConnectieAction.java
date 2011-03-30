@@ -154,7 +154,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         sess.refresh(c);
         populateConnectieForm(c, dynaForm, request);
 
-        prepareMethod(dynaForm, request, LIST, EDIT);
+        prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);
     }
@@ -179,7 +179,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
             c = getConnectie(dynaForm, false);
 
             if (c == null) {
-                prepareMethod(dynaForm, request, LIST, EDIT);
+                prepareMethod(dynaForm, request, EDIT, LIST);
                 addAlternateMessage(mapping, request, NOTFOUND_ERROR_KEY);
 
                 return getAlternateForward(mapping, request);
@@ -225,7 +225,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
             Locale locale = getLocale(request);
             String melding = msg.getMessage(locale, FK_PARENTBRON_ERROR_KEY, zcNamen);
 
-            prepareMethod(dynaForm, request, LIST, EDIT);
+            prepareMethod(dynaForm, request, EDIT, LIST);
             addAlternateMessage(mapping, request, null, melding);
 
             return getAlternateForward(mapping, request);
@@ -233,14 +233,21 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         } catch (Exception ex) {
             logger.error("", ex);
             
-            prepareMethod(dynaForm, request, LIST, EDIT);
+            prepareMethod(dynaForm, request, EDIT, LIST);
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY);
 
             return getAlternateForward(mapping, request);
         }
 
-        dynaForm.initialize(mapping);
-        prepareMethod(dynaForm, request, LIST, EDIT);
+        /* Eerstvolgende bron klaarzetten voor formulier */
+        Bron bron = getConnectie(dynaForm, false);
+        if (bron == null) {
+            bron = getFirstConnectie();
+        }
+        populateConnectieForm(bron, dynaForm, request);
+
+        //dynaForm.initialize(mapping);
+        prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         
         return getDefaultForward(mapping, request);
