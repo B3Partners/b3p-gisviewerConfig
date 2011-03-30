@@ -214,7 +214,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
     }
 
     @Override
-    public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception  {
 
         if (!isTokenValid(request)) {
             prepareMethod(dynaForm, request, EDIT, LIST);
@@ -235,7 +235,13 @@ public class ConfigThemaAction extends ViewerCrudAction {
         sess.delete(t);
         sess.flush();
 
-        dynaForm.initialize(mapping);
+        Themas thema = getFirstThema();
+        if (thema != null) {
+            populateThemasForm(thema, dynaForm, request);
+        } else {
+            dynaForm.initialize(mapping);
+        }
+
         prepareMethod(dynaForm, request, LIST, EDIT);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);
