@@ -1,5 +1,6 @@
 package nl.b3p.gis.viewer;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -7,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.viewer.db.Configuratie;
+import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -125,6 +127,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         List redliningKaartlagen = sess.createQuery("from Themas order by naam").list();
         request.setAttribute("redliningKaartlagen", redliningKaartlagen);
+
+        /* klaarzetten wms layers voor keuze opstartlagen */
+        GisPrincipal user = GisPrincipal.getGisPrincipal(request);
+
+        List lns = user.getLayers(false, true);
+        request.setAttribute("listLayers", lns);
     }
 
     public void populateForm(DynaValidatorForm dynaForm, HttpServletRequest request, Map map, String rolnaam) {
@@ -223,6 +231,19 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* redlining config items */
         dynaForm.set("cfg_redlininggegevensbron", (Integer) map.get("redliningGegevensbron"));
         dynaForm.set("cfg_redliningkaartlaagid", (Integer) map.get("redliningkaartlaagid"));
+
+        /* klaarzetten wms layers voor keuze opstartlagen */
+        GisPrincipal user = GisPrincipal.getGisPrincipal(request);
+
+        List lns = user.getLayers(false, true);
+        request.setAttribute("listLayers", lns);
+
+        /* opstartlagen klaarzetten */
+        String opstartKaarten = (String) map.get("opstartKaarten");
+
+        if (opstartKaarten != null) {
+            dynaForm.set("cfg_opstartkaarten", opstartKaarten.split(","));
+        }
     }
 
     @Override
@@ -247,11 +268,16 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         return getDefaultForward(mapping, request);
     }
 
+
+
     public void populateObject(DynaValidatorForm dynaForm, String rolnaam) {
 
         /* opslaan overige settings */
         ConfigKeeper configKeeper = new ConfigKeeper();
         Configuratie c = null;
+
+        /* opslaan opstartkaarten */
+        writeOpstartKaartenConfig(dynaForm, rolnaam);
 
         /* Opslaan tabbladen */
         writeTabbladenConfig(dynaForm, rolnaam);
@@ -628,8 +654,43 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         sess.flush();
     }
 
-    private void writeTabbladenConfig(DynaValidatorForm form, String rolnaam) {
+    private void writeOpstartKaartenConfig(DynaValidatorForm form, String rolnaam) {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
+        ConfigKeeper configKeeper = new ConfigKeeper();
+        int lastComma = -1;
+
+        Configuratie opstartKaarten = configKeeper.getConfiguratie("opstartKaarten", rolnaam);
+
+        String strKaarten = "";
+        String[] arrKaarten = (String[]) form.get("cfg_opstartkaarten");
+
+        if (arrKaarten != null && arrKaarten.length > 0) {
+            for (int i=0; i < arrKaarten.length; i++) {
+                strKaarten += arrKaarten[i] + ",";
+            }
+
+            lastComma = strKaarten.lastIndexOf(",");
+
+            if (lastComma > 1) {
+                strKaarten = strKaarten.substring(0, lastComma);
+            }
+
+            opstartKaarten.setPropval(strKaarten);
+            opstartKaarten.setType("java.lang.String");
+            sess.merge(opstartKaarten);
+            sess.flush();
+        }
+
+        if (arrKaarten != null && arrKaarten.length == 0) {
+            opstartKaarten.setPropval(null);
+            opstartKaarten.setType("java.lang.String");
+            sess.merge(opstartKaarten);
+            sess.flush();
+        }
+    }
+
+    private void writeTabbladenConfig(DynaValidatorForm form, String rolnaam) {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         ConfigKeeper configKeeper = new ConfigKeeper();
