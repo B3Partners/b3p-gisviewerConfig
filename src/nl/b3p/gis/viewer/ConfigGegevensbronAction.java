@@ -327,8 +327,16 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
 
         /* indien nog themas of children dan niet wissen, levert
          * ConstraintViolationException op */
-        int themaSize = gb.getThemas().size();
-        int childrenSize = gb.getChildren().size();
+
+        int themaSize = 0;
+        if (gb.getThemas() != null) {
+            themaSize = gb.getThemas().size();
+        }
+
+        int childrenSize = 0;
+        if (gb.getChildren() != null) {
+            childrenSize = gb.getChildren().size();
+        }
 
         if (themaSize > 0) {
             prepareMethod(dynaForm, request, LIST, EDIT);
