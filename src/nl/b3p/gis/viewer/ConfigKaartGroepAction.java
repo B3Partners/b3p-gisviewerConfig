@@ -93,7 +93,7 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
         root.put("title", "root");
         root.put("name", "root");
 
-        List ctl = SpatialUtil.getValidClusters();
+        List ctl = SpatialUtil.getClusters();
         Map rootClusterMap = getClusterMap(ctl, null);
         List clusterMaps = (List) rootClusterMap.get("subclusters");
        
