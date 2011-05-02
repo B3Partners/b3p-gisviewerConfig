@@ -110,19 +110,6 @@ public class ConfigThemaAction extends ViewerCrudAction {
             llns = user.getLayers(true, true);
             request.setAttribute("listLegendLayers", llns);
         }
-
-        /* vullen velden voor gegevensbron en geavanceerd */
-        List tns = new ArrayList();
-        Bron b = null;
-
-        try {
-            b = ConfigListsUtil.getBron(sess, user, cId);
-            tns = ConfigListsUtil.getPossibleFeatures(b);
-        } catch (Exception e) {
-            logger.error("", e);
-        }
-
-        request.setAttribute("listTables", tns);
     }
 
     @Override
