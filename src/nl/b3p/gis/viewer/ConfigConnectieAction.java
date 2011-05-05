@@ -1,6 +1,7 @@
 package nl.b3p.gis.viewer;
 
 import java.io.FileNotFoundException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -72,19 +73,23 @@ public class ConfigConnectieAction extends ViewerCrudAction {
             try {
                 ds = b.toDatastore();
 
-                if (ds != null)
+                if (ds != null) {
                     validBronIds.add(b.getId());
+                }
+            
+            } catch (SocketTimeoutException stoex) {
+                logger.error("Socket Timeout for bron url: "+ b.getUrl());
 
             /* deze treed bijvoorbeeld op als je een bron bewerkt en hij kan de
              * GetCapabilities niet ophalen */
             } catch (FileNotFoundException ex) {
                 logger.debug("Kon tijdens bewerken van bron " + b.getNaam() + " de GetCapabilities niet ophalen.");
-
             } catch (Exception e) {
                 logger.error("Exception for bron: "+b.getId()+" URL: "+b.getUrl(), e);
             } finally {
-                if (ds != null)
+                if (ds != null) {
                     ds.dispose();
+                }
             }
         }
 
