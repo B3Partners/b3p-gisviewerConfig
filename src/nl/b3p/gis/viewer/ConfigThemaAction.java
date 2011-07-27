@@ -258,6 +258,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         if (t.getCluster() != null) {
             valCluster = Integer.toString(t.getCluster().getId().intValue());
         }
+
         dynaForm.set("clusterID", valCluster);
         dynaForm.set("opmerkingen", t.getOpmerkingen());
         dynaForm.set("analyse_thema", t.isAnalyse_thema());
@@ -276,6 +277,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         dynaForm.set("sldattribuut",t.getSldattribuut());
         dynaForm.set("uitgebreid", t.isUitgebreid());
         dynaForm.set("layoutadmindata",t.getLayoutadmindata());
+        dynaForm.set("style",t.getStyle());
 
         /*
         Integer gbId = -1;
@@ -339,6 +341,8 @@ public class ConfigThemaAction extends ViewerCrudAction {
         b = (Boolean) dynaForm.get("uitgebreid");
         t.setUitgebreid(b == null ? false : b.booleanValue());
         t.setLayoutadmindata(FormUtils.nullIfEmpty(dynaForm.getString("layoutadmindata")));
+
+        t.setStyle(FormUtils.nullIfEmpty(dynaForm.getString("style")));
 
         int cId = -1;
         try {
