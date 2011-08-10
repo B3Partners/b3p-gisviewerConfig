@@ -1,5 +1,6 @@
 package nl.b3p.gis.viewer;
 
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import nl.b3p.gis.geotools.DataStoreUtil;
 import java.util.List;
@@ -138,8 +139,14 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
 
         Bron b = gb.getBron(request);
 
-        List<String> attributes = DataStoreUtil.getAttributeNames(b, gb);
-        request.setAttribute("listAdminTableColumns", attributes);
+        List<String> attributes = new ArrayList();
+        try {
+            attributes = DataStoreUtil.getAttributeNames(b, gb);
+            request.setAttribute("listAdminTableColumns", attributes);
+        } catch (SocketTimeoutException e) {
+            logger.error("Socket time out error while getting attributes.");
+        }
+        
 
         if (gb.getBron() != null) {
             request.setAttribute("connectieType", gb.getBron().getType());
@@ -347,8 +354,15 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         Bron b = gb.getBron(request);
-        List<String> attributes = DataStoreUtil.getAttributeNames(b, gb);
-        if (attributes == null) {
+
+        List<String> attributes = new ArrayList();
+        try {
+            attributes = DataStoreUtil.getAttributeNames(b, gb);
+        } catch (SocketTimeoutException e) {
+            logger.error("Socket time out error while getting attributes.");
+        }
+
+        if (attributes == null || attributes.size() < 1) {
             return unspecified(mapping, dynaForm, request, response);
         }
 

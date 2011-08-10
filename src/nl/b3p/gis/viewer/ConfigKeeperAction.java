@@ -1,6 +1,5 @@
 package nl.b3p.gis.viewer;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -432,6 +431,15 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         config = configKeeper.getConfiguratie("meldingTekentoolIcoon", rolnaam);
         writeString(dynaForm, "cfg_meldingtekentoolicoon", config);
+
+        config = configKeeper.getConfiguratie("smtpHost", rolnaam);
+        writeString(dynaForm, "cfg_smtpHost", config);
+
+        config = configKeeper.getConfiguratie("fromMailAddress", rolnaam);
+        writeString(dynaForm, "cfg_fromMailAddress", config);
+
+        config = configKeeper.getConfiguratie("mailSubject", rolnaam);
+        writeString(dynaForm, "cfg_mailSubject", config);
 
         sess.flush();
     }
@@ -1030,6 +1038,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_meldinggegevensbron", (Integer) map.get("meldingGegevensbron"));
         dynaForm.set("cfg_meldingobjectsoort", (String) map.get("meldingObjectSoort"));
         dynaForm.set("cfg_meldingtekentoolicoon", (String) map.get("meldingTekentoolIcoon"));
+        dynaForm.set("cfg_smtpHost", (String) map.get("smtpHost"));
+        dynaForm.set("cfg_fromMailAddress", (String) map.get("fromMailAddress"));
+        dynaForm.set("cfg_mailSubject", (String) map.get("mailSubject"));
     }
 
     private void writeDefaultConfigForRole(String rol) {
