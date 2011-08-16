@@ -247,6 +247,16 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             dynaForm.set("cfg_bagmaxopp", (Integer) map.get("bagMaxOpp"));
         if (map.get("bagMinOpp")!=null)
             dynaForm.set("cfg_bagminopp", (Integer) map.get("bagMinOpp"));
+        if (map.get("bagOppAttr")!=null)
+            dynaForm.set("cfg_bagOppAttr", (String)map.get("bagOppAttr"));
+        if (map.get("bagBouwjaarAttr")!=null)
+            dynaForm.set("cfg_bagBouwjaarAttr", (String) map.get("bagBouwjaarAttr"));
+        if (map.get("bagGebruiksfunctieAttr")!=null)
+            dynaForm.set("cfg_bagGebruiksfunctieAttr", (String) map.get("bagGebruiksfunctieAttr"));
+        if (map.get("bagGeomAttr")!=null)
+            dynaForm.set("cfg_bagGeomAttr", (String) map.get("bagGeomAttr"));
+        
+        
         /* klaarzetten wms layers voor keuze opstartlagen */
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
 
@@ -400,6 +410,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         //BAG settings
         c = configKeeper.getConfiguratie("bagkaartlaagid", rolnaam);
         writeInteger(dynaForm, "cfg_bagkaartlaagid", c);
+        //slider settings bag
         c = configKeeper.getConfiguratie("bagMaxBouwjaar", rolnaam);
         writeInteger(dynaForm, "cfg_bagmaxbouwjaar", c);
         c = configKeeper.getConfiguratie("bagMinBouwjaar", rolnaam);
@@ -408,6 +419,17 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         writeInteger(dynaForm, "cfg_bagmaxopp", c);
         c = configKeeper.getConfiguratie("bagMinOpp", rolnaam);
         writeInteger(dynaForm, "cfg_bagminopp", c);
+        //attribute namen BAG
+        c = configKeeper.getConfiguratie("bagOppAttr", rolnaam);
+        writeString(dynaForm,"cfg_bagOppAttr",c);
+        c = configKeeper.getConfiguratie("bagBouwjaarAttr", rolnaam);
+        writeString(dynaForm,"cfg_bagBouwjaarAttr",c);
+        c = configKeeper.getConfiguratie("bagGebruiksfunctieAttr", rolnaam);
+        writeString(dynaForm,"cfg_bagGebruiksfunctieAttr",c);
+        c = configKeeper.getConfiguratie("bagGeomAttr", rolnaam);
+        writeString(dynaForm,"cfg_bagGeomAttr",c);
+        
+        
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String rolnaam) {
@@ -1375,6 +1397,34 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         cfg.setSetting(rol);
         cfg.setType("java.lang.Integer");
         sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("bagOppAttr");
+        cfg.setPropval("OPPERVLAKTE");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("bagBouwjaarAttr");
+        cfg.setPropval("BOUWJAAR");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("bagGebruiksfunctieAttr");
+        cfg.setPropval("GEBRUIKSFUNCTIE");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("bagGeomAttr");
+        cfg.setPropval("the_geom");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.String");
+        sess.save(cfg);        
 
         sess.flush();
     }
