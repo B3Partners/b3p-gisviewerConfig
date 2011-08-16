@@ -1,5 +1,6 @@
 package nl.b3p.gis.viewer;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -235,6 +236,17 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_redlininggegevensbron", (Integer) map.get("redliningGegevensbron"));
         dynaForm.set("cfg_redliningkaartlaagid", (Integer) map.get("redliningkaartlaagid"));
 
+        /* Bag config items*/
+        if (map.get("bagkaartlaagid")!=null)
+            dynaForm.set("cfg_bagkaartlaagid", (Integer) map.get("bagkaartlaagid"));
+        if (map.get("bagMaxBouwjaar")!=null)
+            dynaForm.set("cfg_bagmaxbouwjaar", (Integer) map.get("bagMaxBouwjaar"));
+        if (map.get("bagMinBouwjaar")!=null)
+            dynaForm.set("cfg_bagminbouwjaar", (Integer) map.get("bagMinBouwjaar"));
+        if (map.get("bagMaxOpp")!=null)
+            dynaForm.set("cfg_bagmaxopp", (Integer) map.get("bagMaxOpp"));
+        if (map.get("bagMinOpp")!=null)
+            dynaForm.set("cfg_bagminopp", (Integer) map.get("bagMinOpp"));
         /* klaarzetten wms layers voor keuze opstartlagen */
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
 
@@ -385,6 +397,17 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("redliningkaartlaagid", rolnaam);
         writeInteger(dynaForm, "cfg_redliningkaartlaagid", c);
+        //BAG settings
+        c = configKeeper.getConfiguratie("bagkaartlaagid", rolnaam);
+        writeInteger(dynaForm, "cfg_bagkaartlaagid", c);
+        c = configKeeper.getConfiguratie("bagMaxBouwjaar", rolnaam);
+        writeInteger(dynaForm, "cfg_bagmaxbouwjaar", c);
+        c = configKeeper.getConfiguratie("bagMinBouwjaar", rolnaam);
+        writeInteger(dynaForm, "cfg_bagminbouwjaar", c);
+        c = configKeeper.getConfiguratie("bagMaxOpp", rolnaam);
+        writeInteger(dynaForm, "cfg_bagmaxopp", c);
+        c = configKeeper.getConfiguratie("bagMinOpp", rolnaam);
+        writeInteger(dynaForm, "cfg_bagminopp", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String rolnaam) {
@@ -1321,6 +1344,34 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         cfg = new Configuratie();
         cfg.setProperty("tabWidth");
         cfg.setPropval("288");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+        sess.save(cfg);
+        //BAG
+        cfg = new Configuratie();
+        cfg.setProperty("bagMaxBouwjaar");
+        cfg.setPropval(""+Calendar.getInstance().get(Calendar.YEAR));
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("bagMinBouwjaar");
+        cfg.setPropval("1000");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("bagMaxOpp");
+        cfg.setPropval("16000");
+        cfg.setSetting(rol);
+        cfg.setType("java.lang.Integer");
+        sess.save(cfg);
+
+        cfg = new Configuratie();
+        cfg.setProperty("bagMinOpp");
+        cfg.setPropval("0");
         cfg.setSetting(rol);
         cfg.setType("java.lang.Integer");
         sess.save(cfg);
