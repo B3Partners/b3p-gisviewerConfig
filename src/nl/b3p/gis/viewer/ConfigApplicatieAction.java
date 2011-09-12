@@ -24,20 +24,18 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
 
-        /* Applicaties ophalen */
-        list(request);
-
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
 
         return mapping.findForward(SUCCESS);
     }
 
-    private void list(HttpServletRequest request) throws Exception {
+    @Override
+    protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         List<Applicatie> applicaties = sess.createQuery("from Applicatie order by id").list();
-        
+
         if (applicaties != null && applicaties.size() > 0) {
             request.setAttribute("applicaties", applicaties);
         }
@@ -52,17 +50,13 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             return getAlternateForward(mapping, request);
         }
 
-        /* Applicatie opslaan */
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-
+        /* Applicatie ophalen en opslaan */
         Applicatie app = getApplicatie(dynaForm, request);
-
         populateObject(dynaForm, app, request);
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         sess.saveOrUpdate(app);
         sess.flush();
-
-        /* Applicaties ophalen */
-        list(request);
         
         /* Klaarzetten form */
         populateForm(app, dynaForm, request);
@@ -75,13 +69,10 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
 
     @Override
     public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+                
+        /* Applicatie ophalen en klaarzetten voor form */
         Applicatie app = getApplicatie(dynaForm, request);
         populateForm(app, dynaForm, request);
-
-        /* Applicatie bijwerken */
-
-        /* Applicaties ophalen */
-        list(request);
 
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
@@ -93,33 +84,47 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
 
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        if (!isTokenValid(request)) {
+            addAlternateMessage(mapping, request, TOKEN_ERROR_KEY);
+            return getAlternateForward(mapping, request);
+        }
 
-        /* Applicatie verwijderen */
+        /* Applicatie ophalen en verwijderen */
+        Applicatie app = getApplicatie(dynaForm, request);
 
-        /* Applicaties ophalen */
-        list(request);
+        if (app != null) {
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+            sess.delete(app);
+            sess.flush();
+        }
 
         dynaForm.initialize(mapping);
+
         prepareMethod(dynaForm, request, LIST, EDIT);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
 
         return getDefaultForward(mapping, request);
     }
     
-    private Applicatie getApplicatie(DynaValidatorForm form, HttpServletRequest request) {
-        Integer id = (Integer) form.get("applicatieID");
+    private Applicatie getApplicatie(DynaValidatorForm dynaForm, HttpServletRequest request) {
+        Integer id = (Integer) dynaForm.get("applicatieID");
 
+        Applicatie app = null;
         if (id == null || id < 1) {
-            id = (Integer) request.getAttribute("applicatieID");
-        }
+            app = new Applicatie();
 
-        if (id == null) {
-            return new Applicatie();
-        }
+            String appCode = null;
+            try {
+                appCode = Applicatie.createApplicatieCode();
+            } catch (Exception ex) {
+                log.error("Fout tijdens maken Applicatie code:", ex);
+            }
 
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        Applicatie app = (Applicatie) sess.get(Applicatie.class, id);
+            app.setCode(appCode);
+        } else {
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+            app = (Applicatie) sess.get(Applicatie.class, id);
+        }
 
         return app;
     }
@@ -131,16 +136,8 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
 
         dynaForm.set("applicatieID", app.getId());
         dynaForm.set("naam", app.getNaam());
-        dynaForm.set("code", app.getCode());
         dynaForm.set("gebruikersCode", app.getGebruikersCode());
         dynaForm.set("parent", app.getParent());
-
-        Date datum_gebruikt = app.getDatum_gebruikt();
-
-        if (datum_gebruikt != null) {
-            SimpleDateFormat df = new SimpleDateFormat("d-M-yyyy", new Locale("NL"));
-            dynaForm.set("datum_gebruikt", df.format(datum_gebruikt));
-        }
     }
 
     private void populateObject(DynaValidatorForm dynaForm, Applicatie app, HttpServletRequest request) {
@@ -151,7 +148,6 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         }
 
         app.setNaam(FormUtils.nullIfEmpty(dynaForm.getString("naam")));
-        app.setCode(FormUtils.nullIfEmpty(dynaForm.getString("code")));
         app.setGebruikersCode(FormUtils.nullIfEmpty(dynaForm.getString("gebruikersCode")));
         app.setParent(null);
         app.setDatum_gebruikt(new Date());
