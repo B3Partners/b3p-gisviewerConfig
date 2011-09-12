@@ -138,6 +138,8 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         dynaForm.set("naam", app.getNaam());
         dynaForm.set("gebruikersCode", app.getGebruikersCode());
         dynaForm.set("parent", app.getParent());
+
+        request.setAttribute("appcode", app.getCode());
     }
 
     private void populateObject(DynaValidatorForm dynaForm, Applicatie app, HttpServletRequest request) {
