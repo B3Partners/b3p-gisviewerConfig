@@ -1,8 +1,6 @@
 package nl.b3p.gis.viewer;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -12,16 +10,13 @@ import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.utils.KaartSelectieUtil;
 import nl.b3p.gis.viewer.db.Configuratie;
 import nl.b3p.gis.viewer.db.UserLayer;
-import nl.b3p.gis.viewer.db.UserLayerStyle;
 import nl.b3p.gis.viewer.db.UserService;
-import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
-import org.geotools.data.ows.StyleImpl;
 import org.geotools.data.wms.WMSUtils;
 import org.geotools.data.wms.WebMapServer;
 import org.hibernate.Session;
@@ -79,7 +74,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     }
 
     public ActionForward resetInstellingen(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-
         if (!isTokenValid(request)) {
             prepareMethod(dynaForm, request, EDIT, LIST);
             addAlternateMessage(mapping, request, TOKEN_ERROR_KEY);
@@ -88,18 +82,27 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         String appCode = dynaForm.getString("appcode");
 
+        /* configkeeper instellingen verwijderen en daarna defaults schrijven
+         voor deze appcode */
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         int query = sess.createQuery("delete from Configuratie where setting = :appcode)").setParameter("appcode", appCode).executeUpdate();
 
         sess.flush();
 
         if (query > 0) {
-            writeDefaultApplicatie(appCode);
-            logger.debug("Rolinstellingen zijn gereset voor appcode " + appCode);
+            ConfigKeeper.writeDefaultApplicatie(appCode);
+            logger.debug("Applicatieinstellingen zijn gereset voor appcode " + appCode);
         }
 
-        ConfigKeeper configKeeper = new ConfigKeeper();
+        /* User kaartgroepen en kaartlagen instellingen verwijderen */
+        KaartSelectieUtil.removeExistingUserKaartgroepAndUserKaartlagen(appCode);
+        KaartSelectieUtil.resetExistingUserLayers(appCode);
 
+        /* Basisboom ophalen */
+        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+
+        /* Configkeeper instellingen ook klaarzetten voor form */
+        ConfigKeeper configKeeper = new ConfigKeeper();
         Map map = null;
         map = configKeeper.getConfigMap(appCode);
 
@@ -107,12 +110,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             populateForm(dynaForm, request, map, appCode);
         }
 
-        KaartSelectieUtil.removeExistingUserKaartgroepAndUserKaartlagen(appCode);
-        KaartSelectieUtil.resetExistingUserLayers(appCode);
-
-        /* Basisboom ophalen */
-        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
-
+        /* Appcode klaarzetten voor bovenin jsp */
         request.setAttribute("header_appcode", appCode);
 
         prepareMethod(dynaForm, request, LIST, EDIT);
@@ -131,19 +129,20 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* Basisboom ophalen */
         KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
 
+        /* Applicatieinstellingen ophalen en klaarzetten voor form */
         Map map = null;
-
         ConfigKeeper configKeeper = new ConfigKeeper();
         map = configKeeper.getConfigMap(appCode);
 
         /* TODO weer uncommenten */
         if (map.size() < 1) {
-            writeDefaultApplicatie(appCode);
+            ConfigKeeper.writeDefaultApplicatie(appCode);
             map = configKeeper.getConfigMap(appCode);
         }
 
         populateForm(dynaForm, request, map, appCode);
 
+        /* Appcode klaarzetten voor bovenin jsp */
         request.setAttribute("header_appcode", appCode);
 
         prepareMethod(dynaForm, request, EDIT, LIST);
@@ -158,13 +157,16 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String[] servicesAan = (String[]) dynaForm.get("servicesAan");
         String appCode = (String) dynaForm.get("appcode");
 
+        /* Aangevinkte User services verwijderen */
         for (int i = 0; i < servicesAan.length; i++) {
             Integer serviceId = new Integer(servicesAan[i]);
-            removeService(appCode, serviceId);
+            KaartSelectieUtil.removeService(serviceId);
         }
 
+        /* Basisboom weer klaarzetten */
         KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
 
+        /* Appcode klaarzetten voor bovenin jsp */
         request.setAttribute("header_appcode", appCode);
 
         return mapping.findForward(SUCCESS);
@@ -177,10 +179,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String serviceUrl = (String) dynaForm.get("serviceUrl");
         String sldUrl = (String) dynaForm.get("sldUrl");
 
-        /* controleren of serviceUrl al voorkomt bij applicatie */
+        /* Controleren of User service al voorkomt bij applicatie */
         String appCode = (String) dynaForm.get("appcode");
 
-        if (userAlreadyHasThisService(appCode, serviceUrl)) {
+        if (KaartSelectieUtil.userAlreadyHasThisService(appCode, serviceUrl)) {
             KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
 
             addMessage(request, ERROR_DUPLICATE_WMS, serviceUrl);
@@ -208,10 +210,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         UserService us = new UserService(appCode, serviceUrl, groupName);
 
         /* Eerst parents ophalen. */
-        List<org.geotools.data.ows.Layer> parents = getParentLayers(layers);
+        List<org.geotools.data.ows.Layer> parents =
+                KaartSelectieUtil.getParentLayers(layers);
 
         for (org.geotools.data.ows.Layer layer : parents) {
-            UserLayer ul = createUserLayers(us, layer, null);
+            UserLayer ul = KaartSelectieUtil.createUserLayers(us, layer, null);
             us.addLayer(ul);
         }
 
@@ -219,107 +222,18 @@ public class ConfigKeeperAction extends ViewerCrudAction {
          * toevoegen. */
         if (parents.size() < 1) {
             for (int i = 0; i < layers.length; i++) {
-                UserLayer ul = createUserLayers(us, layers[i], null);
+                UserLayer ul = KaartSelectieUtil.createUserLayers(us, layers[i], null);
                 us.addLayer(ul);
             }
         }
 
         sess.save(us);
 
+        /* Basisboom weer klaarzetten */
         KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
 
         return mapping.findForward(SUCCESS);
     }
-
-    private List<org.geotools.data.ows.Layer> getParentLayers(org.geotools.data.ows.Layer[] layers) {
-        List<org.geotools.data.ows.Layer> parents = new ArrayList();
-
-        for (int i = 0; i < layers.length; i++) {
-            if (layers[i].getChildren().length > 0 || layers[i].getParent() == null) {
-                parents.add(layers[i]);
-            }
-        }
-
-        return parents;
-    }
-
-    private UserLayer createUserLayers(UserService us, org.geotools.data.ows.Layer layer, UserLayer parent) {
-        String layerTitle = layer.getTitle();
-        String layerName = layer.getName();
-        boolean queryable = layer.isQueryable();
-        double scaleMin = layer.getScaleDenominatorMin();
-        double scaleMax = layer.getScaleDenominatorMax();
-
-        UserLayer ul = new UserLayer();
-
-        ul.setServiceid(us);
-
-        if (layerName != null && !layerName.isEmpty()) {
-            ul.setName(layerName);
-        }
-
-        if (layerTitle != null && !layerTitle.isEmpty()) {
-            ul.setTitle(layerTitle);
-        }
-
-        ul.setQueryable(queryable);
-
-        if (scaleMin > 0) {
-            ul.setScalehint_min(Double.toString(scaleMin));
-        }
-
-        if (scaleMax > 0) {
-            ul.setScalehint_max(Double.toString(scaleMax));
-        }
-
-        List<StyleImpl> styles = layer.getStyles();
-
-        for (StyleImpl style : styles) {
-            String styleName = style.getName();
-
-            if (styleName != null && !styleName.isEmpty()) {
-                UserLayerStyle uls = new UserLayerStyle(ul, styleName);
-                ul.addStyle(uls);
-            }
-        }
-
-        if (parent != null) {
-            ul.setParent(parent);
-        }
-
-        org.geotools.data.ows.Layer[] childs = layer.getChildren();
-        for (int i = 0; i < childs.length; i++) {
-            UserLayer child = createUserLayers(us, childs[i], ul);
-            us.addLayer(child);
-        }
-
-        return ul;
-    }
-
-    private boolean userAlreadyHasThisService(String code, String url) {
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-
-        List<UserService> services = sess.createQuery("from UserService where"
-                + " code = :code and url = :url")
-                .setParameter("code", code)
-                .setParameter("url", url)
-                .setMaxResults(1)
-                .list();
-
-        if (services != null && services.size() == 1) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private void removeService(String code, Integer serviceId) {
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-
-        UserService service = (UserService) sess.get(UserService.class, serviceId);
-        sess.delete(service);
-    }
-
 
     @Override
     protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
@@ -335,12 +249,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         List redliningKaartlagen = sess.createQuery("from Themas order by naam").list();
         request.setAttribute("redliningKaartlagen", redliningKaartlagen);
-
-        /* klaarzetten wms layers voor keuze opstartlagen */
-        GisPrincipal user = GisPrincipal.getGisPrincipal(request);
-
-        List lns = user.getLayers(false, true);
-        request.setAttribute("listLayers", lns);
     }
 
     public void populateForm(DynaValidatorForm dynaForm, HttpServletRequest request, Map map, String appCode) {
@@ -472,20 +380,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         if (map.get("bagGeomAttr") != null) {
             dynaForm.set("cfg_bagGeomAttr", (String) map.get("bagGeomAttr"));
         }
-
-
-        /* klaarzetten wms layers voor keuze opstartlagen */
-        GisPrincipal user = GisPrincipal.getGisPrincipal(request);
-
-        List lns = user.getLayers(false, true);
-        request.setAttribute("listLayers", lns);
-
-        /* opstartlagen klaarzetten */
-        String opstartKaarten = (String) map.get("opstartKaarten");
-
-        if (opstartKaarten != null) {
-            dynaForm.set("cfg_opstartkaarten", opstartKaarten.split(","));
-        }
     }
 
     @Override
@@ -554,9 +448,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* opslaan overige settings */
         ConfigKeeper configKeeper = new ConfigKeeper();
         Configuratie c = null;
-
-        /* opslaan opstartkaarten */
-        writeOpstartKaartenConfig(dynaForm, appCode);
 
         /* Opslaan tabbladen */
         writeTabbladenConfig(dynaForm, appCode);
@@ -966,42 +857,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         sess.flush();
     }
 
-    private void writeOpstartKaartenConfig(DynaValidatorForm form, String appCode) {
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-
-        ConfigKeeper configKeeper = new ConfigKeeper();
-        int lastComma = -1;
-
-        Configuratie opstartKaarten = configKeeper.getConfiguratie("opstartKaarten", appCode);
-
-        String strKaarten = "";
-        String[] arrKaarten = (String[]) form.get("cfg_opstartkaarten");
-
-        if (arrKaarten != null && arrKaarten.length > 0) {
-            for (int i = 0; i < arrKaarten.length; i++) {
-                strKaarten += arrKaarten[i] + ",";
-            }
-
-            lastComma = strKaarten.lastIndexOf(",");
-
-            if (lastComma > 1) {
-                strKaarten = strKaarten.substring(0, lastComma);
-            }
-
-            opstartKaarten.setPropval(strKaarten);
-            opstartKaarten.setType("java.lang.String");
-            sess.merge(opstartKaarten);
-            sess.flush();
-        }
-
-        if (arrKaarten != null && arrKaarten.length == 0) {
-            opstartKaarten.setPropval(null);
-            opstartKaarten.setType("java.lang.String");
-            sess.merge(opstartKaarten);
-            sess.flush();
-        }
-    }
-
     private void writeTabbladenConfig(DynaValidatorForm form, String appCode) {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
@@ -1338,344 +1193,5 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_smtpHost", (String) map.get("smtpHost"));
         dynaForm.set("cfg_fromMailAddress", (String) map.get("fromMailAddress"));
         dynaForm.set("cfg_mailSubject", (String) map.get("mailSubject"));
-    }
-
-    private void writeDefaultApplicatie(String appCode) {
-        Configuratie cfg = null;
-
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-
-        cfg = new Configuratie();
-        cfg.setProperty("useCookies");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("multipleActiveThemas");
-        cfg.setPropval("true");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("dataframepopupHandle");
-        cfg.setPropval("null");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("showLeftPanel");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("autoRedirect");
-        cfg.setPropval("2");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("useSortableFunction");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("layerDelay");
-        cfg.setPropval("5000");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("refreshDelay");
-        cfg.setPropval("1000");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("minBboxZoeken");
-        cfg.setPropval("1000");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("zoekConfigIds");
-        cfg.setPropval("\"-1\"");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("maxResults");
-        cfg.setPropval("25");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("usePopup");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("useDivPopup");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("usePanelControls");
-        cfg.setPropval("true");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("expandAll");
-        cfg.setPropval("true");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("tolerance");
-        cfg.setPropval("4");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("useInheritCheckbox");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("showLegendInTree");
-        cfg.setPropval("true");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("useMouseOverTabs");
-        cfg.setPropval("true");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("layoutAdminData");
-        cfg.setPropval("admindata1");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("tabs");
-        cfg.setPropval("\"themas\",\"legenda\",\"zoeken\"");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("planSelectieIds");
-        cfg.setPropval("-1");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("showRedliningTools");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("showBufferTool");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("showSelectBulkTool");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("showNeedleTool");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("showPrintTool");
-        cfg.setPropval("true");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("showLayerSelectionTool");
-        cfg.setPropval("false");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Boolean");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("layerGrouping");
-        cfg.setPropval("lg_cluster");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("popupWidth");
-        cfg.setPropval("90%");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("popupHeight");
-        cfg.setPropval("20%");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("popupLeft");
-        cfg.setPropval("5%");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("popupTop");
-        cfg.setPropval("75%");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("defaultdataframehoogte");
-        cfg.setPropval("150");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("viewerType");
-        cfg.setPropval("flamingo");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("viewerTemplate");
-        cfg.setPropval("standalone");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("objectInfoType");
-        cfg.setPropval("popup");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("treeOrder");
-        cfg.setPropval("volgorde");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("tabWidth");
-        cfg.setPropval("288");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-        //BAG
-        cfg = new Configuratie();
-        cfg.setProperty("bagMaxBouwjaar");
-        cfg.setPropval("" + Calendar.getInstance().get(Calendar.YEAR));
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("bagMinBouwjaar");
-        cfg.setPropval("1000");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("bagMaxOpp");
-        cfg.setPropval("16000");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("bagMinOpp");
-        cfg.setPropval("0");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.Integer");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("bagOppAttr");
-        cfg.setPropval("OPPERVLAKTE");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("bagBouwjaarAttr");
-        cfg.setPropval("BOUWJAAR");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("bagGebruiksfunctieAttr");
-        cfg.setPropval("GEBRUIKSFUNCTIE");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        cfg = new Configuratie();
-        cfg.setProperty("bagGeomAttr");
-        cfg.setPropval("the_geom");
-        cfg.setSetting(appCode);
-        cfg.setType("java.lang.String");
-        sess.save(cfg);
-
-        sess.flush();
-    }
+    }  
 }

@@ -1,9 +1,7 @@
 package nl.b3p.gis.viewer;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
@@ -100,6 +98,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
 
             /* User Kaartgroepen en Kaartlagen verwijderen */
             KaartSelectieUtil.removeExistingUserKaartgroepAndUserKaartlagen(app.getCode());
+            KaartSelectieUtil.removeExistingUserServices(app.getCode());
         }
 
         dynaForm.initialize(mapping);
