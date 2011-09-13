@@ -1,5 +1,7 @@
 package nl.b3p.gis.viewer;
 
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,9 @@ import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.utils.KaartSelectieUtil;
 import nl.b3p.gis.viewer.db.Configuratie;
+import nl.b3p.gis.viewer.db.UserLayer;
+import nl.b3p.gis.viewer.db.UserLayerStyle;
+import nl.b3p.gis.viewer.db.UserService;
 import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import org.apache.commons.logging.Log;
@@ -16,24 +21,35 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.validator.DynaValidatorForm;
+import org.geotools.data.ows.StyleImpl;
+import org.geotools.data.wms.WMSUtils;
+import org.geotools.data.wms.WebMapServer;
 import org.hibernate.Session;
 import org.json.JSONException;
 
 public class ConfigKeeperAction extends ViewerCrudAction {
 
     private static final Log logger = LogFactory.getLog(ConfigKeeperAction.class);
+
     private static final String[] CONFIGKEEPER_TABS = {
         "leeg", "themas", "legenda", "zoeken", "informatie", "gebieden",
         "analyse", "planselectie", "meldingen", "vergunningen", "voorzieningen",
-        "redlining","cms","bag"
+        "redlining", "cms", "bag"
     };
+
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Info", "Gebieden",
         "Analyse", "Plannen", "Meldingen", "Vergunningen", "Voorzieningen",
-        "Redlining","CMS","BAG"
+        "Redlining", "CMS", "BAG"
     };
-    
+
     protected static final String RESET_INSTELLINGEN = "resetInstellingen";
+
+    protected static final String SAVE_WMS_SERVICE = "saveWMSService";
+    protected static final String DELETE_WMS_SERVICES = "deleteWMSServices";
+
+    protected static final String ERROR_SAVE_WMS = "error.save.wms";
+    protected static final String ERROR_DUPLICATE_WMS = "error.duplicate.wms";
 
     @Override
     protected Map getActionMethodPropertiesMap() {
@@ -44,6 +60,20 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         crudProp = new ExtendedMethodProperties(RESET_INSTELLINGEN);
         crudProp.setDefaultForwardName(SUCCESS);
         map.put(RESET_INSTELLINGEN, crudProp);
+
+        crudProp = new ExtendedMethodProperties(SAVE_WMS_SERVICE);
+        crudProp.setDefaultForwardName(SUCCESS);
+        crudProp.setDefaultMessageKey("message.userwms.success");
+        crudProp.setAlternateForwardName(FAILURE);
+        crudProp.setAlternateMessageKey("message.userwms.failed");
+        map.put(SAVE_WMS_SERVICE, crudProp);
+
+        crudProp = new ExtendedMethodProperties(DELETE_WMS_SERVICES);
+        crudProp.setDefaultForwardName(SUCCESS);
+        crudProp.setDefaultMessageKey("message.userwms.delete.success");
+        crudProp.setAlternateForwardName(FAILURE);
+        crudProp.setAlternateMessageKey("message.userwms.delete.failed");
+        map.put(DELETE_WMS_SERVICES, crudProp);
 
         return map;
     }
@@ -56,12 +86,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             return this.getAlternateForward(mapping, request);
         }
 
-        String appCode = dynaForm.getString("appcode");        
+        String appCode = dynaForm.getString("appcode");
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        int query = sess.createQuery("delete from Configuratie where setting = :appcode)")
-                .setParameter("appcode", appCode)
-                .executeUpdate();
+        int query = sess.createQuery("delete from Configuratie where setting = :appcode)").setParameter("appcode", appCode).executeUpdate();
 
         sess.flush();
 
@@ -123,6 +151,175 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         return mapping.findForward(SUCCESS);
     }
+
+    public ActionForward deleteWMSServices(ActionMapping mapping, DynaValidatorForm dynaForm,
+            HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        String[] servicesAan = (String[]) dynaForm.get("servicesAan");
+        String appCode = (String) dynaForm.get("appcode");
+
+        for (int i = 0; i < servicesAan.length; i++) {
+            Integer serviceId = new Integer(servicesAan[i]);
+            removeService(appCode, serviceId);
+        }
+
+        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+
+        request.setAttribute("header_appcode", appCode);
+
+        return mapping.findForward(SUCCESS);
+    }
+
+    public ActionForward saveWMSService(ActionMapping mapping, DynaValidatorForm dynaForm,
+            HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        String groupName = (String) dynaForm.get("groupName");
+        String serviceUrl = (String) dynaForm.get("serviceUrl");
+        String sldUrl = (String) dynaForm.get("sldUrl");
+
+        /* controleren of serviceUrl al voorkomt bij applicatie */
+        String appCode = (String) dynaForm.get("appcode");
+
+        if (userAlreadyHasThisService(appCode, serviceUrl)) {
+            KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+
+            addMessage(request, ERROR_DUPLICATE_WMS, serviceUrl);
+            return getAlternateForward(mapping, request);
+        }
+
+        /* WMS Service layers ophalen met Geotools */
+        URI uri = new URI(serviceUrl);
+        org.geotools.data.ows.Layer[] layers = null;
+        try {
+            WebMapServer wms = new WebMapServer(uri.toURL(), 30000);
+            layers = WMSUtils.getNamedLayers(wms.getCapabilities());
+        } catch (Exception ex) {
+            logger.error("Fout tijdens opslaan WMS. ", ex);
+
+            KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+
+            addMessage(request, ERROR_SAVE_WMS, uri.toString());
+            return getAlternateForward(mapping, request);
+        }
+
+        /* Nieuwe UserService entity aanmaken en opslaan */
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        UserService us = new UserService(appCode, serviceUrl, groupName);
+
+        /* Eerst parents ophalen. */
+        List<org.geotools.data.ows.Layer> parents = getParentLayers(layers);
+
+        for (org.geotools.data.ows.Layer layer : parents) {
+            UserLayer ul = createUserLayers(us, layer, null);
+            us.addLayer(ul);
+        }
+
+        /* Indien geen parents gevonden maar wel layers dan gewoon allemaal
+         * toevoegen. */
+        if (parents.size() < 1) {
+            for (int i = 0; i < layers.length; i++) {
+                UserLayer ul = createUserLayers(us, layers[i], null);
+                us.addLayer(ul);
+            }
+        }
+
+        sess.save(us);
+
+        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+
+        return mapping.findForward(SUCCESS);
+    }
+
+    private List<org.geotools.data.ows.Layer> getParentLayers(org.geotools.data.ows.Layer[] layers) {
+        List<org.geotools.data.ows.Layer> parents = new ArrayList();
+
+        for (int i = 0; i < layers.length; i++) {
+            if (layers[i].getChildren().length > 0 || layers[i].getParent() == null) {
+                parents.add(layers[i]);
+            }
+        }
+
+        return parents;
+    }
+
+    private UserLayer createUserLayers(UserService us, org.geotools.data.ows.Layer layer, UserLayer parent) {
+        String layerTitle = layer.getTitle();
+        String layerName = layer.getName();
+        boolean queryable = layer.isQueryable();
+        double scaleMin = layer.getScaleDenominatorMin();
+        double scaleMax = layer.getScaleDenominatorMax();
+
+        UserLayer ul = new UserLayer();
+
+        ul.setServiceid(us);
+
+        if (layerName != null && !layerName.isEmpty()) {
+            ul.setName(layerName);
+        }
+
+        if (layerTitle != null && !layerTitle.isEmpty()) {
+            ul.setTitle(layerTitle);
+        }
+
+        ul.setQueryable(queryable);
+
+        if (scaleMin > 0) {
+            ul.setScalehint_min(Double.toString(scaleMin));
+        }
+
+        if (scaleMax > 0) {
+            ul.setScalehint_max(Double.toString(scaleMax));
+        }
+
+        List<StyleImpl> styles = layer.getStyles();
+
+        for (StyleImpl style : styles) {
+            String styleName = style.getName();
+
+            if (styleName != null && !styleName.isEmpty()) {
+                UserLayerStyle uls = new UserLayerStyle(ul, styleName);
+                ul.addStyle(uls);
+            }
+        }
+
+        if (parent != null) {
+            ul.setParent(parent);
+        }
+
+        org.geotools.data.ows.Layer[] childs = layer.getChildren();
+        for (int i = 0; i < childs.length; i++) {
+            UserLayer child = createUserLayers(us, childs[i], ul);
+            us.addLayer(child);
+        }
+
+        return ul;
+    }
+
+    private boolean userAlreadyHasThisService(String code, String url) {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        List<UserService> services = sess.createQuery("from UserService where"
+                + " code = :code and url = :url")
+                .setParameter("code", code)
+                .setParameter("url", url)
+                .setMaxResults(1)
+                .list();
+
+        if (services != null && services.size() == 1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private void removeService(String code, Integer serviceId) {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        UserService service = (UserService) sess.get(UserService.class, serviceId);
+        sess.delete(service);
+    }
+
 
     @Override
     protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
@@ -248,26 +445,35 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_redliningkaartlaagid", (Integer) map.get("redliningkaartlaagid"));
 
         /* Bag config items*/
-        if (map.get("bagkaartlaagid")!=null)
+        if (map.get("bagkaartlaagid") != null) {
             dynaForm.set("cfg_bagkaartlaagid", (Integer) map.get("bagkaartlaagid"));
-        if (map.get("bagMaxBouwjaar")!=null)
+        }
+        if (map.get("bagMaxBouwjaar") != null) {
             dynaForm.set("cfg_bagmaxbouwjaar", (Integer) map.get("bagMaxBouwjaar"));
-        if (map.get("bagMinBouwjaar")!=null)
+        }
+        if (map.get("bagMinBouwjaar") != null) {
             dynaForm.set("cfg_bagminbouwjaar", (Integer) map.get("bagMinBouwjaar"));
-        if (map.get("bagMaxOpp")!=null)
+        }
+        if (map.get("bagMaxOpp") != null) {
             dynaForm.set("cfg_bagmaxopp", (Integer) map.get("bagMaxOpp"));
-        if (map.get("bagMinOpp")!=null)
+        }
+        if (map.get("bagMinOpp") != null) {
             dynaForm.set("cfg_bagminopp", (Integer) map.get("bagMinOpp"));
-        if (map.get("bagOppAttr")!=null)
-            dynaForm.set("cfg_bagOppAttr", (String)map.get("bagOppAttr"));
-        if (map.get("bagBouwjaarAttr")!=null)
+        }
+        if (map.get("bagOppAttr") != null) {
+            dynaForm.set("cfg_bagOppAttr", (String) map.get("bagOppAttr"));
+        }
+        if (map.get("bagBouwjaarAttr") != null) {
             dynaForm.set("cfg_bagBouwjaarAttr", (String) map.get("bagBouwjaarAttr"));
-        if (map.get("bagGebruiksfunctieAttr")!=null)
+        }
+        if (map.get("bagGebruiksfunctieAttr") != null) {
             dynaForm.set("cfg_bagGebruiksfunctieAttr", (String) map.get("bagGebruiksfunctieAttr"));
-        if (map.get("bagGeomAttr")!=null)
+        }
+        if (map.get("bagGeomAttr") != null) {
             dynaForm.set("cfg_bagGeomAttr", (String) map.get("bagGeomAttr"));
-        
-        
+        }
+
+
         /* klaarzetten wms layers voor keuze opstartlagen */
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
 
@@ -301,7 +507,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         prepareMethod(dynaForm, request, LIST, EDIT);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
-        
+
         return getDefaultForward(mapping, request);
     }
 
@@ -405,7 +611,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("showPrintTool", appCode);
         writeBoolean(dynaForm, "cfg_showPrintTool", c);
-        
+
         c = configKeeper.getConfiguratie("showLayerSelectionTool", appCode);
         writeBoolean(dynaForm, "cfg_showLayerSelectionTool", c);
 
@@ -469,13 +675,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         writeInteger(dynaForm, "cfg_bagminopp", c);
         //attribute namen BAG
         c = configKeeper.getConfiguratie("bagOppAttr", appCode);
-        writeString(dynaForm,"cfg_bagOppAttr",c);
+        writeString(dynaForm, "cfg_bagOppAttr", c);
         c = configKeeper.getConfiguratie("bagBouwjaarAttr", appCode);
-        writeString(dynaForm,"cfg_bagBouwjaarAttr",c);
+        writeString(dynaForm, "cfg_bagBouwjaarAttr", c);
         c = configKeeper.getConfiguratie("bagGebruiksfunctieAttr", appCode);
-        writeString(dynaForm,"cfg_bagGebruiksfunctieAttr",c);
+        writeString(dynaForm, "cfg_bagGebruiksfunctieAttr", c);
         c = configKeeper.getConfiguratie("bagGeomAttr", appCode);
-        writeString(dynaForm,"cfg_bagGeomAttr",c);
+        writeString(dynaForm, "cfg_bagGeomAttr", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String appCode) {
@@ -772,7 +978,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String[] arrKaarten = (String[]) form.get("cfg_opstartkaarten");
 
         if (arrKaarten != null && arrKaarten.length > 0) {
-            for (int i=0; i < arrKaarten.length; i++) {
+            for (int i = 0; i < arrKaarten.length; i++) {
                 strKaarten += arrKaarten[i] + ",";
             }
 
@@ -822,7 +1028,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         if (!form.get("cfg_tab5").equals("leeg")) {
-            strBeheerTabs += "\"" + form.get("cfg_tab5")+ "\",";
+            strBeheerTabs += "\"" + form.get("cfg_tab5") + "\",";
         }
 
         lastComma = strBeheerTabs.lastIndexOf(",");
@@ -1416,7 +1622,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         //BAG
         cfg = new Configuratie();
         cfg.setProperty("bagMaxBouwjaar");
-        cfg.setPropval(""+Calendar.getInstance().get(Calendar.YEAR));
+        cfg.setPropval("" + Calendar.getInstance().get(Calendar.YEAR));
         cfg.setSetting(appCode);
         cfg.setType("java.lang.Integer");
         sess.save(cfg);

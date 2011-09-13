@@ -7,6 +7,7 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
+import nl.b3p.gis.utils.KaartSelectieUtil;
 import nl.b3p.gis.viewer.db.Applicatie;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import org.apache.commons.logging.Log;
@@ -96,6 +97,9 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
             sess.delete(app);
             sess.flush();
+
+            /* User Kaartgroepen en Kaartlagen verwijderen */
+            KaartSelectieUtil.removeExistingUserKaartgroepAndUserKaartlagen(app.getCode());
         }
 
         dynaForm.initialize(mapping);
@@ -121,6 +125,9 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             }
 
             app.setCode(appCode);
+            
+            /* Applicaties door de beheerder gemaakt zijn standaard read-only */
+            app.setRead_only(true);
         } else {
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
             app = (Applicatie) sess.get(Applicatie.class, id);
