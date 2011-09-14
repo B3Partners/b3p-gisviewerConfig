@@ -2,9 +2,11 @@ package nl.b3p.gis.viewer;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
+import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.utils.KaartSelectieUtil;
 import nl.b3p.gis.viewer.db.Applicatie;
 import nl.b3p.gis.viewer.services.HibernateUtil;
@@ -18,6 +20,24 @@ import org.hibernate.Session;
 public class ConfigApplicatieAction extends ViewerCrudAction {
 
     private static final Log log = LogFactory.getLog(ConfigApplicatieAction.class);
+
+    protected static final String MAPPING_COPY = "copy";
+
+    @Override
+    protected Map getActionMethodPropertiesMap() {
+        Map map = super.getActionMethodPropertiesMap();
+
+        ExtendedMethodProperties crudProp = null;
+
+        crudProp = new ExtendedMethodProperties(MAPPING_COPY);
+        crudProp.setDefaultForwardName(SUCCESS);
+        crudProp.setDefaultMessageKey("message.applicatie.copy.success");
+        crudProp.setAlternateForwardName(FAILURE);
+        crudProp.setAlternateMessageKey("message.applicatie.copy.failed");
+        map.put(MAPPING_COPY, crudProp);
+
+        return map;
+    }
 
     @Override
     public ActionForward unspecified(ActionMapping mapping, DynaValidatorForm dynaForm,
@@ -79,6 +99,33 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         return getDefaultForward(mapping, request);
     }
 
+    public ActionForward copy(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        Integer id = FormUtils.StringToInteger(request.getParameter("applicatieID"));
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        Applicatie app = (Applicatie) sess.get(Applicatie.class, id);
+
+        if (app == null) {
+            addAlternateMessage(mapping, request, FAILURE);
+            return getAlternateForward(mapping, request);
+        }
+
+        Applicatie newApp = KaartSelectieUtil.copyApplicatie(app);
+
+        if (newApp == null) {
+            addAlternateMessage(mapping, request, FAILURE);
+            return getAlternateForward(mapping, request);
+        }
+
+        /* Vullen form met nieuwe Applicatie */
+        populateForm(newApp, dynaForm, request);
+
+        prepareMethod(dynaForm, request, EDIT, LIST);
+        addDefaultMessage(mapping, request, SUCCESS);
+
+        return getDefaultForward(mapping, request);
+    }
+
     @Override
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -96,7 +143,8 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             sess.delete(app);
             sess.flush();
 
-            /* User Kaartgroepen en Kaartlagen verwijderen */
+            /* Configinstellingen, User Kaartgroepen en Kaartlagen verwijderen */
+            KaartSelectieUtil.removeExistingConfigKeeperSettings(app.getCode());
             KaartSelectieUtil.removeExistingUserKaartgroepAndUserKaartlagen(app.getCode());
             KaartSelectieUtil.removeExistingUserServices(app.getCode());
         }
@@ -143,7 +191,9 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         dynaForm.set("applicatieID", app.getId());
         dynaForm.set("naam", app.getNaam());
         dynaForm.set("gebruikersCode", app.getGebruikersCode());
-        dynaForm.set("parent", app.getParent());
+
+        if (app.getParent() != null)
+            dynaForm.set("parent", app.getParent().getId());
 
         request.setAttribute("appcode", app.getCode());
     }
