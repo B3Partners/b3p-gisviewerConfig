@@ -110,7 +110,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             return getAlternateForward(mapping, request);
         }
 
-        Applicatie newApp = KaartSelectieUtil.copyApplicatie(app);
+        Applicatie newApp = KaartSelectieUtil.copyApplicatie(app, app.getRead_only());
 
         if (newApp == null) {
             addAlternateMessage(mapping, request, FAILURE);
