@@ -53,7 +53,8 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
     protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        List<Applicatie> applicaties = sess.createQuery("from Applicatie order by id").list();
+        List<Applicatie> applicaties = sess.createQuery("from Applicatie"
+                + " order by user_copy, versie").list();
 
         if (applicaties != null && applicaties.size() > 0) {
             request.setAttribute("applicaties", applicaties);
@@ -110,7 +111,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             return getAlternateForward(mapping, request);
         }
 
-        Applicatie newApp = KaartSelectieUtil.copyApplicatie(app, app.getRead_only());
+        Applicatie newApp = KaartSelectieUtil.copyApplicatie(app, app.getRead_only(), app.getUser_copy());
 
         if (newApp == null) {
             addAlternateMessage(mapping, request, FAILURE);
