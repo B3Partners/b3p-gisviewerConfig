@@ -176,6 +176,8 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             
             /* Applicaties door de beheerder gemaakt zijn standaard read-only */
             app.setRead_only(true);
+            app.setUser_copy(false);
+            app.setVersie(1);
         } else {
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
             app = (Applicatie) sess.get(Applicatie.class, id);

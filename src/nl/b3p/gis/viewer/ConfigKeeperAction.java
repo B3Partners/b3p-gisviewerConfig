@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.utils.KaartSelectieUtil;
+import nl.b3p.gis.viewer.db.Applicatie;
 import nl.b3p.gis.viewer.db.Configuratie;
 import nl.b3p.gis.viewer.db.UserLayer;
 import nl.b3p.gis.viewer.db.UserService;
@@ -52,8 +53,18 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         ExtendedMethodProperties crudProp = null;
 
+        crudProp = new ExtendedMethodProperties(SAVE);
+        crudProp.setDefaultForwardName(SUCCESS);
+        crudProp.setDefaultMessageKey("message.saveinstellingen.success");
+        crudProp.setAlternateForwardName(FAILURE);
+        crudProp.setAlternateMessageKey("message.saveinstellingen.failed");
+        map.put(SAVE, crudProp);
+
         crudProp = new ExtendedMethodProperties(RESET_INSTELLINGEN);
         crudProp.setDefaultForwardName(SUCCESS);
+        crudProp.setDefaultMessageKey("message.resetappsettings.success");
+        crudProp.setAlternateForwardName(FAILURE);
+        crudProp.setAlternateMessageKey("message.resetappsettings.failed");
         map.put(RESET_INSTELLINGEN, crudProp);
 
         crudProp = new ExtendedMethodProperties(SAVE_WMS_SERVICE);
@@ -110,13 +121,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             populateForm(dynaForm, request, map, appCode);
         }
 
-        /* Appcode klaarzetten voor bovenin jsp */
-        request.setAttribute("header_appcode", appCode);
+        populateForApplicatieHeader(request, appCode);
 
-        prepareMethod(dynaForm, request, LIST, EDIT);
+        prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
 
-        return getDefaultForward(mapping, request);
+        return mapping.findForward(SUCCESS);
     }
 
     @Override
@@ -142,8 +152,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         populateForm(dynaForm, request, map, appCode);
 
-        /* Appcode klaarzetten voor bovenin jsp */
-        request.setAttribute("header_appcode", appCode);
+        populateForApplicatieHeader(request, appCode);
 
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
@@ -166,8 +175,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* Basisboom weer klaarzetten */
         KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
 
-        /* Appcode klaarzetten voor bovenin jsp */
-        request.setAttribute("header_appcode", appCode);
+        populateForApplicatieHeader(request, appCode);
 
         return mapping.findForward(SUCCESS);
     }
@@ -232,6 +240,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* Basisboom weer klaarzetten */
         KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
 
+        populateForApplicatieHeader(request, appCode);
+
         return mapping.findForward(SUCCESS);
     }
 
@@ -251,8 +261,15 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         request.setAttribute("redliningKaartlagen", redliningKaartlagen);
     }
 
-    public void populateForm(DynaValidatorForm dynaForm, HttpServletRequest request, Map map, String appCode) {
+    private void populateForApplicatieHeader(HttpServletRequest request, String appCode) {
+        Applicatie app = KaartSelectieUtil.getApplicatie(appCode);
 
+        if (app != null) {
+            request.setAttribute("header_appnaam", app.getNaam());
+        }
+    }
+
+    public void populateForm(DynaValidatorForm dynaForm, HttpServletRequest request, Map map, String appCode) {
         Boolean useCookies = (Boolean) map.get("useCookies");
         Boolean usePopup = (Boolean) map.get("usePopup");
         Boolean useDivPopup = (Boolean) map.get("useDivPopup");
@@ -397,12 +414,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         saveKaartSelectie(appCode, dynaForm, request);
         populateObject(dynaForm, appCode);
 
-        request.setAttribute("header_appcode", appCode);
+        populateForApplicatieHeader(request, appCode);
 
-        prepareMethod(dynaForm, request, LIST, EDIT);
+        prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
 
-        return getDefaultForward(mapping, request);
+        return mapping.findForward(SUCCESS);
     }
 
     private void saveKaartSelectie(String appCode, DynaValidatorForm dynaForm,
