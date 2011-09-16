@@ -310,6 +310,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         Integer tabWidth = (Integer) map.get("tabWidth");
 
+        String extent = (String) map.get("extent");
+        String activeTab = (String) map.get("activeTab");
+
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
         fillPlanSelectieBox(dynaForm, request, planSelectieIds);
@@ -359,6 +362,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_treeOrder", treeOrder);
 
         dynaForm.set("cfg_tabWidth", tabWidth);
+
+        dynaForm.set("cfg_activeTab", activeTab);
+        dynaForm.set("cfg_extent", extent);
 
         dynaForm.set("appcode", appCode);
 
@@ -555,6 +561,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("tabWidth", appCode);
         writeInteger(dynaForm, "cfg_tabWidth", c);
+
+        c = configKeeper.getConfiguratie("activeTab", appCode);
+        writeString(dynaForm, "cfg_activeTab", c);
+
+        c = configKeeper.getConfiguratie("extent", appCode);
+        writeString(dynaForm, "cfg_extent", c);
 
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, appCode);
