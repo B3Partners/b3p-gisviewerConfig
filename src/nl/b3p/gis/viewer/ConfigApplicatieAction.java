@@ -70,6 +70,13 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             return getAlternateForward(mapping, request);
         }
 
+        /* Ald Applicatie is default app is aangevinkt eerst alle Applicaties
+         * op default app false zetten */
+        Boolean defaultApp = (Boolean) dynaForm.get("defaultApp");
+        if (defaultApp != null) {
+            updateAppsToNonDefault();
+        }
+
         /* Applicatie ophalen en opslaan */
         Applicatie app = getApplicatie(dynaForm, request);
         populateObject(dynaForm, app, request);
@@ -177,6 +184,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             /* Applicaties door de beheerder gemaakt zijn standaard read-only */
             app.setRead_only(true);
             app.setUser_copy(false);
+            app.setDefault_app(false);
             app.setVersie(1);
         } else {
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
@@ -195,8 +203,11 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         dynaForm.set("naam", app.getNaam());
         dynaForm.set("gebruikersCode", app.getGebruikersCode());
 
-        if (app.getParent() != null)
+        if (app.getParent() != null) {
             dynaForm.set("parent", app.getParent().getId());
+        }
+
+        dynaForm.set("defaultApp", app.getDefault_app());
 
         request.setAttribute("appcode", app.getCode());
     }
@@ -211,6 +222,29 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         app.setNaam(FormUtils.nullIfEmpty(dynaForm.getString("naam")));
         app.setGebruikersCode(FormUtils.nullIfEmpty(dynaForm.getString("gebruikersCode")));
         app.setParent(null);
-        app.setDatum_gebruikt(new Date());
+
+        /* De gebruiksdatum alleen wijzigen als iemand de appcode gebruikt in de viewer */
+        //app.setDatum_gebruikt(new Date());
+
+        Boolean defaultApp = (Boolean) dynaForm.get("defaultApp");
+
+        if (defaultApp != null) {          
+            app.setDefault_app(true);
+        } else {
+            app.setDefault_app(false);
+        }
+    }
+
+    private void updateAppsToNonDefault() {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        List<Applicatie> allApps = sess.createQuery("from Applicatie").list();
+
+        for (Applicatie app : allApps) {
+            app.setDefault_app(false);
+            sess.save(app);
+        }
+
+        sess.flush();
     }
 }
