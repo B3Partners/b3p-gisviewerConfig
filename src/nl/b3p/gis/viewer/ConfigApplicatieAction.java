@@ -186,6 +186,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             app.setUser_copy(false);
             app.setDefault_app(false);
             app.setVersie(1);
+            app.setDatum_gebruikt(new Date());
         } else {
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
             app = (Applicatie) sess.get(Applicatie.class, id);
