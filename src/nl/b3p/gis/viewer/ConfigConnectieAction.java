@@ -74,7 +74,9 @@ public class ConfigConnectieAction extends ViewerCrudAction {
                 ds = b.toDatastore();
 
                 if (ds != null) {
-                    validBronIds.add(b.getId());
+                    String[] typeNames = ds.getTypeNames();
+                    if (typeNames != null && typeNames.length > 0)
+                        validBronIds.add(b.getId());
                 }
             
             } catch (SocketTimeoutException stoex) {
@@ -278,7 +280,10 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         c.setNaam(FormUtils.nullIfEmpty(dynaForm.getString("naam")));
         c.setUrl(FormUtils.nullIfEmpty(dynaForm.getString("url")));
         c.setGebruikersnaam(FormUtils.nullIfEmpty(dynaForm.getString("gebruikersnaam")));
-        c.setWachtwoord(FormUtils.nullIfEmpty(dynaForm.getString("wachtwoord")));
+
+        String wachtwoord = FormUtils.nullIfEmpty(dynaForm.getString("wachtwoord"));
+        c.setWachtwoord(wachtwoord);
+        
         if (FormUtils.nullIfEmpty(dynaForm.getString("volgorde"))!=null){
             c.setVolgorde(new Integer (dynaForm.getString("volgorde")));
         }
