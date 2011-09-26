@@ -200,9 +200,11 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             if (zc.getParentZoekConfiguratie() != null) {
                 request.setAttribute(PARENTZOEKCONFIGURATIE, zc.getParentZoekConfiguratie().getId());
             }
+
             if (!zc.isResultListDynamic()) {
-                request.setAttribute("usecaching", "on");
+                request.setAttribute("usecaching", "1");
             }
+
             featureType = zc.getFeatureType();
         } else {
             bron = getAndSetBron(request);
@@ -226,6 +228,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         request.setAttribute("zoekConfiguraties", zoekconfiguraties);
         return mapping.findForward(STEP3);
     }
+
     /*Zoekingang velden*/
     public ActionForward step3(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         ZoekConfiguratie zc = getAndSetZoekConfiguratie(request);
@@ -281,11 +284,16 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         }
         zc.setParentBron(bron);
         zc.setFeatureType(featureType);
-        if (FormUtils.nullIfEmpty(request.getParameter("usecaching")) != null) {
+
+        String useCaching = FormUtils.nullIfEmpty(request.getParameter("usecaching"));
+
+        if (useCaching != null) {
             zc.setResultListDynamic(false);
+            request.setAttribute("usecaching", "1");
         } else {
             zc.setResultListDynamic(true);
         }
+
         //sla alles op.
         sess.save(zc);
         sess.flush();
