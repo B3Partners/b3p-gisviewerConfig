@@ -736,7 +736,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         sess.merge(configTabs);
         sess.flush();
 
-
         Configuratie configStraal = configKeeper.getConfiguratie("voorzieningConfigStraal", appCode);
         String straal = "";
         if (!form.get("cfg_voorzieningstraal").equals("leeg")) {
@@ -748,7 +747,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         configStraal.setType("java.lang.String");
         sess.merge(configStraal);
         sess.flush();
-
 
         int lastTypComma = -1;
 
@@ -781,7 +779,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         lastTypComma = strTypeTabs.lastIndexOf(",");
 
-        if (lastComma > 1) {
+        if (lastTypComma > 1) {
             strTypeTabs = strTypeTabs.substring(0, lastTypComma);
         }
 
