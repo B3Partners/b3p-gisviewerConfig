@@ -687,6 +687,30 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             strBeheerTabs += form.get("cfg_zoekenid4") + ",";
         }
 
+        if (!form.get("cfg_zoekenid5").equals("leeg")) {
+            strBeheerTabs += form.get("cfg_zoekenid5") + ",";
+        }
+
+        if (!form.get("cfg_zoekenid6").equals("leeg")) {
+            strBeheerTabs += form.get("cfg_zoekenid6") + ",";
+        }
+
+        if (!form.get("cfg_zoekenid7").equals("leeg")) {
+            strBeheerTabs += form.get("cfg_zoekenid7") + ",";
+        }
+
+        if (!form.get("cfg_zoekenid8").equals("leeg")) {
+            strBeheerTabs += form.get("cfg_zoekenid8") + ",";
+        }
+
+        if (!form.get("cfg_zoekenid9").equals("leeg")) {
+            strBeheerTabs += form.get("cfg_zoekenid9") + ",";
+        }
+
+        if (!form.get("cfg_zoekenid10").equals("leeg")) {
+            strBeheerTabs += form.get("cfg_zoekenid10") + ",";
+        }
+
         lastComma = strBeheerTabs.lastIndexOf(",");
 
         if (lastComma > 1) {
@@ -919,10 +943,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             strBeheerTabs = strBeheerTabs.substring(0, lastComma);
         }
 
-        configTabs.setPropval(strBeheerTabs);
-        configTabs.setType("java.lang.String");
-        sess.merge(configTabs);
-        sess.flush();
+        if (configTabs != null) {
+            configTabs.setPropval(strBeheerTabs);
+            configTabs.setType("java.lang.String");
+            sess.merge(configTabs);
+            sess.flush();
+        }
     }
 
     private void writeBoolean(DynaValidatorForm form, String field, Configuratie c) {
@@ -1050,6 +1076,42 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         if (items.length > 3) {
             if ((items[3] != null) || items[3].equals("")) {
                 dynaForm.set("cfg_zoekenid4", items[3].replaceAll("\"", ""));
+            }
+        }
+
+        if (items.length > 4) {
+            if ((items[4] != null) || items[4].equals("")) {
+                dynaForm.set("cfg_zoekenid5", items[4].replaceAll("\"", ""));
+            }
+        }
+
+        if (items.length > 5) {
+            if ((items[5] != null) || items[5].equals("")) {
+                dynaForm.set("cfg_zoekenid6", items[5].replaceAll("\"", ""));
+            }
+        }
+
+        if (items.length > 6) {
+            if ((items[6] != null) || items[6].equals("")) {
+                dynaForm.set("cfg_zoekenid7", items[6].replaceAll("\"", ""));
+            }
+        }
+
+        if (items.length > 7) {
+            if ((items[7] != null) || items[7].equals("")) {
+                dynaForm.set("cfg_zoekenid8", items[7].replaceAll("\"", ""));
+            }
+        }
+
+        if (items.length > 8) {
+            if ((items[8] != null) || items[8].equals("")) {
+                dynaForm.set("cfg_zoekenid9", items[8].replaceAll("\"", ""));
+            }
+        }
+
+        if (items.length > 9) {
+            if ((items[9] != null) || items[9].equals("")) {
+                dynaForm.set("cfg_zoekenid10", items[9].replaceAll("\"", ""));
             }
         }
     }
