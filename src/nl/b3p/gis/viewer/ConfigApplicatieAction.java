@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
+import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.utils.KaartSelectieUtil;
 import nl.b3p.gis.viewer.db.Applicatie;
 import nl.b3p.gis.viewer.services.HibernateUtil;
@@ -79,7 +80,16 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
 
         /* Applicatie ophalen en opslaan */
         Applicatie app = getApplicatie(dynaForm, request);
-        populateObject(dynaForm, app, request);
+
+        /* Als bij het opslaan app null is dan wordt er een nieuwe applicatie
+         opgeslagen. Alleen-lezen is voor een nieuw app object al op true gezet */
+        if (app == null) {
+            app = KaartSelectieUtil.getNewApplicatie();
+            populateObject(dynaForm, app, request, false);
+            ConfigKeeper.writeDefaultApplicatie(app.getCode());
+        } else {
+            populateObject(dynaForm, app, request, true);
+        }
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         sess.saveOrUpdate(app);
@@ -168,29 +178,8 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
     private Applicatie getApplicatie(DynaValidatorForm dynaForm, HttpServletRequest request) {
         Integer id = (Integer) dynaForm.get("applicatieID");
 
-        Applicatie app = null;
-        if (id == null || id < 1) {
-            app = new Applicatie();
-
-            String appCode = null;
-            try {
-                appCode = Applicatie.createApplicatieCode();
-            } catch (Exception ex) {
-                log.error("Fout tijdens maken Applicatie code:", ex);
-            }
-
-            app.setCode(appCode);
-            
-            /* Applicaties door de beheerder gemaakt zijn standaard read-only */
-            app.setRead_only(true);
-            app.setUser_copy(false);
-            app.setDefault_app(false);
-            app.setVersie(1);
-            app.setDatum_gebruikt(new Date());
-        } else {
-            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-            app = (Applicatie) sess.get(Applicatie.class, id);
-        }
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        Applicatie app = (Applicatie) sess.get(Applicatie.class, id);
 
         return app;
     }
@@ -209,11 +198,13 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         }
 
         dynaForm.set("defaultApp", app.getDefault_app());
+        dynaForm.set("readOnly", app.getRead_only());
 
         request.setAttribute("appcode", app.getCode());
     }
 
-    private void populateObject(DynaValidatorForm dynaForm, Applicatie app, HttpServletRequest request) {
+    private void populateObject(DynaValidatorForm dynaForm, Applicatie app,
+            HttpServletRequest request, Boolean populateReadOnlyFromForm) {
         Integer id = (Integer) dynaForm.get("applicatieID");
 
         if (id != null && id != 0) {
@@ -224,15 +215,20 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         app.setGebruikersCode(FormUtils.nullIfEmpty(dynaForm.getString("gebruikersCode")));
         app.setParent(null);
 
-        /* De gebruiksdatum alleen wijzigen als iemand de appcode gebruikt in de viewer */
-        //app.setDatum_gebruikt(new Date());
-
         Boolean defaultApp = (Boolean) dynaForm.get("defaultApp");
-
         if (defaultApp != null) {          
             app.setDefault_app(true);
         } else {
             app.setDefault_app(false);
+        }
+
+        if (populateReadOnlyFromForm) {
+            Boolean readOnly = (Boolean) dynaForm.get("readOnly");
+            if (readOnly != null) {
+                app.setRead_only(true);
+            } else {
+                app.setRead_only(false);
+            }
         }
     }
 
