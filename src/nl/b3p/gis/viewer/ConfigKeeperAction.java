@@ -631,7 +631,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         config = configKeeper.getConfiguratie("meldingEmail", appCode);
         writeString(dynaForm, "cfg_meldingemail", config);
 
-        config = configKeeper.getConfiguratie("meldingEmailmelder", appCode);
+        config = configKeeper.getConfiguratie("meldingEmailMelder", appCode);
         writeBoolean(dynaForm, "cfg_meldingemailmelder", config);
 
         config = configKeeper.getConfiguratie("meldingEmailBehandelaar", appCode);
