@@ -176,6 +176,10 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
     
     private Applicatie getApplicatie(DynaValidatorForm dynaForm, HttpServletRequest request) {
         Integer id = (Integer) dynaForm.get("applicatieID");
+        
+        if (id == null || id < 1) {
+            return null;
+        }
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         Applicatie app = (Applicatie) sess.get(Applicatie.class, id);
