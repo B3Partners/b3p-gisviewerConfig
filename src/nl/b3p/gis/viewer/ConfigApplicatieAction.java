@@ -164,6 +164,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             KaartSelectieUtil.removeExistingConfigKeeperSettings(app.getCode());
             KaartSelectieUtil.removeExistingUserKaartgroepAndUserKaartlagen(app.getCode());
             KaartSelectieUtil.removeExistingUserServices(app.getCode());
+            KaartSelectieUtil.removeCyclomediaAccount(app.getCode());
         }
 
         dynaForm.initialize(mapping);
