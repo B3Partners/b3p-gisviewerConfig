@@ -541,7 +541,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         if (dynaForm.getString("dataorder") != null && dynaForm.getString("dataorder").length() > 0) {
             td.setDataorder(Integer.parseInt(dynaForm.getString("dataorder")));
         } else {
-            td.setDataorder(0);
+            td.setDataorder(null);
         }
 
         td.setEenheid(FormUtils.nullIfEmpty(dynaForm.getString("eenheid")));
