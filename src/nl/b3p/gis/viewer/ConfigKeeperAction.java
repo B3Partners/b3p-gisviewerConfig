@@ -455,8 +455,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         saveCyclomediaAccount(appCode, dynaForm, request);
 
         saveKaartSelectie(appCode, dynaForm, request);
+        
         populateObject(dynaForm, appCode);
-
+        
+        /* Basisboom ophalen */
+        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+        
         populateForApplicatieHeader(request, appCode);
 
         prepareMethod(dynaForm, request, EDIT, LIST);
@@ -618,9 +622,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         KaartSelectieUtil.saveServiceLayers(layersAan, layersDefaultAan);
         KaartSelectieUtil.saveUserLayerStyles(useLayerStyles);
         KaartSelectieUtil.saveUserLayerSldParts(userLayerIds, useLayerSldParts);
-
-        /* Basisboom ophalen */
-        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
     }
 
     public void populateObject(DynaValidatorForm dynaForm, String appCode) {
