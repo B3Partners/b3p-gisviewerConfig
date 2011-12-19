@@ -134,7 +134,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         KaartSelectieUtil.resetExistingUserLayers(appCode);
 
         /* Basisboom ophalen */
-        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+        KaartSelectieUtil.populateKaartSelectieForm(appCode, request, false);
 
         /* Configkeeper instellingen ook klaarzetten voor form */
         ConfigKeeper configKeeper = new ConfigKeeper();
@@ -161,7 +161,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String appCode = (String) request.getParameter("appcode");
 
         /* Basisboom ophalen */
-        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+        KaartSelectieUtil.populateKaartSelectieForm(appCode, request, false);
 
         /* Applicatieinstellingen ophalen en klaarzetten voor form */
         Map map = null;
@@ -197,7 +197,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         /* Basisboom weer klaarzetten */
-        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+        KaartSelectieUtil.populateKaartSelectieForm(appCode, request, false);
 
         populateForApplicatieHeader(request, appCode);
 
@@ -215,7 +215,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String appCode = (String) dynaForm.get("appcode");
 
         if (KaartSelectieUtil.userAlreadyHasThisService(appCode, serviceUrl)) {
-            KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+            KaartSelectieUtil.populateKaartSelectieForm(appCode, request, false);
 
             addMessage(request, ERROR_DUPLICATE_WMS, serviceUrl);
             return getAlternateForward(mapping, request);
@@ -230,7 +230,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         } catch (Exception ex) {
             logger.error("Fout tijdens opslaan WMS. ", ex);
 
-            KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+            KaartSelectieUtil.populateKaartSelectieForm(appCode, request, false);
 
             addMessage(request, ERROR_SAVE_WMS, uri.toString());
             return getAlternateForward(mapping, request);
@@ -262,7 +262,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         sess.save(us);
 
         /* Basisboom weer klaarzetten */
-        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+        KaartSelectieUtil.populateKaartSelectieForm(appCode, request, false);
 
         populateForApplicatieHeader(request, appCode);
 
@@ -458,8 +458,15 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         
         populateObject(dynaForm, appCode);
         
-        /* Basisboom ophalen */
-        KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+        /* Basisboom ophalen. Check of er een bestand geupload is */
+        FormFile tempFormFile = (FormFile) dynaForm.get("cfg_cyclo_keybestand");
+        
+        boolean uploading = false;
+        if (tempFormFile != null && tempFormFile.getFileSize() > 0) {
+            uploading = true;
+        }
+        
+        KaartSelectieUtil.populateKaartSelectieForm(appCode, request, uploading);
         
         populateForApplicatieHeader(request, appCode);
 
