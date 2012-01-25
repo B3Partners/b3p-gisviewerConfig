@@ -194,6 +194,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         }
 
         dynaForm.set("applicatieID", app.getId());
+        dynaForm.set("email", app.getEmail());
         dynaForm.set("naam", app.getNaam());
         dynaForm.set("gebruikersCode", app.getGebruikersCode());
 
@@ -215,6 +216,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
             app.setId(id);
         }
 
+        app.setEmail(FormUtils.nullIfEmpty(dynaForm.getString("email")));
         app.setNaam(FormUtils.nullIfEmpty(dynaForm.getString("naam")));
         app.setGebruikersCode(FormUtils.nullIfEmpty(dynaForm.getString("gebruikersCode")));
         app.setParent(null);
