@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.viewer.db.UserService;
+import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -168,7 +169,18 @@ public class ConfigUserWMSList extends ViewerCrudAction {
             service.setId(id);
         }
         
-        service.setCode("");
+        GisPrincipal user = GisPrincipal.getGisPrincipal(request);
+        String beheerderCode = null;
+        if (user != null) {
+            beheerderCode = user.getCode();
+        }
+        
+        if (beheerderCode != null && !beheerderCode.equals("")) {
+            service.setCode(beheerderCode);
+        } else {
+            service.setCode("");
+        }
+        
         service.setUse_in_list(true);
         service.setName(FormUtils.nullIfEmpty(dynaForm.getString("name")));
         service.setGroupname(FormUtils.nullIfEmpty(dynaForm.getString("groupname")));
