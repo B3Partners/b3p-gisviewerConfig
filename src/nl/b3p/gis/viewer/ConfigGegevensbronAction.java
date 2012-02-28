@@ -8,8 +8,10 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
+import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.utils.ConfigListsUtil;
 import nl.b3p.gis.viewer.db.Gegevensbron;
+import nl.b3p.gis.viewer.db.ThemaData;
 import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.zoeker.configuratie.Bron;
@@ -38,6 +40,86 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
     protected static final String ERROR_ISPARENT = "error.gb.isparent";
 
     public static final String GEGEVENSBRONID = "gegevensbronID";
+    
+    protected static final String MAPPING_COPY = "copy";
+
+    @Override
+    protected Map getActionMethodPropertiesMap() {
+        Map map = super.getActionMethodPropertiesMap();
+
+        ExtendedMethodProperties crudProp = null;
+
+        crudProp = new ExtendedMethodProperties(MAPPING_COPY);
+        crudProp.setDefaultForwardName(SUCCESS);
+        crudProp.setDefaultMessageKey("message.gegevensbron.copy.success");
+        crudProp.setAlternateForwardName(FAILURE);
+        crudProp.setAlternateMessageKey("message.gegevensbron.copy.failed");
+        map.put(MAPPING_COPY, crudProp);
+
+        return map;
+    }
+    
+    public ActionForward copy(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        if (!isTokenValid(request)) {
+            prepareMethod(dynaForm, request, EDIT, LIST);
+            addAlternateMessage(mapping, request, TOKEN_ERROR_KEY);
+            return getAlternateForward(mapping, request);
+        }
+
+        ActionErrors errors = dynaForm.validate(mapping, request);
+        if (!errors.isEmpty()) {
+            addMessages(request, errors);
+            prepareMethod(dynaForm, request, EDIT, LIST);
+            addAlternateMessage(mapping, request, VALIDATION_ERROR_KEY);
+            return getAlternateForward(mapping, request);
+        }
+
+        Gegevensbron gb = getGegevensbron(dynaForm, true);
+        if (gb == null) {
+            prepareMethod(dynaForm, request, LIST, EDIT);
+            addAlternateMessage(mapping, request, NOTFOUND_ERROR_KEY);
+            return getAlternateForward(mapping, request);
+        }
+        
+        /* Nieuwe Gegevensbron object en vullen */
+        Gegevensbron kopie = new Gegevensbron();
+        kopie.setNaam(gb.getNaam() + " kopie");
+        kopie.setBron(gb.getBron());
+        kopie.setAdmin_tabel(gb.getAdmin_tabel());
+        kopie.setAdmin_pk(gb.getAdmin_pk());
+        
+        if (gb.getVolgordenr() != null && gb.getVolgordenr() > 0)
+            kopie.setVolgordenr(gb.getVolgordenr() + 10);
+        else
+            kopie.setVolgordenr(new Integer(10));
+        
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        sess.save(kopie);
+        sess.flush();
+        
+        /* Clonen themadata */
+        List<ThemaData> themaDataItems = sess.createQuery("from ThemaData where"
+                + " gegevensbron = :bron")
+                .setParameter("bron", gb)
+                .list();
+        
+        if (themaDataItems != null && themaDataItems.size() > 0) {
+            for (ThemaData item : themaDataItems) {
+                ThemaData clone = (ThemaData) item.clone();
+                clone.setGegevensbron(kopie);
+
+                sess.save(clone);
+                sess.flush();
+            }
+        }
+        
+        populateGegevensbronForm(kopie, dynaForm, request);
+
+        prepareMethod(dynaForm, request, LIST, EDIT);
+        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+        
+        return getDefaultForward(mapping, request);
+    }
 
     protected Gegevensbron getGegevensbron(DynaValidatorForm form, boolean createNew) {
         Integer id = FormUtils.StringToInteger(form.getString("gegevensbronID"));
