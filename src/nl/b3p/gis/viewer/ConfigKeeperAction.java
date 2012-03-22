@@ -318,7 +318,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showNeedleTool = (Boolean) map.get("showNeedleTool");
         Boolean showPrintTool = (Boolean) map.get("showPrintTool");
         Boolean showLayerSelectionTool = (Boolean) map.get("showLayerSelectionTool");
-        Boolean useUserWmsDropdown = (Boolean) map.get("useUserWmsDropdown");
+        Boolean useUserWmsDropdown = (Boolean) map.get("useUserWmsDropdown");        
+        Boolean datasetDownload = (Boolean) map.get("datasetDownload");
 
         String layerGrouping = (String) map.get("layerGrouping");
         String popupWidth = (String) map.get("popupWidth");
@@ -431,6 +432,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
         
         dynaForm.set("cfg_useUserWmsDropdown", useUserWmsDropdown);
+        dynaForm.set("cfg_datasetDownload", datasetDownload);
     }
 
     @Override
@@ -629,10 +631,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("bagGebruiksfunctieAttr", appCode);
         writeString(dynaForm, "cfg_bagGebruiksfunctieAttr", c);
         c = configKeeper.getConfiguratie("bagGeomAttr", appCode);
-        writeString(dynaForm, "cfg_bagGeomAttr", c);
-        
+        writeString(dynaForm, "cfg_bagGeomAttr", c);        
         c = configKeeper.getConfiguratie("useUserWmsDropdown", appCode);
         writeBoolean(dynaForm, "cfg_useUserWmsDropdown", c);
+        c = configKeeper.getConfiguratie("datasetDownload", appCode);
+        writeBoolean(dynaForm, "cfg_datasetDownload", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String appCode) {
