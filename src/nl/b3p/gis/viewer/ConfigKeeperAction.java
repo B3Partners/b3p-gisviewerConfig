@@ -319,26 +319,21 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showPrintTool = (Boolean) map.get("showPrintTool");
         Boolean showLayerSelectionTool = (Boolean) map.get("showLayerSelectionTool");
         Boolean useUserWmsDropdown = (Boolean) map.get("useUserWmsDropdown");        
-        Boolean datasetDownload = (Boolean) map.get("datasetDownload");
-
+        Boolean datasetDownload = (Boolean) map.get("datasetDownload");        
         String layerGrouping = (String) map.get("layerGrouping");
         String popupWidth = (String) map.get("popupWidth");
         String popupHeight = (String) map.get("popupHeight");
         String popupLeft = (String) map.get("popupLeft");
         String popupTop = (String) map.get("popupTop");
         String defaultdataframehoogte = (String) map.get("defaultdataframehoogte");
-
         String viewerType = (String) map.get("viewerType");
         String viewerTemplate = (String) map.get("viewerTemplate");
-
         String objectInfoType = (String) map.get("objectInfoType");
-
         String treeOrder = (String) map.get("treeOrder");
-
         Integer tabWidth = (Integer) map.get("tabWidth");
-
         String extent = (String) map.get("extent");
         String activeTab = (String) map.get("activeTab");
+        String tilingResolutions = (String) map.get("tilingResolutions");
 
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
@@ -433,6 +428,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         
         dynaForm.set("cfg_useUserWmsDropdown", useUserWmsDropdown);
         dynaForm.set("cfg_datasetDownload", datasetDownload);
+        dynaForm.set("cfg_tilingResolutions", tilingResolutions);
     }
 
     @Override
@@ -635,7 +631,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("useUserWmsDropdown", appCode);
         writeBoolean(dynaForm, "cfg_useUserWmsDropdown", c);
         c = configKeeper.getConfiguratie("datasetDownload", appCode);
-        writeBoolean(dynaForm, "cfg_datasetDownload", c);
+        writeBoolean(dynaForm, "cfg_datasetDownload", c);        
+        c = configKeeper.getConfiguratie("tilingResolutions", appCode);
+        writeString(dynaForm, "cfg_tilingResolutions", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String appCode) {
