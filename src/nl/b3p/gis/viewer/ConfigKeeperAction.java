@@ -984,45 +984,51 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     }
 
     private void writeBoolean(DynaValidatorForm form, String field, Configuratie c) {
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        if (c != null) {
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        if (form.get(field) != null && form.get(field).toString().length() > 0) {
-            c.setPropval("true");
-        } else {
-            c.setPropval("false");
+            if (form.get(field) != null && form.get(field).toString().length() > 0) {
+                c.setPropval("true");
+            } else {
+                c.setPropval("false");
+            }
+            c.setType("java.lang.Boolean");
+
+            sess.merge(c);
+            sess.flush();
         }
-        c.setType("java.lang.Boolean");
-
-        sess.merge(c);
-        sess.flush();
     }
 
     private void writeInteger(DynaValidatorForm form, String field, Configuratie c) {
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        if (c != null) {
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        if (form.get(field) != null) {
-            c.setPropval(form.get(field).toString());
-        } else {
-            c.setPropval("0");
+            if (form.get(field) != null) {
+                c.setPropval(form.get(field).toString());
+            } else {
+                c.setPropval("0");
+            }
+            c.setType("java.lang.Integer");
+
+            sess.merge(c);
+            sess.flush();
         }
-        c.setType("java.lang.Integer");
-
-        sess.merge(c);
-        sess.flush();
     }
 
-    private void writeString(DynaValidatorForm form, String field, Configuratie c) {
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+    private void writeString(DynaValidatorForm form, String field, Configuratie c) {        
+        if (c != null) {
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        if (form.get(field) != null) {
-            c.setPropval(form.get(field).toString());
-        } else {
-            c.setPropval("");
-        }
-        c.setType("java.lang.String");
+            if (form.get(field) != null) {
+                c.setPropval(form.get(field).toString());
+            } else {
+                c.setPropval("");
+            }
+            c.setType("java.lang.String");
 
-        sess.merge(c);
-        sess.flush();
+            sess.merge(c);
+            sess.flush();
+        }        
     }
 
     private void fillTabbladenConfig(DynaValidatorForm dynaForm, Map map) {
