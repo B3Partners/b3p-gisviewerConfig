@@ -32,6 +32,8 @@ import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.viewer.ConfigZoekConfiguratieAction;
 import nl.b3p.gis.viewer.ViewerCrudAction;
+import nl.b3p.gis.viewer.db.Themas;
+import nl.b3p.gis.viewer.db.ZoekconfiguratieThemas;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.zoeker.configuratie.Bron;
 import nl.b3p.zoeker.configuratie.ResultaatAttribuut;
@@ -47,8 +49,8 @@ import org.hibernate.Session;
 
 /**
  * B3partners B.V. http://www.b3partners.nl
- * @author Roy Braam
- * Created on 01-juni-2010, 16:10:12
+ *
+ * @author Roy Braam Created on 01-juni-2010, 16:10:12
  */
 public class WizardZoekConfiguratieAction extends ViewerCrudAction {
 
@@ -62,7 +64,9 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
     public static final String STEP2 = "step2";
     public static final String STEP3 = "step3";
     public static final String STEP4 = "step4";
-
+    public static final String STEP5 = "step5";
+    public static final String SAVESTEP5 = "saveStep5";
+    public static final String WIZARDDONE = "wizardDone";
     protected static final String ERROR_ZOEKVELD_RELATION = "error.zoekveld.relation";
 
     @Override
@@ -82,6 +86,21 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         crudProp.setDefaultForwardName(STEP3);
         crudProp.setAlternateForwardName(FAILURE);
         map.put(STEP3, crudProp);
+
+        crudProp = new ExtendedMethodProperties(STEP5);
+        crudProp.setDefaultForwardName(STEP5);
+        crudProp.setAlternateForwardName(FAILURE);
+        map.put(STEP5, crudProp);
+
+        crudProp = new ExtendedMethodProperties(SAVESTEP5);
+        crudProp.setDefaultForwardName(SAVESTEP5);
+        crudProp.setAlternateForwardName(FAILURE);
+        map.put(SAVESTEP5, crudProp);
+
+        crudProp = new ExtendedMethodProperties(WIZARDDONE);
+        crudProp.setDefaultForwardName(WIZARDDONE);
+        crudProp.setAlternateForwardName(FAILURE);
+        map.put(WIZARDDONE, crudProp);
 
         return map;
     }
@@ -107,14 +126,16 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             Object zc = sess.get(ZoekConfiguratie.class, id);
 
             if (zc != null) {
-                ZoekConfiguratie zoekConfiguratie = (ZoekConfiguratie)zc;
+                ZoekConfiguratie zoekConfiguratie = (ZoekConfiguratie) zc;
 
                 String message = "";
 
-                /* controleren of er een zoekconfig bestaat die de te verwijderen zoekconfig
-                 gekoppeld heeft als vervolgzoeker */
+                /*
+                 * controleren of er een zoekconfig bestaat die de te
+                 * verwijderen zoekconfig gekoppeld heeft als vervolgzoeker
+                 */
                 List parents = sess.createQuery("from ZoekConfiguratie z where z.parentZoekConfiguratie=:zc").setParameter("zc", zc).list();
-                
+
                 if (parents != null && parents.size() > 0) {
                     message += "De zoekconfiguratie(s) ";
 
@@ -128,13 +149,12 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
                     message += ", hebben de " + zoekConfiguratie.getNaam() + " zoeker nog als vervolgzoeker ingesteld. ";
                 }
 
-                /* controleren of er een zoekconfig bestaat die de te verwijderen zoekconfig
-                 gekoppeld heeft via een zoekveld input */
+                /*
+                 * controleren of er een zoekconfig bestaat die de te
+                 * verwijderen zoekconfig gekoppeld heeft via een zoekveld input
+                 */
                 List velden = sess.createQuery("from ZoekAttribuut zv where zv.zoekConfiguratie != :zcId1 AND "
-                        + "zv.inputzoekconfiguratie = :zcId2")
-                        .setParameter("zcId1", zc)
-                        .setParameter("zcId2", zc)
-                        .list();
+                        + "zv.inputzoekconfiguratie = :zcId2").setParameter("zcId1", zc).setParameter("zcId2", zc).list();
 
                 if (velden != null && velden.size() > 0) {
                     message += "In de zoekconfiguratie(s) ";
@@ -159,7 +179,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
                     sess.delete(zc);
                     sess.flush();
                 }
-                
+
             } else { // zc is null
                 addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "Kan opgegeven zoekconfiguratie niet vinden.");
             }
@@ -185,8 +205,11 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
     }
 
     public ActionForward step2(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        /*kijk of er een zoekconfiguratie is, zoja vul dan alles met de gegevens van de zoekconfiguratie
-        Zoniet vul dan alles met de hiervoor geselecteerde dingen.*/
+        /*
+         * kijk of er een zoekconfiguratie is, zoja vul dan alles met de
+         * gegevens van de zoekconfiguratie Zoniet vul dan alles met de hiervoor
+         * geselecteerde dingen.
+         */
         ZoekConfiguratie zc = getAndSetZoekConfiguratie(request);
         Bron bron = null;
         String featureType = null;
@@ -210,14 +233,14 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             bron = getAndSetBron(request);
             featureType = FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
         }
-        
+
         request.setAttribute(FEATURETYPE, featureType);
 
         if (zc != null && bron == null || featureType == null) {
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De geselecteerde zoekconfiguratie is ongeldig.");
             return unspecified(mapping, dynaForm, request, response);
         }
-        
+
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         //maak een lijst met mogelijke zoekconfiguraties (om als parent te kiezen)zonder zichzelf
         String queryString = "from ZoekConfiguratie";
@@ -229,7 +252,9 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         return mapping.findForward(STEP3);
     }
 
-    /*Zoekingang velden*/
+    /*
+     * Zoekingang velden
+     */
     public ActionForward step3(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         ZoekConfiguratie zc = getAndSetZoekConfiguratie(request);
         Bron bron = null;
@@ -308,9 +333,51 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         return mapping.findForward(STEP4);
     }
 
+    public ActionForward step5(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        ZoekConfiguratie zc = getAndSetZoekConfiguratie(request);
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        List l = sess.createQuery("from Themas").list();
+
+        List<ZoekconfiguratieThemas> zoekconfigThemas = sess.createQuery("from ZoekconfiguratieThemas WHERE zoekconfiguratie = :id").setParameter("id", zc).list();
+        List<String> layersAan = new ArrayList<String>();
+        for (Iterator<ZoekconfiguratieThemas> it = zoekconfigThemas.iterator(); it.hasNext();) {
+            ZoekconfiguratieThemas zoekconfiguratieThema = it.next();
+            layersAan.add(zoekconfiguratieThema.getThema().getId().toString());
+        }
+        request.setAttribute("themas", l);
+        dynaForm.set("layersAan", layersAan.toArray(new String[layersAan.size()]));
+        return mapping.findForward(STEP5);
+    }
+
+    public ActionForward saveStep5(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        ZoekConfiguratie zc = getAndSetZoekConfiguratie(request);
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        // Verwijder de oude entries
+        
+        List<ZoekconfiguratieThemas> zoekconfigThemas = sess.createQuery("from ZoekconfiguratieThemas WHERE zoekconfiguratie = :id").setParameter("id", zc).list();
+        for (Iterator<ZoekconfiguratieThemas> it = zoekconfigThemas.iterator(); it.hasNext();) {
+            ZoekconfiguratieThemas zoekconfigThema = it.next();
+            sess.delete(zoekconfigThema);
+        }
+        sess.flush();
+        String[] layersAan = dynaForm.getStrings("layersAan");
+
+        for (int i = 0; i < layersAan.length; i++) {
+            String thema = layersAan[i];
+            Themas t = (Themas) sess.get(Themas.class, new Integer(thema));
+            ZoekconfiguratieThemas zt = new ZoekconfiguratieThemas();
+            zt.setThema(t);
+            zt.setZoekconfiguratie(zc);
+            sess.save(zt);
+        }
+        sess.flush();
+        return mapping.findForward(WIZARDDONE);
+    }
+
     /**
-     * Haalt de bron op met het id op het request en set het ook weer gelijk op het request
-     * zodat de volgende submit het weer kan doorsturen
+     * Haalt de bron op met het id op het request en set het ook weer gelijk op
+     * het request zodat de volgende submit het weer kan doorsturen
      */
     private Bron getAndSetBron(HttpServletRequest request) {
         Bron bron = getBron(request);
@@ -331,8 +398,9 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
     }
 
     /**
-     * Haalt de ZoekConfiguratie op met het id op het request en set het ook weer gelijk op het request
-     * zodat de volgende submit het weer kan doorsturen
+     * Haalt de ZoekConfiguratie op met het id op het request en set het ook
+     * weer gelijk op het request zodat de volgende submit het weer kan
+     * doorsturen
      */
     private ZoekConfiguratie getAndSetZoekConfiguratie(HttpServletRequest request) {
         Integer zid = FormUtils.StringToInteger(request.getParameter(ZOEKCONFIGURATIEID));
@@ -346,7 +414,10 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         }
         return zc;
     }
-    /*Maak een lijst met tip resource keys zodat de gebruiker wat feedback krijgt bij het aanmaken van de velden.*/
+    /*
+     * Maak een lijst met tip resource keys zodat de gebruiker wat feedback
+     * krijgt bij het aanmaken van de velden.
+     */
 
     private ArrayList<String> createTips(ZoekConfiguratie zc) {
         if (zc == null) {
