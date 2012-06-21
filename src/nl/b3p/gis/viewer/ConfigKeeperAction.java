@@ -30,13 +30,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private static final String[] CONFIGKEEPER_TABS = {
         "leeg", "themas", "legenda", "zoeken", "informatie", "gebieden",
         "analyse", "planselectie", "meldingen", "vergunningen", "voorzieningen",
-        "redlining", "cms", "bag"
+        "redlining", "cms", "bag", "wkt"
     };
 
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Info", "Gebieden",
         "Analyse", "Plannen", "Meldingen", "Vergunningen", "Voorzieningen",
-        "Redlining", "CMS", "BAG"
+        "Redlining", "CMS", "BAG", "WKT"
     };
 
     protected static final String RESET_INSTELLINGEN = "resetInstellingen";
