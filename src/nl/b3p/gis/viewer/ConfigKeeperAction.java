@@ -318,6 +318,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showNeedleTool = (Boolean) map.get("showNeedleTool");
         Boolean showPrintTool = (Boolean) map.get("showPrintTool");
         Boolean showLayerSelectionTool = (Boolean) map.get("showLayerSelectionTool");
+        Boolean showGPSTool = (Boolean) map.get("showGPSTool");
+        String gpsBuffer = (String) map.get("gpsBuffer");
         Boolean useUserWmsDropdown = (Boolean) map.get("useUserWmsDropdown");        
         Boolean datasetDownload = (Boolean) map.get("datasetDownload");        
         String layerGrouping = (String) map.get("layerGrouping");
@@ -369,6 +371,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showNeedleTool", showNeedleTool);
         dynaForm.set("cfg_showPrintTool", showPrintTool);
         dynaForm.set("cfg_showLayerSelectionTool", showLayerSelectionTool);
+        dynaForm.set("cfg_showGPSTool", showGPSTool);
+        dynaForm.set("cfg_GPSBuffer", gpsBuffer);
 
         dynaForm.set("cfg_layerGrouping", layerGrouping);
         dynaForm.set("cfg_popupWidth", popupWidth);
@@ -554,6 +558,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("showLayerSelectionTool", appCode);
         writeBoolean(dynaForm, "cfg_showLayerSelectionTool", c);
+        
+        c = configKeeper.getConfiguratie("showGPSTool", appCode);
+        writeBoolean(dynaForm, "cfg_showGPSTool", c);
+        
+        c = configKeeper.getConfiguratie("gpsBuffer", appCode);
+        writeString(dynaForm, "cfg_GPSBuffer", c);
 
         c = configKeeper.getConfiguratie("layerGrouping", appCode);
         writeString(dynaForm, "cfg_layerGrouping", c);
