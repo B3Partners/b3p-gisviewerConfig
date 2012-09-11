@@ -340,11 +340,14 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
 
         List<ZoekconfiguratieThemas> zoekconfigThemas = sess.createQuery("from ZoekconfiguratieThemas WHERE zoekconfiguratie = :id").setParameter("id", zc).list();
         List<String> layersAan = new ArrayList<String>();
+        List<String> layerNamesOn = new ArrayList<String>();
         for (Iterator<ZoekconfiguratieThemas> it = zoekconfigThemas.iterator(); it.hasNext();) {
             ZoekconfiguratieThemas zoekconfiguratieThema = it.next();
             layersAan.add(zoekconfiguratieThema.getThema().getId().toString());
+            layerNamesOn.add(zoekconfiguratieThema.getThema().getNaam());
         }
         request.setAttribute("themas", l);
+        request.setAttribute("layerNamesOn", layerNamesOn);
         dynaForm.set("layersAan", layersAan.toArray(new String[layersAan.size()]));
         return mapping.findForward(STEP5);
     }

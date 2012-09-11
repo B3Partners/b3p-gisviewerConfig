@@ -321,7 +321,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showGPSTool = (Boolean) map.get("showGPSTool");
         String gpsBuffer = (String) map.get("gpsBuffer");
         Boolean useUserWmsDropdown = (Boolean) map.get("useUserWmsDropdown");        
-        Boolean datasetDownload = (Boolean) map.get("datasetDownload");        
+        Boolean datasetDownload = (Boolean) map.get("datasetDownload");  
+        Boolean showServiceUrl = (Boolean) map.get("showServiceUrl");        
+        
         String layerGrouping = (String) map.get("layerGrouping");
         String popupWidth = (String) map.get("popupWidth");
         String popupHeight = (String) map.get("popupHeight");
@@ -433,6 +435,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_useUserWmsDropdown", useUserWmsDropdown);
         dynaForm.set("cfg_datasetDownload", datasetDownload);
         dynaForm.set("cfg_tilingResolutions", tilingResolutions);
+        dynaForm.set("cfg_showServiceUrl", showServiceUrl);
     }
 
     @Override
@@ -644,6 +647,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         writeBoolean(dynaForm, "cfg_datasetDownload", c);        
         c = configKeeper.getConfiguratie("tilingResolutions", appCode);
         writeString(dynaForm, "cfg_tilingResolutions", c);
+        
+        c = configKeeper.getConfiguratie("showServiceUrl", appCode);
+        writeBoolean(dynaForm, "cfg_showServiceUrl", c);   
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String appCode) {
