@@ -168,8 +168,25 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
 
                     message += ", wordt de " + zoekConfiguratie.getNaam() + " zoeker nog als input voor een zoekveld gebruikt.";
                 }
+                
+                /* Controleer op zoekconfiguratie_thema's */
+                List themas = sess.createQuery("from ZoekconfiguratieThemas where zoekconfiguratie = :zoeker")
+                        .setParameter("zoeker", zoekConfiguratie).list();
+                
+                if(themas != null && themas.size() > 0){
+                    message += "In de zoekconfiguratie " + zoekConfiguratie.getNaam() + ", worden de kaartlagen ";
+                    
+                    Iterator iter = themas.iterator();
+                    while (iter.hasNext()) {
+                        ZoekconfiguratieThemas zt = (ZoekconfiguratieThemas) iter.next();
 
-                int size = parents.size() + velden.size();
+                        message += " : " + zt.getThema().getNaam();
+                    }
+                    
+                    message += " nog gekoppeld aan de zoekingang.";
+                }
+
+                int size = parents.size() + velden.size() + themas.size();
 
                 if (size > 0) {
                     addAlternateMessage(mapping, request, ERROR_ZOEKVELD_RELATION, message);
