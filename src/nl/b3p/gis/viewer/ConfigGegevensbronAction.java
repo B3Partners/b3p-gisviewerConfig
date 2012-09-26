@@ -411,8 +411,11 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
          * ConstraintViolationException op */
 
         int themaSize = 0;
-        if (gb.getThemas() != null) {
-            themaSize = gb.getThemas().size();
+        
+        List themas = sess.createQuery("from Themas where gegevensbron = :gegevensbron")
+                .setParameter("gegevensbron", gb).list();
+        if(themas != null && themas.size() > 0){
+            themaSize = themas.size();
         }
 
         int childrenSize = 0;

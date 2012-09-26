@@ -9,6 +9,7 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
+import nl.b3p.gis.viewer.db.Gegevensbron;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.zoeker.configuratie.Bron;
 import nl.b3p.zoeker.configuratie.ZoekConfiguratie;
@@ -32,6 +33,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
     private static final Log logger = LogFactory.getLog(ConfigConnectieAction.class);
 
     protected static final String FK_PARENTBRON_ERROR_KEY = "error.fk.parentbron";
+    protected static final String FK_GEGEVENSBRON_ERROR_KEY = "error.fk.gegevensbron";
     
     protected Bron getConnectie(DynaValidatorForm form, boolean createNew) {
         Integer id = FormUtils.StringToInteger(form.getString("bronId"));
@@ -191,51 +193,85 @@ public class ConfigConnectieAction extends ViewerCrudAction {
 
                 return getAlternateForward(mapping, request);
             }
-
-            sess.delete(c);
-            sess.flush();
-
-        } catch (ConstraintViolationException ex) {
-
-            /* ophalen gekoppelde zoekconfiguraties */
+            
             List zoekConfigs = sess.createQuery("from ZoekConfiguratie where "
-                    + " parentbron = :bronid")
-                    .setParameter("bronid", c.getId())
+                    + " parentbron = :bron")
+                    .setParameter("bron", c)
                     .list();
 
-            String zcNamen = "";
-            if (zoekConfigs != null && zoekConfigs.size() > 1) {
+            if (zoekConfigs != null && zoekConfigs.size() > 0) {
                 Iterator iter = zoekConfigs.iterator();
+                String zcNamen = "";
 
                 while (iter.hasNext()) {
                     ZoekConfiguratie zc = (ZoekConfiguratie) iter.next();
 
                     if (zc.getNaam() != null) {
-                        if (zcNamen.length() < 1)
+                        if (zcNamen.length() < 1) {
                             zcNamen += zc.getNaam();
-                        else
+                        }
+                        else {
                             zcNamen += ", "+zc.getNaam();
+                        }
 
                     } else {
-                        if (zcNamen.length() < 1)
+                        if (zcNamen.length() < 1) {
                             zcNamen += zc.getFeatureType();
-                        else
+                        }
+                        else {
                             zcNamen += ", " +zc.getFeatureType();
+                        }
                     }
                 }
-            }
-
-            logger.error("Kon bron "+ c.getNaam() +" niet verwijderen. Er is nog een"
+                logger.error("Kon bron "+ c.getNaam() +" niet verwijderen. Er is nog een"
                     + " zoekconfiguratie aan gekoppeld.");
 
-            MessageResources msg = getResources(request);
-            Locale locale = getLocale(request);
-            String melding = msg.getMessage(locale, FK_PARENTBRON_ERROR_KEY, zcNamen);
+                MessageResources msg = getResources(request);
+                Locale locale = getLocale(request);
+                String melding = msg.getMessage(locale, FK_PARENTBRON_ERROR_KEY, zcNamen);
 
-            prepareMethod(dynaForm, request, EDIT, LIST);
-            addAlternateMessage(mapping, request, null, melding);
+                prepareMethod(dynaForm, request, EDIT, LIST);
+                addAlternateMessage(mapping, request, null, melding);
 
-            return getAlternateForward(mapping, request);
+                return getAlternateForward(mapping, request);
+            }
+            
+            List gegevensbronen = sess.createQuery("from Gegevensbron where bron = :bron")
+                    .setParameter("bron", c).list();
+            if(gegevensbronen != null && gegevensbronen.size() > 0){
+                Iterator iter = gegevensbronen.iterator();
+                String gbNamen = "";
+
+                while (iter.hasNext()) {
+                    Gegevensbron gb = (Gegevensbron) iter.next();
+
+                    if (gb.getNaam() != null) {
+                        if (gbNamen.length() < 1) {
+                            gbNamen += gb.getNaam();
+                        }
+                        else {
+                            gbNamen += ", "+gb.getNaam();
+                        }
+
+                    }
+                }
+                
+                logger.error("Kon bron "+ c.getNaam() +" niet verwijderen. Er is nog een"
+                    + " gegevensbron aan gekoppeld.");
+                
+                MessageResources msg = getResources(request);
+                Locale locale = getLocale(request);
+                String melding = msg.getMessage(locale, FK_GEGEVENSBRON_ERROR_KEY, gbNamen);
+
+                prepareMethod(dynaForm, request, EDIT, LIST);
+                addAlternateMessage(mapping, request, null, melding);
+
+                return getAlternateForward(mapping, request);
+            }
+            
+
+            sess.delete(c);
+            sess.flush();
 
         } catch (Exception ex) {
             logger.error("", ex);
