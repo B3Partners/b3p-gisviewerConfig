@@ -54,7 +54,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         List<Applicatie> applicaties = sess.createQuery("from Applicatie"
-                + " order by user_copy, versie").list();
+                + " order by user_copy, naam, versie").list();
 
         if (applicaties != null && applicaties.size() > 0) {
             request.setAttribute("applicaties", applicaties);
