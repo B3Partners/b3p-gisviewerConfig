@@ -87,6 +87,7 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
         kopie.setBron(gb.getBron());
         kopie.setAdmin_tabel(gb.getAdmin_tabel());
         kopie.setAdmin_pk(gb.getAdmin_pk());
+        kopie.setEditable(gb.isEditable());
         
         if (gb.getVolgordenr() != null && gb.getVolgordenr() > 0)
             kopie.setVolgordenr(gb.getVolgordenr() + 10);
@@ -411,11 +412,8 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
          * ConstraintViolationException op */
 
         int themaSize = 0;
-        
-        List themas = sess.createQuery("from Themas where gegevensbron = :gegevensbron")
-                .setParameter("gegevensbron", gb).list();
-        if(themas != null && themas.size() > 0){
-            themaSize = themas.size();
+        if (gb.getThemas() != null) {
+            themaSize = gb.getThemas().size();
         }
 
         int childrenSize = 0;
@@ -482,6 +480,8 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
         dynaForm.set("admin_fk", gb.getAdmin_fk());
         dynaForm.set("admin_query", gb.getAdmin_query());
         dynaForm.set("admin_tabel_opmerkingen", gb.getAdmin_tabel_opmerkingen());
+        dynaForm.set("editable", gb.isEditable());
+        dynaForm.set("geometryeditable", gb.isGeometryeditable());
 
         if (gb.getVolgordenr() != null)
             dynaForm.set("volgordenr", FormUtils.IntToString(gb.getVolgordenr()));
@@ -532,5 +532,9 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
         gb.setAdmin_fk(FormUtils.nullIfEmpty(dynaForm.getString("admin_fk")));
         gb.setAdmin_query(FormUtils.nullIfEmpty(dynaForm.getString("admin_query")));
         gb.setAdmin_tabel_opmerkingen(FormUtils.nullIfEmpty(dynaForm.getString("admin_tabel_opmerkingen")));
+        Boolean editable = (Boolean) dynaForm.get("editable");
+        gb.setEditable(editable == null ? false : editable.booleanValue());
+        Boolean geometryeditable = (Boolean) dynaForm.get("geometryeditable");
+        gb.setGeometryeditable(geometryeditable == null ? false : geometryeditable.booleanValue());
     }
 }

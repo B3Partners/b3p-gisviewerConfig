@@ -2,6 +2,7 @@ package nl.b3p.gis.viewer;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import nl.b3p.gis.geotools.DataStoreUtil;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import nl.b3p.gis.viewer.services.SpatialUtil;
 import nl.b3p.zoeker.configuratie.Bron;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.ActionErrors;
@@ -136,6 +138,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
 
         List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(gb, false);
         request.setAttribute("listThemaData", bestaandeObjecten);
+        request.setAttribute("gegevensbron", gb);
 
         Bron b = gb.getBron(request);
 
@@ -146,7 +149,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         } catch (SocketTimeoutException e) {
             logger.error("Socket time out error while getting attributes.");
         }
-        
+
 
         if (gb.getBron() != null) {
             request.setAttribute("connectieType", gb.getBron().getType());
@@ -155,10 +158,14 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         }
 
         ArrayList<Integer> basisregels = new ArrayList<Integer>();
+        ArrayList<Integer> editables = new ArrayList<Integer>();
         StringBuilder uglyThemaData = new StringBuilder();
         for (ThemaData tdi : bestaandeObjecten) {
             if (tdi.isBasisregel()) {
                 basisregels.add(tdi.getId());
+            }
+            if (tdi.isEditable()) {
+                editables.add(tdi.getId());
             }
             boolean bestaatNog = false;
             if (tdi.getKolomnaam() == null) {
@@ -208,6 +215,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         }
         request.setAttribute("listUglyThemaData", uglyThemaData);
         dynaForm.set("basisregels", basisregels.toArray(new Integer[basisregels.size()]));
+        dynaForm.set("editables", editables.toArray(new Integer[editables.size()]));
 
     }
 
@@ -330,7 +338,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         for (ThemaData td : bestaandeObjecten) {
             boolean isBasis = false;
             for (Integer bs : basisregels) {
-                if (bs!=null && bs.compareTo(td.getId())==0) {
+                if (bs != null && bs.compareTo(td.getId()) == 0) {
                     isBasis = true;
                     break;
                 }
@@ -398,11 +406,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             }
             if (!bestaatAl) {
                 ThemaData td = new ThemaData();
-                if (attributes.size() <= DEFAULTBASISCOLUMNS) {
-                    td.setBasisregel(false);
-                } else {
-                    td.setBasisregel(false);
-                }
+                td.setBasisregel(false);
                 td.setDataType((DataTypen) sess.get(DataTypen.class, DataTypen.DATA));
                 String netteNaam = attributeName.getLocalPart();
                 if (netteNaam.indexOf("{") >= 0 && netteNaam.indexOf("}") >= 0) {
@@ -411,6 +415,8 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                 td.setLabel(netteNaam);
                 td.setKolomnaam(attributeName.getLocalPart());
                 td.setGegevensbron(gb);
+                td.setDefaultValues("");
+                td.setEditable(false);
                 td.setWaardeType((WaardeTypen) sess.get(WaardeTypen.class, WaardeTypen.STRING));
                 sess.saveOrUpdate(td);
             } else {
@@ -512,6 +518,8 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         }
         dynaForm.set("gegevensbronID", val);
         dynaForm.set("basisregel", td.isBasisregel());
+        dynaForm.set("editable", td.isEditable());
+        dynaForm.set("defaultValues", td.getDefaultValues());
         dynaForm.set("voorbeelden", td.getVoorbeelden());
         dynaForm.set("kolombreedte", FormUtils.IntToString(td.getKolombreedte()));
         val = "";
@@ -550,6 +558,20 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         td.setLabel(FormUtils.nullIfEmpty(dynaForm.getString("label")));
         td.setOmschrijving(FormUtils.nullIfEmpty(dynaForm.getString("omschrijving")));
         td.setVoorbeelden(FormUtils.nullIfEmpty(dynaForm.getString("voorbeelden")));
+        Boolean editable = (Boolean) dynaForm.get("editable");
+        td.setEditable(editable == null ? false : editable.booleanValue());
+
+        String defaultValues = FormUtils.nullIfEmpty(dynaForm.getString("defaultValues"));
+        if (defaultValues != null) {
+            // Delete spaces between entries and comma's
+            String[] entries = defaultValues.split(",");
+            for (int i = 0; i < entries.length; i++) {
+                entries[i] = entries[i].trim();
+            }
+            defaultValues = StringUtils.join(entries, ",");
+        }
+        td.setDefaultValues(defaultValues);
+
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         int tId = 0, dId = 0, wId = 0;
@@ -576,6 +598,8 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         ThemaData td = new ThemaData();
         td.setLabel("Extra");
         td.setBasisregel(false);
+        td.setEditable(false);
+        td.setDefaultValues("");
         td.setKolombreedte(50);
         td.setWaardeType((WaardeTypen) sess.get(WaardeTypen.class, WaardeTypen.STRING));
         td.setDataType((DataTypen) sess.get(DataTypen.class, DataTypen.URL));

@@ -1,6 +1,8 @@
 package nl.b3p.gis.viewer;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -10,9 +12,12 @@ import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.utils.KaartSelectieUtil;
 import nl.b3p.gis.viewer.db.Applicatie;
 import nl.b3p.gis.viewer.db.Configuratie;
+import nl.b3p.gis.viewer.db.Gegevensbron;
+import nl.b3p.gis.viewer.db.Themas;
 import nl.b3p.gis.viewer.db.UserLayer;
 import nl.b3p.gis.viewer.db.UserService;
 import nl.b3p.gis.viewer.services.HibernateUtil;
+import nl.b3p.zoeker.configuratie.Bron;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.ActionForward;
@@ -30,13 +35,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private static final String[] CONFIGKEEPER_TABS = {
         "leeg", "themas", "legenda", "zoeken", "informatie", "gebieden",
         "analyse", "planselectie", "meldingen", "vergunningen", "voorzieningen",
-        "redlining", "cms", "bag", "wkt", "transparantie"
+        "redlining", "cms", "bag", "wkt", "transparantie", "tekenen"
     };
 
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Info", "Gebieden",
         "Analyse", "Plannen", "Meldingen", "Vergunningen", "Voorzieningen",
-        "Redlining", "CMS", "BAG", "WKT", "Transparantie"
+        "Redlining", "CMS", "BAG", "WKT", "Transparantie", "Tekenen"
     };
 
     protected static final String RESET_INSTELLINGEN = "resetInstellingen";
@@ -284,6 +289,16 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         List redliningKaartlagen = sess.createQuery("from Themas order by naam").list();
         request.setAttribute("redliningKaartlagen", redliningKaartlagen);
+        
+        List<Gegevensbron> tekenGegevensbronnen = sess.createQuery("from Gegevensbron order by naam").list();
+        List<Gegevensbron> tempGb = new ArrayList<Gegevensbron>();
+        for (Iterator<Gegevensbron> it = tekenGegevensbronnen.iterator(); it.hasNext();) {
+            Gegevensbron gegevensbron = it.next();
+            if(gegevensbron.getBron().checkType(Bron.TYPE_JDBC)){
+                tempGb.add(gegevensbron);
+            }
+        }
+        request.setAttribute("tekenGegevensbronnen", tempGb);
     }
 
     private void populateForApplicatieHeader(HttpServletRequest request, String appCode) {
@@ -319,6 +334,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showPrintTool = (Boolean) map.get("showPrintTool");
         Boolean showLayerSelectionTool = (Boolean) map.get("showLayerSelectionTool");
         Boolean showGPSTool = (Boolean) map.get("showGPSTool");
+        Boolean edit = (Boolean) map.get("showEditTool");
         String gpsBuffer = (String) map.get("gpsBuffer");
         Boolean useUserWmsDropdown = (Boolean) map.get("useUserWmsDropdown");        
         Boolean datasetDownload = (Boolean) map.get("datasetDownload");  
@@ -374,6 +390,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showPrintTool", showPrintTool);
         dynaForm.set("cfg_showLayerSelectionTool", showLayerSelectionTool);
         dynaForm.set("cfg_showGPSTool", showGPSTool);
+        dynaForm.set("cfg_showEditTool", edit);
         dynaForm.set("cfg_GPSBuffer", gpsBuffer);
 
         dynaForm.set("cfg_layerGrouping", layerGrouping);
@@ -403,6 +420,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_redlininggegevensbron", (Integer) map.get("redliningGegevensbron"));
         dynaForm.set("cfg_redliningkaartlaagid", (Integer) map.get("redliningkaartlaagid"));
 
+        /* Teken config items */
+        dynaForm.set("cfg_tekenGegevensbron", (Integer) map.get("tekenGegevensbron"));
+        dynaForm.set("cfg_tekenTekstBoven", (String) map.get("tekenTekstBoven"));
+        dynaForm.set("cfg_tekenTekstOnder", (String) map.get("tekenTekstOnder"));
+        dynaForm.set("cfg_tekenTitel", (String) map.get("tekenTitel"));
+        dynaForm.set("cfg_tekenPlaatje", (String) map.get("tekenPlaatje"));
+        
         /* Bag config items*/
         if (map.get("bagkaartlaagid") != null) {
             dynaForm.set("cfg_bagkaartlaagid", (Integer) map.get("bagkaartlaagid"));
@@ -565,6 +589,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("showGPSTool", appCode);
         writeBoolean(dynaForm, "cfg_showGPSTool", c);
         
+        c = configKeeper.getConfiguratie("showEditTool", appCode);
+        writeBoolean(dynaForm, "cfg_showEditTool", c);
+        
         c = configKeeper.getConfiguratie("gpsBuffer", appCode);
         writeString(dynaForm, "cfg_GPSBuffer", c);
 
@@ -620,6 +647,19 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("redliningkaartlaagid", appCode);
         writeInteger(dynaForm, "cfg_redliningkaartlaagid", c);
+
+        // Teken settings
+        c = configKeeper.getConfiguratie("tekenGegevensbron", appCode);
+        writeInteger(dynaForm, "cfg_tekenGegevensbron", c);
+        c = configKeeper.getConfiguratie("tekenTekstBoven", appCode);
+        writeString(dynaForm, "cfg_tekenTekstBoven", c);
+        c = configKeeper.getConfiguratie("tekenTekstOnder", appCode);
+        writeString(dynaForm, "cfg_tekenTekstOnder", c);
+        c = configKeeper.getConfiguratie("tekenTitel", appCode);
+        writeString(dynaForm, "cfg_tekenTitel", c);
+        c = configKeeper.getConfiguratie("tekenPlaatje", appCode);
+        writeString(dynaForm, "cfg_tekenPlaatje", c);
+        
         //BAG settings
         c = configKeeper.getConfiguratie("bagkaartlaagid", appCode);
         writeInteger(dynaForm, "cfg_bagkaartlaagid", c);
