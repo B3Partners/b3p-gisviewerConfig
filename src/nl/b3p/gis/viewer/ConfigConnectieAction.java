@@ -31,10 +31,9 @@ import org.hibernate.exception.ConstraintViolationException;
 public class ConfigConnectieAction extends ViewerCrudAction {
 
     private static final Log logger = LogFactory.getLog(ConfigConnectieAction.class);
-
     protected static final String FK_PARENTBRON_ERROR_KEY = "error.fk.parentbron";
     protected static final String FK_GEGEVENSBRON_ERROR_KEY = "error.fk.gegevensbron";
-    
+
     protected Bron getConnectie(DynaValidatorForm form, boolean createNew) {
         Integer id = FormUtils.StringToInteger(form.getString("bronId"));
         Bron c = null;
@@ -63,37 +62,36 @@ public class ConfigConnectieAction extends ViewerCrudAction {
 
         List alleBronnen = sess.createQuery("from Bron order by naam").list();
         request.setAttribute("allConnecties", alleBronnen);
+    }
 
-        /* lijstje werkende bronnen om status te kunnen plaatsen bij niet werkende */
-        Iterator iter = alleBronnen.iterator();
+    public void checkValidBron(Bron b, HttpServletRequest request) {
+        /* Als er connectie gemaakt kan worden bronid toevoegen aan
+         * validBronIds. In de tabel wordt dan de status GOED getoond */
         List validBronIds = new ArrayList();
+        DataStore ds = null;
 
-        while (iter.hasNext()) {
-            Bron b = (Bron) iter.next();
-            DataStore ds = null;
+        try {
+            ds = b.toDatastore();
 
-            try {
-                ds = b.toDatastore();
-
-                if (ds != null) {
-                    String[] typeNames = ds.getTypeNames();
-                    if (typeNames != null && typeNames.length > 0)
-                        validBronIds.add(b.getId());
+            if (ds != null) {
+                String[] typeNames = ds.getTypeNames();
+                if (typeNames != null && typeNames.length > 0) {
+                    validBronIds.add(b.getId());
                 }
-            
-            } catch (SocketTimeoutException stoex) {
-                logger.error("Socket Timeout for bron url: "+ b.getUrl());
+            }
+
+        } catch (SocketTimeoutException stoex) {
+            logger.error("Socket Timeout for bron url: " + b.getUrl());
 
             /* deze treed bijvoorbeeld op als je een bron bewerkt en hij kan de
              * GetCapabilities niet ophalen */
-            } catch (FileNotFoundException ex) {
-                logger.debug("Kon tijdens bewerken van bron " + b.getNaam() + " de GetCapabilities niet ophalen.");
-            } catch (Exception e) {
-                logger.error("Exception for bron: "+b.getId()+" URL: "+b.getUrl(), e);
-            } finally {
-                if (ds != null) {
-                    ds.dispose();
-                }
+        } catch (FileNotFoundException ex) {
+            logger.debug("Kon tijdens bewerken van bron " + b.getNaam() + " de GetCapabilities niet ophalen.");
+        } catch (Exception e) {
+            logger.error("Exception for bron: " + b.getId() + " URL: " + b.getUrl(), e);
+        } finally {
+            if (ds != null) {
+                ds.dispose();
             }
         }
 
@@ -107,7 +105,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
             c = getFirstConnectie();
         }
         populateConnectieForm(c, dynaForm, request);
-        
+
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return mapping.findForward(SUCCESS);
@@ -163,6 +161,8 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         sess.refresh(c);
         populateConnectieForm(c, dynaForm, request);
 
+        //checkValidBron(c, request);
+
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
         return getDefaultForward(mapping, request);
@@ -193,7 +193,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
 
                 return getAlternateForward(mapping, request);
             }
-            
+
             List zoekConfigs = sess.createQuery("from ZoekConfiguratie where "
                     + " parentbron = :bron")
                     .setParameter("bron", c)
@@ -209,22 +209,20 @@ public class ConfigConnectieAction extends ViewerCrudAction {
                     if (zc.getNaam() != null) {
                         if (zcNamen.length() < 1) {
                             zcNamen += zc.getNaam();
-                        }
-                        else {
-                            zcNamen += ", "+zc.getNaam();
+                        } else {
+                            zcNamen += ", " + zc.getNaam();
                         }
 
                     } else {
                         if (zcNamen.length() < 1) {
                             zcNamen += zc.getFeatureType();
-                        }
-                        else {
-                            zcNamen += ", " +zc.getFeatureType();
+                        } else {
+                            zcNamen += ", " + zc.getFeatureType();
                         }
                     }
                 }
-                logger.error("Kon bron "+ c.getNaam() +" niet verwijderen. Er is nog een"
-                    + " zoekconfiguratie aan gekoppeld.");
+                logger.error("Kon bron " + c.getNaam() + " niet verwijderen. Er is nog een"
+                        + " zoekconfiguratie aan gekoppeld.");
 
                 MessageResources msg = getResources(request);
                 Locale locale = getLocale(request);
@@ -235,10 +233,10 @@ public class ConfigConnectieAction extends ViewerCrudAction {
 
                 return getAlternateForward(mapping, request);
             }
-            
+
             List gegevensbronen = sess.createQuery("from Gegevensbron where bron = :bron")
                     .setParameter("bron", c).list();
-            if(gegevensbronen != null && gegevensbronen.size() > 0){
+            if (gegevensbronen != null && gegevensbronen.size() > 0) {
                 Iterator iter = gegevensbronen.iterator();
                 String gbNamen = "";
 
@@ -248,17 +246,16 @@ public class ConfigConnectieAction extends ViewerCrudAction {
                     if (gb.getNaam() != null) {
                         if (gbNamen.length() < 1) {
                             gbNamen += gb.getNaam();
-                        }
-                        else {
-                            gbNamen += ", "+gb.getNaam();
+                        } else {
+                            gbNamen += ", " + gb.getNaam();
                         }
 
                     }
                 }
-                
-                logger.error("Kon bron "+ c.getNaam() +" niet verwijderen. Er is nog een"
-                    + " gegevensbron aan gekoppeld.");
-                
+
+                logger.error("Kon bron " + c.getNaam() + " niet verwijderen. Er is nog een"
+                        + " gegevensbron aan gekoppeld.");
+
                 MessageResources msg = getResources(request);
                 Locale locale = getLocale(request);
                 String melding = msg.getMessage(locale, FK_GEGEVENSBRON_ERROR_KEY, gbNamen);
@@ -268,14 +265,14 @@ public class ConfigConnectieAction extends ViewerCrudAction {
 
                 return getAlternateForward(mapping, request);
             }
-            
+
 
             sess.delete(c);
             sess.flush();
 
         } catch (Exception ex) {
             logger.error("", ex);
-            
+
             prepareMethod(dynaForm, request, EDIT, LIST);
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY);
 
@@ -292,7 +289,7 @@ public class ConfigConnectieAction extends ViewerCrudAction {
 
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
-        
+
         return getDefaultForward(mapping, request);
     }
 
@@ -305,13 +302,14 @@ public class ConfigConnectieAction extends ViewerCrudAction {
         dynaForm.set("url", c.getUrl());
         dynaForm.set("gebruikersnaam", c.getGebruikersnaam());
         dynaForm.set("wachtwoord", c.getWachtwoord());
-        if (c.getVolgorde()!=null)
+        if (c.getVolgorde() != null) {
             dynaForm.set("volgorde", c.getVolgorde().toString());
+        }
     }
 
     private void populateConnectieObject(DynaValidatorForm dynaForm, Bron c, HttpServletRequest request) {
-        if (FormUtils.nullIfEmpty(dynaForm.getString("bronId"))!=null){
-            c.setId(new Integer (dynaForm.getString("bronId")));
+        if (FormUtils.nullIfEmpty(dynaForm.getString("bronId")) != null) {
+            c.setId(new Integer(dynaForm.getString("bronId")));
         }
         c.setNaam(FormUtils.nullIfEmpty(dynaForm.getString("naam")));
         c.setUrl(FormUtils.nullIfEmpty(dynaForm.getString("url")));
@@ -319,9 +317,9 @@ public class ConfigConnectieAction extends ViewerCrudAction {
 
         String wachtwoord = FormUtils.nullIfEmpty(dynaForm.getString("wachtwoord"));
         c.setWachtwoord(wachtwoord);
-        
-        if (FormUtils.nullIfEmpty(dynaForm.getString("volgorde"))!=null){
-            c.setVolgorde(new Integer (dynaForm.getString("volgorde")));
+
+        if (FormUtils.nullIfEmpty(dynaForm.getString("volgorde")) != null) {
+            c.setVolgorde(new Integer(dynaForm.getString("volgorde")));
         }
     }
 }
