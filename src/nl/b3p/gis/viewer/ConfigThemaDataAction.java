@@ -599,7 +599,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         td.setLabel("Extra");
         td.setBasisregel(false);
         td.setEditable(false);
-        td.setDefaultValues("");
+        td.setDefaultValues(null);
         td.setKolombreedte(50);
         td.setWaardeType((WaardeTypen) sess.get(WaardeTypen.class, WaardeTypen.STRING));
         td.setDataType((DataTypen) sess.get(DataTypen.class, DataTypen.URL));
