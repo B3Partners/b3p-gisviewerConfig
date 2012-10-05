@@ -294,7 +294,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         List<Gegevensbron> tempGb = new ArrayList<Gegevensbron>();
         for (Iterator<Gegevensbron> it = tekenGegevensbronnen.iterator(); it.hasNext();) {
             Gegevensbron gegevensbron = it.next();
-            if(gegevensbron.getBron().checkType(Bron.TYPE_JDBC)){
+            if(gegevensbron.getBron() != null && gegevensbron.getBron().checkType(Bron.TYPE_JDBC)){
                 tempGb.add(gegevensbron);
             }
         }
