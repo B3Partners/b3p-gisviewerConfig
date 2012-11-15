@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
+import nl.b3p.gis.utils.ConfigListsUtil;
 import nl.b3p.gis.viewer.db.DataTypen;
 import nl.b3p.gis.viewer.db.Gegevensbron;
 import nl.b3p.gis.viewer.db.ThemaData;
@@ -150,6 +151,10 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             logger.error("Socket time out error while getting attributes.");
         }
 
+        /* Workaround voor ophalen objectdata voor WFS 110 */
+        if (attributes == null || attributes.size() < 1) {
+            attributes = getObjectDataForWFS110(b, gb);
+        }
 
         if (gb.getBron() != null) {
             request.setAttribute("connectieType", gb.getBron().getType());
@@ -370,6 +375,11 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             logger.error("Socket time out error while getting attributes.");
         }
 
+        /* Workaround voor ophalen objectdata voor WFS 110 */
+        if (attributes == null || attributes.size() < 1) {
+            attributes = getObjectDataForWFS110(b, gb);
+        }
+
         if (attributes == null || attributes.size() < 1) {
             return unspecified(mapping, dynaForm, request, response);
         }
@@ -465,7 +475,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         }
 
         return unspecified(mapping, dynaForm, request, response);
-    }
+    }    
 
     @Override
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -606,5 +616,24 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         td.setCommando("viewerdata.do?aanvullendeinfo=t&");
         td.setGegevensbron(gb);
         return td;
+    }
+    
+    private List<String> getObjectDataForWFS110(Bron b, Gegevensbron gb) {
+        List<String> attributes = new ArrayList<String>();
+
+        try {
+            List attrArr = ConfigListsUtil.getPossibleAttributes(b, gb.getAdmin_tabel());
+
+            for (Object obj : attrArr) {
+                if (obj != null && obj instanceof String[]) {
+                    String[] values = (String[]) obj;
+                    attributes.add(values[0]);
+                }
+            }
+        } catch (Exception ex) {
+            logger.error("Fout tijdens ophalen objectdata voor WFS 110: ", ex);
+        }
+
+        return attributes;
     }
 }
