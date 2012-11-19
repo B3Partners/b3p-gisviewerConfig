@@ -39,13 +39,15 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         if (attr != null) {
             populateForm(attr, dynaForm);
             
-            if (attr instanceof ResultaatAttribuut)
+            if (attr instanceof ResultaatAttribuut) {
                 request.setAttribute(ATTRIBUUTTYPE,"resultaat");
-            else
+            } else {
                 request.setAttribute(ATTRIBUUTTYPE,"zoek");
+            }
 
-            if (attr.getType() != null)
+            if (attr.getType() != null) {
                 request.setAttribute("selType", attr.getType().toString());
+            }
 
         } else {
             
@@ -76,8 +78,9 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         Attribuut a = getAttribuut(request,false);
         ZoekConfiguratie zc=null;
 
-        if (a!=null)
+        if (a!=null) {
             zc=a.getZoekConfiguratie();
+        }
 
         /*Als zc nog steeds null is dan is het attribuut waarschijnlijk nieuw
          en staat het id van de zoekconfiguratie op het request*/
@@ -126,20 +129,24 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         attr.setLabel(dynaForm.getString("label"));
         attr.setNaam(dynaForm.getString("naam"));
 
-        if (FormUtils.nullIfEmpty(dynaForm.getString("type"))!=null)
+        if (FormUtils.nullIfEmpty(dynaForm.getString("type"))!=null) {
             attr.setType(new Integer(dynaForm.getString("type")));
+        }
 
-        if (FormUtils.nullIfEmpty(dynaForm.getString("volgorde"))!=null)
+        if (FormUtils.nullIfEmpty(dynaForm.getString("volgorde"))!=null) {
             attr.setVolgorde(new Integer(dynaForm.getString("volgorde")));
+        }
 
         if (FormUtils.nullIfEmpty(dynaForm.getString("inputtype"))!=null) {
-            if (attr instanceof ZoekAttribuut)
+            if (attr instanceof ZoekAttribuut) {
                 ((ZoekAttribuut)attr).setInputtype(new Integer(dynaForm.getString("inputtype")));
+            }
         }
 
         if (FormUtils.nullIfEmpty(dynaForm.getString("inputsize"))!=null) {
-            if (attr instanceof ZoekAttribuut)
+            if (attr instanceof ZoekAttribuut) {
                 ((ZoekAttribuut)attr).setInputsize(new Integer(dynaForm.getString("inputsize")));
+            }
         }
 
         if (FormUtils.nullIfEmpty(dynaForm.getString("inputzoekconfiguratie")) != null) {
@@ -149,8 +156,9 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
                 List zoekConfigs = sess.createQuery("from ZoekConfiguratie where id = :id")
                         .setParameter("id", inputZoekConfigId)
                         .list();
-                if (zoekConfigs.size() == 1)
+                if (zoekConfigs.size() == 1) {
                     ((ZoekAttribuut)attr).setInputzoekconfiguratie((ZoekConfiguratie)zoekConfigs.get(0));
+                }
             }
         }
 
@@ -165,15 +173,18 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
             ZoekConfiguratie zc= getZoekConfiguratie(request);
             attr.setZoekConfiguratie(zc);
         }
+        
+        attr.setOmschrijving(FormUtils.nullIfEmpty(dynaForm.getString("omschrijving")));
 
         return attr;
 
     }
     private void populateForm(Attribuut a, DynaValidatorForm dynaForm) {
-        if (a instanceof ZoekAttribuut)
+        if (a instanceof ZoekAttribuut) {
             dynaForm.set("zoekAttribuutId", a.getId().toString());
-        else if (a instanceof ResultaatAttribuut)
+        } else if (a instanceof ResultaatAttribuut) {
             dynaForm.set("resultaatAttribuutId", a.getId().toString());
+        }
 
         dynaForm.set("label", a.getLabel());
         dynaForm.set("naam", a.getNaam());
@@ -193,11 +204,13 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
             Integer inputsize = za.getInputsize();
             ZoekConfiguratie zc = za.getInputzoekconfiguratie();
 
-            if (inputtype != null)
+            if (inputtype != null) {
                 dynaForm.set("inputtype", inputtype.toString());
+            }
 
-            if (inputsize != null)
+            if (inputsize != null) {
                 dynaForm.set("inputsize", inputsize.toString());
+            }
 
             if (zc != null) {
                 dynaForm.set("inputzoekconfiguratie", zc.getId().toString());
@@ -205,6 +218,10 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         }
 
         dynaForm.set("attribuutnaam", a.getAttribuutnaam());
+        
+        if (a.getOmschrijving() != null) {
+            dynaForm.set("omschrijving", a.getOmschrijving());
+        }
     }
 
     private Attribuut getAttribuut(HttpServletRequest request,boolean createNew) {

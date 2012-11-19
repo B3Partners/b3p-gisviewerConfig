@@ -244,6 +244,8 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             if (!zc.isResultListDynamic()) {
                 request.setAttribute("usecaching", "1");
             }
+            
+            request.setAttribute("omschrijving", zc.getOmschrijving());
 
             featureType = zc.getFeatureType();
         } else {
@@ -334,6 +336,10 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             request.setAttribute("usecaching", "1");
         } else {
             zc.setResultListDynamic(true);
+        }
+        
+        if (request.getParameter("omschrijving") != null) {
+            zc.setOmschrijving(request.getParameter("omschrijving"));
         }
 
         //sla alles op.
