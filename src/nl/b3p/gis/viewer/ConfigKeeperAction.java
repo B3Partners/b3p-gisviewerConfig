@@ -13,7 +13,6 @@ import nl.b3p.gis.utils.KaartSelectieUtil;
 import nl.b3p.gis.viewer.db.Applicatie;
 import nl.b3p.gis.viewer.db.Configuratie;
 import nl.b3p.gis.viewer.db.Gegevensbron;
-import nl.b3p.gis.viewer.db.Themas;
 import nl.b3p.gis.viewer.db.UserLayer;
 import nl.b3p.gis.viewer.db.UserService;
 import nl.b3p.gis.viewer.services.HibernateUtil;
@@ -321,6 +320,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String planSelectieIds = (String) map.get("planSelectieIds");
         Integer minBboxZoeken = (Integer) map.get("minBboxZoeken");
         Integer maxResults = (Integer) map.get("maxResults");
+        Integer defaultSearchRadius = (Integer) map.get("defaultSearchRadius");
         Boolean expandAll = (Boolean) map.get("expandAll");
         Boolean multipleActiveThemas = (Boolean) map.get("multipleActiveThemas");
         Boolean useInheritCheckbox = (Boolean) map.get("useInheritCheckbox");
@@ -377,6 +377,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_refreshDelay", refreshDelay);
         dynaForm.set("cfg_minBboxZoeken", minBboxZoeken);
         dynaForm.set("cfg_maxResults", maxResults);
+        dynaForm.set("cfg_defaultSearchRadius", defaultSearchRadius);
         dynaForm.set("cfg_expandAll", expandAll);
         dynaForm.set("cfg_multipleActiveThemas", multipleActiveThemas);
         dynaForm.set("cfg_useInheritCheckbox", useInheritCheckbox);
@@ -549,6 +550,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("maxResults", appCode);
         writeInteger(dynaForm, "cfg_maxResults", c);
+        
+        c = configKeeper.getConfiguratie("defaultSearchRadius", appCode);
+        writeInteger(dynaForm, "cfg_defaultSearchRadius", c);
 
         c = configKeeper.getConfiguratie("expandAll", appCode);
         writeBoolean(dynaForm, "cfg_expandAll", c);

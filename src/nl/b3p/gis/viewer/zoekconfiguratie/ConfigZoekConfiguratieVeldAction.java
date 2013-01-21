@@ -96,6 +96,10 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
             sft = ds.getSchema(ftype);
         } catch (NullPointerException ex) {
             logger.error("NullPointerException bij ophalen schema van datastore: ");
+        } finally {
+            if (ds != null) {
+                ds.dispose();
+            }
         }
 
         if (sft != null) {

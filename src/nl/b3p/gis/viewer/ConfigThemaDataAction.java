@@ -2,8 +2,6 @@ package nl.b3p.gis.viewer;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import nl.b3p.gis.geotools.DataStoreUtil;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -11,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import nl.b3p.commons.services.FormUtils;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
+import nl.b3p.gis.geotools.DataStoreUtil;
 import nl.b3p.gis.utils.ConfigListsUtil;
 import nl.b3p.gis.viewer.db.DataTypen;
 import nl.b3p.gis.viewer.db.Gegevensbron;
@@ -537,7 +536,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             val = Integer.toString(td.getWaardeType().getId());
         }
         dynaForm.set("waardeTypeID", val);
-        val = "";
+        val = "1";
         if (td.getDataType() != null) {
             val = Integer.toString(td.getDataType().getId());
         }

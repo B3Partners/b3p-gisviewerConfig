@@ -28,46 +28,70 @@ import nl.b3p.zoeker.configuratie.Bron;
 import nl.b3p.zoeker.configuratie.ResultaatAttribuut;
 import nl.b3p.zoeker.configuratie.ZoekAttribuut;
 import nl.b3p.zoeker.services.Zoeker;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.geotools.data.DataStore;
 import org.hibernate.Session;
 
 /*
  * @author Roy Braam
  */
-public class ZoekConfiguratieListUtil{
+public class ZoekConfiguratieListUtil {
+    
+    private static final Log log = LogFactory.getLog(ZoekConfiguratieListUtil.class);
 
     /**
      * Haalt de mogelijke featureTypeNames van een bron op.
-     **/
+     *
+     */
     public static String[] getTypeNames(Bron bron, Boolean sort) throws Exception {
-        if (bron==null){
+        if (bron == null) {
             throw new Exception("Bron kan niet worden gevonden");
         }
-        DataStore ds=Zoeker.getDataStore(bron);
-        if (ds==null){
+
+        DataStore ds = null;
+        String[] types = null;
+        try {
+            ds = Zoeker.getDataStore(bron);
+
+            if (ds != null) {
+                types = ds.getTypeNames();
+            }
+
+            if (types != null && types.length > 0) {
+                Arrays.sort(types);
+            }
+        } catch (Exception ex) {
             throw new Exception("Kan geen verbinding maken met bron");
+        } finally {
+            if (ds != null) {
+                ds.dispose();
+            }
         }
-        String[] types=ds.getTypeNames();
-        Arrays.sort(types);
+
         return types;
     }
+
     /**
-     * Haalt de mogelijke featureTypeNames van een bron op adhv het id van de bron
-     **/
-    public static String[] getTypeNamesById(Integer bronId) throws Exception{
+     * Haalt de mogelijke featureTypeNames van een bron op adhv het id van de
+     * bron
+     *
+     */
+    public static String[] getTypeNamesById(Integer bronId) throws Exception {        
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        Bron bron = (Bron) sess.get(Bron.class,bronId);
-        return getTypeNames(bron,true);
+        Bron bron = (Bron) sess.get(Bron.class, bronId);
+        return getTypeNames(bron, true);
     }
 
-    public static void removeZoekAttribuut(Integer id){
-        Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
+    public static void removeZoekAttribuut(Integer id) {        
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         ZoekAttribuut za = (ZoekAttribuut) sess.get(ZoekAttribuut.class, id);
         za.getZoekConfiguratie().getZoekVelden().remove(za);
         sess.delete(za);
     }
-    public static void removeResultaatAttribuut(Integer id){
-        Session sess= HibernateUtil.getSessionFactory().getCurrentSession();
+
+    public static void removeResultaatAttribuut(Integer id) {        
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         ResultaatAttribuut ra = (ResultaatAttribuut) sess.get(ResultaatAttribuut.class, id);
         ra.getZoekConfiguratie().getResultaatVelden().remove(ra);
         sess.delete(ra);
