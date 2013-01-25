@@ -178,6 +178,7 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
             attr.setZoekConfiguratie(zc);
         }
         
+        attr.setDropDownValues(FormUtils.nullIfEmpty(dynaForm.getString("dropDownValues")));
         attr.setOmschrijving(FormUtils.nullIfEmpty(dynaForm.getString("omschrijving")));
 
         return attr;
@@ -225,6 +226,10 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
         
         if (a.getOmschrijving() != null) {
             dynaForm.set("omschrijving", a.getOmschrijving());
+        }
+        
+        if (a.getDropDownValues() != null) {
+            dynaForm.set("dropDownValues", a.getDropDownValues());
         }
     }
 
