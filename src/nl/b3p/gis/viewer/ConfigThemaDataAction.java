@@ -2,6 +2,8 @@ package nl.b3p.gis.viewer;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -163,6 +165,10 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
 
         ArrayList<Integer> basisregels = new ArrayList<Integer>();
         ArrayList<Integer> editables = new ArrayList<Integer>();
+
+        Map volgordeVelden = new HashMap();
+        Map labelVelden = new HashMap();
+
         StringBuilder uglyThemaData = new StringBuilder();
         for (ThemaData tdi : bestaandeObjecten) {
             if (tdi.isBasisregel()) {
@@ -216,7 +222,19 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                 uglyThemaData.append(tdi.getId() + ":COMMANDO");
                 uglyThemaData.append("]");
             }
+
+            if (tdi.getDataorder() != null) {
+                volgordeVelden.put(tdi.getId().toString(), tdi.getDataorder());
+            }
+
+            if (tdi.getLabel() != null) {
+                labelVelden.put(tdi.getId().toString(), tdi.getLabel());
+            }
         }
+
+        dynaForm.set("volgordeVelden", volgordeVelden);
+        dynaForm.set("labelVelden", labelVelden);
+
         request.setAttribute("listUglyThemaData", uglyThemaData);
         dynaForm.set("basisregels", basisregels.toArray(new Integer[basisregels.size()]));
         dynaForm.set("editables", editables.toArray(new Integer[editables.size()]));
@@ -358,7 +376,83 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             sess.flush();
         }
 
+        saveVolgordeVelden(dynaForm);
+        saveLabelVelden(dynaForm);
+
         return unspecified(mapping, dynaForm, request, response);
+    }
+
+    private void saveVolgordeVelden(DynaValidatorForm dynaForm) {
+        Map volgordeVelden = (HashMap) dynaForm.get("volgordeVelden");
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        Iterator it = volgordeVelden.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pairs = (Map.Entry) it.next();
+
+            Integer key = null;
+            Integer volgorde = null;
+
+            try {
+                key = new Integer((String) pairs.getKey());
+                volgorde = new Integer((String) pairs.getValue());
+            } catch (NumberFormatException nfe) {
+                logger.debug("Fout tijdens omzetten volgorde waardes van objectdata veld.");
+            }
+
+            if (key != null && key > 0 && volgorde != null) {
+                ThemaData td = (ThemaData) sess.get(ThemaData.class, key);
+
+                if (td != null) {
+                    if (volgorde < 1) {
+                        td.setDataorder(null);
+                    } else if (volgorde > 0) {
+                        td.setDataorder(new Integer(volgorde));
+                    }
+
+                    sess.saveOrUpdate(td);
+                }
+            }
+        }
+
+        sess.flush();
+    }
+
+    private void saveLabelVelden(DynaValidatorForm dynaForm) {
+        Map labelVelden = (HashMap) dynaForm.get("labelVelden");
+
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        Iterator it = labelVelden.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pairs = (Map.Entry) it.next();
+
+            Integer key = null;
+            String label = (String) pairs.getValue();
+
+            try {
+                key = new Integer((String) pairs.getKey());
+            } catch (NumberFormatException nfe) {
+                logger.debug("Fout tijdens omzetten volgorde waardes van objectdata veld.");
+            }
+
+            if (key != null && key > 0 && label != null) {
+                ThemaData td = (ThemaData) sess.get(ThemaData.class, key);
+
+                if (td != null) {
+                    if (label.equals("")) {
+                        td.setLabel(null);
+                    } else if (!label.equals("")) {
+                        td.setLabel(label);
+                    }
+
+                    sess.saveOrUpdate(td);
+                }
+            }
+        }
+
+        sess.flush();
     }
 
     public ActionForward createAllThemaData(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -474,7 +568,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         }
 
         return unspecified(mapping, dynaForm, request, response);
-    }    
+    }
 
     @Override
     public ActionForward delete(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -616,7 +710,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         td.setGegevensbron(gb);
         return td;
     }
-    
+
     private List<String> getObjectDataForWFS110(Bron b, Gegevensbron gb) {
         List<String> attributes = new ArrayList<String>();
 
