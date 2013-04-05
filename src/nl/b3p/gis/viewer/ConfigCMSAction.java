@@ -205,6 +205,7 @@ public class ConfigCMSAction extends ViewerCrudAction {
         dynaForm.set("volgordeNr", tb.getVolgordeNr());
         dynaForm.set("kleur", tb.getKleur());
         dynaForm.set("inlogIcon", tb.getInlogIcon());
+        dynaForm.set("hoogte", tb.getHoogte());
     }
 
     private void populateTekstblokObject(DynaValidatorForm dynaForm, Tekstblok tb, HttpServletRequest request) {
@@ -221,6 +222,12 @@ public class ConfigCMSAction extends ViewerCrudAction {
         tb.setPagina(FormUtils.nullIfEmpty(dynaForm.getString("pagina")));
         tb.setKleur(FormUtils.nullIfEmpty(dynaForm.getString("kleur")));
         tb.setInlogIcon((Boolean) dynaForm.get("inlogIcon"));
+        
+        Integer hoogte = (Integer)dynaForm.get("hoogte");
+        if (hoogte != null){
+            tb.setHoogte(hoogte);
+        }
+        
 
         Integer volgordeNr = (Integer) dynaForm.get("volgordeNr");
 
