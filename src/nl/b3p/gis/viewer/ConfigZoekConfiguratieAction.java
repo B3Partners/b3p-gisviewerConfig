@@ -40,7 +40,10 @@ public class ConfigZoekConfiguratieAction extends ViewerCrudAction {
     public void createLists(DynaValidatorForm dynaForm,HttpServletRequest request) {
         
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        List zoekConfiguraties = sess.createQuery("from ZoekConfiguratie order by NAAM").list();
+        List zoekConfiguraties = sess.createQuery("from ZoekConfiguratie zc"
+                + " LEFT JOIN FETCH zc.parentBron"
+                + " order by zc.naam").list();
+        
         request.setAttribute("zoekConfiguraties", zoekConfiguraties);
         
     }

@@ -23,9 +23,11 @@
 package nl.b3p.gis.viewer.zoekconfiguratie;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.services.FormUtils;
@@ -262,10 +264,14 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         //maak een lijst met mogelijke zoekconfiguraties (om als parent te kiezen)zonder zichzelf
-        String queryString = "from ZoekConfiguratie";
+        String queryString = "from ZoekConfiguratie z"
+                + " LEFT JOIN FETCH z.parentZoekConfiguratie"
+                + " LEFT JOIN FETCH z.parentBron";
+        
         if (zc != null) {
-            queryString += " z where z.id != " + zc.getId();
+            queryString += " where z.id != " + zc.getId();
         }
+        
         List zoekconfiguraties = sess.createQuery(queryString).list();
         request.setAttribute("zoekConfiguraties", zoekconfiguraties);
         return mapping.findForward(STEP3);
@@ -345,15 +351,40 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         //sla alles op.
         sess.save(zc);
         sess.flush();
+        
         //set the lijsten die nodig zijn voor de volgende pagina.
         request.setAttribute("zoekConfiguratieId", zc.getId());
         request.setAttribute("zoekVelden", zc.getZoekVelden());
         request.setAttribute("resultaatVelden", zc.getResultaatVelden());
         request.setAttribute("tips", createTips(zc));
-        if (zc.getParentZoekConfiguratie() != null) {
-            request.setAttribute("parentZoekVelden", zc.getParentZoekConfiguratie().getZoekVelden());
+        
+        if (zc.getParentZoekConfiguratie() != null) {            
+            //Set<ZoekAttribuut> zoekVelden = getParentZoekvelden(zc.getParentZoekConfiguratie());           
+            //request.setAttribute("parentZoekVelden", zoekVelden);
         }
+        
         return mapping.findForward(STEP4);
+    }
+    
+    private Set<ZoekAttribuut> getParentZoekvelden(ZoekConfiguratie parent) {
+        Set<ZoekAttribuut> zoekVelden = new HashSet<ZoekAttribuut>();
+        
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        String queryString = "from ZoekConfiguratie z"
+                + " LEFT JOIN FETCH z.zoekVelden"
+                + " LEFT JOIN FETCH z.parentBron";
+        
+        if (parent != null) {
+            queryString += " where z.id != " + parent.getId();
+        }
+        
+        List<ZoekConfiguratie> zoekConfigs = sess.createQuery(queryString).list();
+        
+        if (zoekConfigs != null && zoekConfigs.size() == 1) {
+            zoekVelden = zoekConfigs.get(0).getZoekVelden();
+        }
+
+        return zoekVelden;
     }
 
     public ActionForward step5(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
