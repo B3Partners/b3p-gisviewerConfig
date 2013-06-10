@@ -62,6 +62,9 @@ public class ConfigCMSAction extends ViewerCrudAction {
 
         List tekstBlokken = sess.createQuery("from Tekstblok order by cdate").list();
         request.setAttribute("tekstBlokken", tekstBlokken);
+        
+        List cmsPaginas = sess.createQuery("from CMSPagina order by cdate").list();
+        request.setAttribute("cmsPaginas", cmsPaginas);
     }
 
     @Override
@@ -200,12 +203,12 @@ public class ConfigCMSAction extends ViewerCrudAction {
         dynaForm.set("titel", tb.getTitel());
         dynaForm.set("tekst", tb.getTekst());
         dynaForm.set("url", tb.getUrl());
-        dynaForm.set("toonUrl", tb.getToonUrl());
-        dynaForm.set("pagina", tb.getPagina());
+        dynaForm.set("toonUrl", tb.getToonUrl());        
         dynaForm.set("volgordeNr", tb.getVolgordeNr());
         dynaForm.set("kleur", tb.getKleur());
         dynaForm.set("inlogIcon", tb.getInlogIcon());
         dynaForm.set("hoogte", tb.getHoogte());
+        dynaForm.set("cmsPagina", tb.getCmsPagina());
     }
 
     private void populateTekstblokObject(DynaValidatorForm dynaForm, Tekstblok tb, HttpServletRequest request) {
@@ -218,8 +221,7 @@ public class ConfigCMSAction extends ViewerCrudAction {
         tb.setTitel(FormUtils.nullIfEmpty(dynaForm.getString("titel")));
         tb.setTekst(FormUtils.nullIfEmpty(dynaForm.getString("tekst")));
         tb.setUrl(FormUtils.nullIfEmpty(dynaForm.getString("url")));
-        tb.setToonUrl((Boolean) dynaForm.get("toonUrl"));
-        tb.setPagina(FormUtils.nullIfEmpty(dynaForm.getString("pagina")));
+        tb.setToonUrl((Boolean) dynaForm.get("toonUrl"));        
         tb.setKleur(FormUtils.nullIfEmpty(dynaForm.getString("kleur")));
         tb.setInlogIcon((Boolean) dynaForm.get("inlogIcon"));
         
@@ -231,13 +233,21 @@ public class ConfigCMSAction extends ViewerCrudAction {
 
         Integer volgordeNr = (Integer) dynaForm.get("volgordeNr");
 
-        if (volgordeNr != null)
+        if (volgordeNr != null) {
             tb.setVolgordeNr(volgordeNr);
+        }  
 
         /* TODO: vervangen voor ingelogde gebruikersnaam */
         tb.setAuteur("beheerder");
 
         Date cdate = new Date();
         tb.setCdate(cdate);
+        
+        Integer cmsPagina = (Integer)dynaForm.get("cmsPagina");
+        if (cmsPagina != null && cmsPagina > 0){
+            tb.setCmsPagina(cmsPagina);
+        } else {
+            tb.setCmsPagina(null);
+        }
     }
 }
