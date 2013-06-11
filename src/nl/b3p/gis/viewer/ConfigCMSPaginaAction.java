@@ -23,7 +23,7 @@ import org.hibernate.Session;
 public class ConfigCMSPaginaAction extends ViewerCrudAction {
 
     private static final Log logger = LogFactory.getLog(ConfigCMSPaginaAction.class);
-
+    
     private CMSPagina getCMSPagina(DynaValidatorForm form, boolean createNew) {
         if (createNew) {
             return new CMSPagina();
@@ -35,8 +35,9 @@ public class ConfigCMSPaginaAction extends ViewerCrudAction {
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
             CMSPagina cmsPag = (CMSPagina) sess.get(CMSPagina.class, id);
 
-            if (cmsPag != null)
+            if (cmsPag != null) {
                 return cmsPag;
+            }
         }
 
         return null;

@@ -63,7 +63,7 @@ public class ConfigCMSAction extends ViewerCrudAction {
         List tekstBlokken = sess.createQuery("from Tekstblok order by cdate").list();
         request.setAttribute("tekstBlokken", tekstBlokken);
         
-        List cmsPaginas = sess.createQuery("from CMSPagina order by cdate").list();
+        List cmsPaginas = sess.createQuery("from CMSPagina order by titel").list();
         request.setAttribute("cmsPaginas", cmsPaginas);
     }
 
