@@ -183,10 +183,11 @@ public class ConfigCMSPaginaAction extends ViewerCrudAction {
 
         CMSPagina pag = getFirstCMSPagina();
 
-        if (pag != null)
+        if (pag != null) {
             populateCMSPaginaForm(pag, dynaForm, request);
-        else
+        } else {
             dynaForm.initialize(mapping);
+        }
         
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
