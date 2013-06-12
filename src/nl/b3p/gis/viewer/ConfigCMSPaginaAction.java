@@ -203,6 +203,7 @@ public class ConfigCMSPaginaAction extends ViewerCrudAction {
         dynaForm.set("titel", cmsPag.getTitel());
         dynaForm.set("tekst", cmsPag.getTekst());
         dynaForm.set("thema", cmsPag.getThema());
+        dynaForm.set("showPlainAndMapButton", cmsPag.getShowPlainAndMapButton());
     }
 
     private void populateCMSPaginaObject(DynaValidatorForm dynaForm, CMSPagina cmsPag, HttpServletRequest request) {
@@ -215,6 +216,14 @@ public class ConfigCMSPaginaAction extends ViewerCrudAction {
         cmsPag.setTitel(FormUtils.nullIfEmpty(dynaForm.getString("titel")));
         cmsPag.setTekst(FormUtils.nullIfEmpty(dynaForm.getString("tekst")));
         cmsPag.setThema(FormUtils.nullIfEmpty(dynaForm.getString("thema")));
+        
+        Boolean showPlainAndMapButton = (Boolean) dynaForm.get("showPlainAndMapButton");
+        
+        if (showPlainAndMapButton != null && showPlainAndMapButton) {
+            cmsPag.setShowPlainAndMapButton(true);
+        } else {
+            cmsPag.setShowPlainAndMapButton(false);
+        }        
         
         cmsPag.setCdate(new Date());
     }

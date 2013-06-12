@@ -221,9 +221,22 @@ public class ConfigCMSAction extends ViewerCrudAction {
         tb.setTitel(FormUtils.nullIfEmpty(dynaForm.getString("titel")));
         tb.setTekst(FormUtils.nullIfEmpty(dynaForm.getString("tekst")));
         tb.setUrl(FormUtils.nullIfEmpty(dynaForm.getString("url")));
-        tb.setToonUrl((Boolean) dynaForm.get("toonUrl"));        
+        
+        Boolean toonUrl = (Boolean) dynaForm.get("toonUrl");        
+        if (toonUrl != null && toonUrl) {
+            tb.setToonUrl(true);
+        } else {
+            tb.setToonUrl(false);
+        } 
+        
         tb.setKleur(FormUtils.nullIfEmpty(dynaForm.getString("kleur")));
-        tb.setInlogIcon((Boolean) dynaForm.get("inlogIcon"));
+        
+        Boolean inlogIcon = (Boolean) dynaForm.get("inlogIcon");        
+        if (inlogIcon != null && inlogIcon) {
+            tb.setInlogIcon(true);
+        } else {
+            tb.setInlogIcon(false);
+        } 
         
         Integer hoogte = (Integer)dynaForm.get("hoogte");
         if (hoogte != null){
