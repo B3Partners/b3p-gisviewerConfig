@@ -64,6 +64,9 @@ public class ConfigCMSPaginaAction extends ViewerCrudAction {
 
         List cmsPaginas = sess.createQuery("from CMSPagina order by cdate").list();
         request.setAttribute("cmsPaginas", cmsPaginas);
+        
+        List cmsMenus = sess.createQuery("from CMSMenu order by titel").list();
+        request.setAttribute("cmsMenus", cmsMenus);
     }
 
     @Override
@@ -205,6 +208,8 @@ public class ConfigCMSPaginaAction extends ViewerCrudAction {
         dynaForm.set("tekst", cmsPag.getTekst());
         dynaForm.set("thema", cmsPag.getThema());
         dynaForm.set("showPlainAndMapButton", cmsPag.getShowPlainAndMapButton());
+        dynaForm.set("cmsMenu", cmsPag.getCmsMenu());        
+        dynaForm.set("loginRequired", cmsPag.getLoginRequired());
     }
 
     private void populateCMSPaginaObject(DynaValidatorForm dynaForm, CMSPagina cmsPag, HttpServletRequest request) {
@@ -227,5 +232,19 @@ public class ConfigCMSPaginaAction extends ViewerCrudAction {
         }        
         
         cmsPag.setCdate(new Date());
+        
+        Integer cmsMenu = (Integer)dynaForm.get("cmsMenu");
+        if (cmsMenu != null && cmsMenu > 0){
+            cmsPag.setCmsMenu(cmsMenu);
+        } else {
+            cmsPag.setCmsMenu(null);
+        }
+        
+        Boolean loginRequired = (Boolean) dynaForm.get("loginRequired");        
+        if (loginRequired != null && loginRequired) {
+            cmsPag.setLoginRequired(true);
+        } else {
+            cmsPag.setLoginRequired(false);
+        } 
     }
 }
