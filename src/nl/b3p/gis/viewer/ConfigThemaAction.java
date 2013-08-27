@@ -78,9 +78,9 @@ public class ConfigThemaAction extends ViewerCrudAction {
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
         request.setAttribute("allThemas", sess.createQuery("from Themas order by naam").list());
-        request.setAttribute("allClusters", sess.createQuery("from Clusters where default_cluster=:defaultCluster order by naam").setBoolean("defaultCluster", false).list());
+        request.setAttribute("allClusters", sess.createQuery("from Clusters where default_cluster=:defaultCluster order by LOWER(naam) asc").setBoolean("defaultCluster", false).list());
         request.setAttribute("listValidGeoms", SpatialUtil.VALID_GEOMS);
-        request.setAttribute("listBronnen", sess.createQuery("from Gegevensbron order by naam").list());
+        request.setAttribute("listBronnen", sess.createQuery("from Gegevensbron order by LOWER(naam) asc").list());
 
         HttpSession session = request.getSession(true);
         Integer sessionThemaId = (Integer) session.getAttribute("sessionThemaId");

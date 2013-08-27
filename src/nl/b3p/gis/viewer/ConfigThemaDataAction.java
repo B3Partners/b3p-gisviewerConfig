@@ -121,10 +121,11 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         super.createLists(dynaForm, request);
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        request.setAttribute("listThemas", sess.createQuery("from Gegevensbron order by naam").list());
+        request.setAttribute("listThemas", sess.createQuery("from Gegevensbron order by LOWER(naam) asc").list());
         request.setAttribute("listWaardeTypen", sess.createQuery("from WaardeTypen order by naam").list());
         request.setAttribute("listDataTypen", sess.createQuery("from DataTypen order by naam").list());
-        Gegevensbron gb = null;
+        
+        Gegevensbron gb;
         ThemaData td = getThemaData(dynaForm, false);
         if (td == null) {
             gb = getGegevensbron(dynaForm, false);

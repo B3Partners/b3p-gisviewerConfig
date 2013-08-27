@@ -42,6 +42,14 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         "Analyse", "Plannen", "Meldingen", "Vergunningen", "Voorzieningen",
         "Redlining", "CMS", "BAG", "WKT", "Transparantie", "Tekenen", "Upload tijdelijke punten"
     };
+    
+    private static final String[] CONFIGKEEPER_SLIDER_TABS = {
+        "leeg", "themas", "legenda", "zoeken"
+    };
+
+    private static final String[] LABELS_VOOR_SLIDER_TABS = {
+        "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken"
+    };
 
     protected static final String RESET_INSTELLINGEN = "resetInstellingen";
 
@@ -278,6 +286,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
         request.setAttribute("tabValues", CONFIGKEEPER_TABS);
         request.setAttribute("tabLabels", LABELS_VOOR_TABS);
+        
+        request.setAttribute("tabSliderValues", CONFIGKEEPER_SLIDER_TABS);
+        request.setAttribute("tabSliderLabels", LABELS_VOOR_SLIDER_TABS);
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         List zoekconfigs = sess.createQuery("from ZoekConfiguratie order by naam").list();
@@ -352,7 +363,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String treeOrder = (String) map.get("treeOrder");
         Integer tabWidth = (Integer) map.get("tabWidth");
         String extent = (String) map.get("extent");
+        String fullextent = (String) map.get("fullextent");
         String activeTab = (String) map.get("activeTab");
+        String transSliderTab = (String) map.get("transSliderTab");
         String tilingResolutions = (String) map.get("tilingResolutions");
 
         /* vullen box voor zoek ingangen */
@@ -410,7 +423,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_tabWidth", tabWidth);
 
         dynaForm.set("cfg_activeTab", activeTab);
+        dynaForm.set("cfg_transSliderTab", transSliderTab);        
+        
         dynaForm.set("cfg_extent", extent);
+        dynaForm.set("cfg_fullextent", fullextent);
 
         dynaForm.set("appcode", appCode);
 
@@ -634,9 +650,15 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("activeTab", appCode);
         writeString(dynaForm, "cfg_activeTab", c);
+        
+        c = configKeeper.getConfiguratie("transSliderTab", appCode);
+        writeString(dynaForm, "cfg_transSliderTab", c);
 
         c = configKeeper.getConfiguratie("extent", appCode);
         writeString(dynaForm, "cfg_extent", c);
+        
+        c = configKeeper.getConfiguratie("fullextent", appCode);
+        writeString(dynaForm, "cfg_fullextent", c);
 
         /* opslaan zoekinganen */
         writeZoekenIdConfig(dynaForm, appCode);
@@ -805,14 +827,20 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         lastComma = strBeheerTabs.lastIndexOf(",");
 
-        if (lastComma > 1) {
+        if (lastComma > 0) {
             strBeheerTabs = strBeheerTabs.substring(0, lastComma);
         }
 
         strBeheerTabs = "\"" + strBeheerTabs + "\"";
 
-        configTabs.setPropval(strBeheerTabs);
+        if (strBeheerTabs != null && strBeheerTabs.equals("\"\"")) {
+            configTabs.setPropval(null);
+        } else {
+            configTabs.setPropval(strBeheerTabs);
+        }
+        
         configTabs.setType("java.lang.String");
+        
         sess.merge(configTabs);
         sess.flush();
     }
