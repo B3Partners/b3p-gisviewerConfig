@@ -34,14 +34,14 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private static final String[] CONFIGKEEPER_TABS = {
         "leeg", "themas", "legenda", "zoeken", "gebieden",
         "analyse", "planselectie", "meldingen", "redlining",
-        "cms", "bag", "wkt", "transparantie", "tekenen",
+        "bag", "wkt", "transparantie", "tekenen",
         "uploadpoints"
     };
 
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Gebieden",
         "Analyse", "Plannen", "Meldingen", "Redlining",
-        "CMS", "BAG", "WKT", "Transparantie", "Tekenen",
+        "BAG", "WKT", "Transparantie", "Tekenen",
         "Upload tijdelijke punten"
     };
     
