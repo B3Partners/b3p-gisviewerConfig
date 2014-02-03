@@ -117,6 +117,7 @@ public class ConfigKaartGroepAction extends ViewerCrudAction {
 
             jsonCluster.put("id", cluster.getId().intValue());
             jsonCluster.put("title", cluster.getNaam());
+            jsonCluster.put("volgorde", cluster.getBelangnr());
             jsonCluster.put("name", cluster.getNaam());
           
             List subsubclusterMaps = (List) clMap.get("subclusters");

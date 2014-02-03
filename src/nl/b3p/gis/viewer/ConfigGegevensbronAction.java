@@ -238,6 +238,7 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
             jsonGb.put("id", gb.getId().intValue());
             jsonGb.put("title", gb.getNaam());
             jsonGb.put("name", gb.getNaam());
+            jsonGb.put("volgorde", gb.getVolgordenr());
 
             List subsubMaps = (List) clMap.get("subbronnen");
 

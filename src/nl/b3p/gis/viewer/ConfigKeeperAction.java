@@ -32,15 +32,17 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     private static final Log logger = LogFactory.getLog(ConfigKeeperAction.class);
 
     private static final String[] CONFIGKEEPER_TABS = {
-        "leeg", "themas", "legenda", "zoeken", "informatie", "gebieden",
-        "analyse", "planselectie", "meldingen", "vergunningen", "voorzieningen",
-        "redlining", "cms", "bag", "wkt", "transparantie", "tekenen", "uploadpoints"
+        "leeg", "themas", "legenda", "zoeken", "gebieden",
+        "analyse", "planselectie", "meldingen", "redlining",
+        "cms", "bag", "wkt", "transparantie", "tekenen",
+        "uploadpoints"
     };
 
     private static final String[] LABELS_VOOR_TABS = {
-        "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Info", "Gebieden",
-        "Analyse", "Plannen", "Meldingen", "Vergunningen", "Voorzieningen",
-        "Redlining", "CMS", "BAG", "WKT", "Transparantie", "Tekenen", "Upload tijdelijke punten"
+        "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Gebieden",
+        "Analyse", "Plannen", "Meldingen", "Redlining",
+        "CMS", "BAG", "WKT", "Transparantie", "Tekenen",
+        "Upload tijdelijke punten"
     };
     
     private static final String[] CONFIGKEEPER_SLIDER_TABS = {
