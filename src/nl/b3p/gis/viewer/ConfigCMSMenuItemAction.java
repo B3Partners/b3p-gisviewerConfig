@@ -163,6 +163,8 @@ public class ConfigCMSMenuItemAction extends ViewerCrudAction {
 
                 return getAlternateForward(mapping, request);
             }
+            
+            deleteFromMenuItemJoinTable(cmsMenuItem.getId());
 
             sess.delete(cmsMenuItem);
             sess.flush();
@@ -188,6 +190,15 @@ public class ConfigCMSMenuItemAction extends ViewerCrudAction {
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
 
         return mapping.findForward(SUCCESS);
+    }
+    
+    private void deleteFromMenuItemJoinTable(Integer id) {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+        
+        sess.createSQLQuery("delete from cms_menu_menuitem"
+                + " where cms_menuitem_id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
     }
 
     private void populateCMSMenuItemForm(CMSMenuItem cmsMenuItem, DynaValidatorForm dynaForm, HttpServletRequest request) {
