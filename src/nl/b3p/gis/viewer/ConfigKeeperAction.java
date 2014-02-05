@@ -364,6 +364,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String objectInfoType = (String) map.get("objectInfoType");
         String treeOrder = (String) map.get("treeOrder");
         Integer tabWidth = (Integer) map.get("tabWidth");
+        Integer tabWidthLeft = (Integer) map.get("tabWidthLeft");
         String extent = (String) map.get("extent");
         String fullextent = (String) map.get("fullextent");
         String activeTab = (String) map.get("activeTab");
@@ -414,6 +415,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_treeOrder", treeOrder);
 
         dynaForm.set("cfg_tabWidth", tabWidth);
+        dynaForm.set("cfg_tabWidthLeft", tabWidthLeft);
 
         dynaForm.set("cfg_activeTab", activeTab);
         dynaForm.set("cfg_transSliderTab", transSliderTab);        
@@ -641,6 +643,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("tabWidth", appCode);
         writeInteger(dynaForm, "cfg_tabWidth", c);
 
+        c = configKeeper.getConfiguratie("tabWidthLeft", appCode);
+        writeInteger(dynaForm, "cfg_tabWidthLeft", c);
+        
         c = configKeeper.getConfiguratie("activeTab", appCode);
         writeString(dynaForm, "cfg_activeTab", c);
         
