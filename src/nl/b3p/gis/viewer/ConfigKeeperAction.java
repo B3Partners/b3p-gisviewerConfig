@@ -212,6 +212,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String groupName = (String) dynaForm.get("groupName");
         String serviceUrl = (String) dynaForm.get("serviceUrl");
         String sldUrl = (String) dynaForm.get("sldUrl");
+        
+        boolean error = false;
 
         /* Controleren of User service al voorkomt bij applicatie */
         String appCode = (String) dynaForm.get("appcode");
@@ -220,7 +222,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
 
             addMessage(request, ERROR_DUPLICATE_WMS, serviceUrl);
-            return getAlternateForward(mapping, request);
+            error = true;
         }
 
         /* WMS Service layers ophalen met Geotools */
@@ -236,33 +238,36 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
 
             addMessage(request, ERROR_SAVE_WMS, uri.toString());
-            return getAlternateForward(mapping, request);
+            error = true;
         }
+        
+        if(!error){
 
-        /* Nieuwe UserService entity aanmaken en opslaan */
-        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+            /* Nieuwe UserService entity aanmaken en opslaan */
+            Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
-        UserService us = new UserService(appCode, serviceUrl, groupName);
+            UserService us = new UserService(appCode, serviceUrl, groupName);
 
-        /* Eerst parents ophalen. */
-        List<org.geotools.data.ows.Layer> parents =
-                KaartSelectieUtil.getParentLayers(layers);
+            /* Eerst parents ophalen. */
+            List<org.geotools.data.ows.Layer> parents =
+                    KaartSelectieUtil.getParentLayers(layers);
 
-        for (org.geotools.data.ows.Layer layer : parents) {
-            UserLayer ul = KaartSelectieUtil.createUserLayers(us, layer, null);
-            us.addLayer(ul);
-        }
-
-        /* Indien geen parents gevonden maar wel layers dan gewoon allemaal
-         * toevoegen. */
-        if (parents.size() < 1) {
-            for (int i = 0; i < layers.length; i++) {
-                UserLayer ul = KaartSelectieUtil.createUserLayers(us, layers[i], null);
+            for (org.geotools.data.ows.Layer layer : parents) {
+                UserLayer ul = KaartSelectieUtil.createUserLayers(us, layer, null);
                 us.addLayer(ul);
             }
-        }
 
-        sess.save(us);
+            /* Indien geen parents gevonden maar wel layers dan gewoon allemaal
+             * toevoegen. */
+            if (parents.size() < 1) {
+                for (int i = 0; i < layers.length; i++) {
+                    UserLayer ul = KaartSelectieUtil.createUserLayers(us, layers[i], null);
+                    us.addLayer(ul);
+                }
+            }
+
+            sess.save(us);
+        }
         
         /* Basisboom weer klaarzetten */
         KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
@@ -279,9 +284,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         populateForApplicatieHeader(request, appCode);
         
         prepareMethod(dynaForm, request, EDIT, LIST);
-        addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
-
-        return mapping.findForward(SUCCESS);
+        
+        if(!error){
+            addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
+            return mapping.findForward(SUCCESS);
+        } else{
+            return getAlternateForward(mapping, request);
+        }
     }
 
     @Override
