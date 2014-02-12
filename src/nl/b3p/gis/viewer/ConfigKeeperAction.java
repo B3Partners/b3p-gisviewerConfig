@@ -379,6 +379,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String activeTab = (String) map.get("activeTab");
         String transSliderTab = (String) map.get("transSliderTab");
         String tilingResolutions = (String) map.get("tilingResolutions");
+        
+        Boolean showLeftInfoTab = (Boolean) map.get("showLeftInfoTab");
+        Integer widthLeftInfoTab = (Integer) map.get("widthLeftInfoTab");
 
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
@@ -481,6 +484,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_datasetDownload", datasetDownload);
         dynaForm.set("cfg_tilingResolutions", tilingResolutions);
         dynaForm.set("cfg_showServiceUrl", showServiceUrl);
+        
+        dynaForm.set("cfg_showLeftInfoTab", showLeftInfoTab);
+        dynaForm.set("cfg_widthLeftInfoTab", widthLeftInfoTab);
     }
 
     @Override
@@ -720,7 +726,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         writeString(dynaForm, "cfg_tilingResolutions", c);
         
         c = configKeeper.getConfiguratie("showServiceUrl", appCode);
-        writeBoolean(dynaForm, "cfg_showServiceUrl", c);   
+        writeBoolean(dynaForm, "cfg_showServiceUrl", c);
+        
+        c = configKeeper.getConfiguratie("showLeftInfoTab", appCode);
+        writeBoolean(dynaForm, "cfg_showLeftInfoTab", c);   
+        c = configKeeper.getConfiguratie("widthLeftInfoTab", appCode);
+        writeInteger(dynaForm, "cfg_widthLeftInfoTab", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String appCode) {

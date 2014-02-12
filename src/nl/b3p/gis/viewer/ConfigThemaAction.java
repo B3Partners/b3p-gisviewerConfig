@@ -276,6 +276,8 @@ public class ConfigThemaAction extends ViewerCrudAction {
         dynaForm.set("uitgebreid", t.isUitgebreid());
         dynaForm.set("layoutadmindata",t.getLayoutadmindata());
         dynaForm.set("style",t.getStyle());
+        
+        dynaForm.set("info_tekst", t.getInfo_tekst());
 
         /*
         Integer gbId = -1;
@@ -350,5 +352,7 @@ public class ConfigThemaAction extends ViewerCrudAction {
         }
         Clusters c = (Clusters) sess.get(Clusters.class, new Integer(cId));
         t.setCluster(c);
+        
+        t.setInfo_tekst(FormUtils.nullIfEmpty(dynaForm.getString("info_tekst")));
     }
 }
