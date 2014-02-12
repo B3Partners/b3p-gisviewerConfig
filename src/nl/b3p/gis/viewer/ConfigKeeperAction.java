@@ -35,14 +35,14 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         "leeg", "themas", "legenda", "zoeken", "gebieden",
         "analyse", "planselectie", "meldingen", "redlining",
         "bag", "wkt", "transparantie", "tekenen",
-        "uploadpoints"
+        "uploadpoints", "layerinfo"
     };
 
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Gebieden",
         "Analyse", "Plannen", "Meldingen", "Redlining",
         "BAG", "WKT", "Transparantie", "Tekenen",
-        "Upload tijdelijke punten"
+        "Upload tijdelijke punten", "Laag informatie"
     };
     
     private static final String[] CONFIGKEEPER_SLIDER_TABS = {
@@ -380,8 +380,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String transSliderTab = (String) map.get("transSliderTab");
         String tilingResolutions = (String) map.get("tilingResolutions");
         
-        Boolean showLeftInfoTab = (Boolean) map.get("showLeftInfoTab");
-        Integer widthLeftInfoTab = (Integer) map.get("widthLeftInfoTab");
+        String showInfoTab = (String) map.get("showInfoTab");
 
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
@@ -485,8 +484,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_tilingResolutions", tilingResolutions);
         dynaForm.set("cfg_showServiceUrl", showServiceUrl);
         
-        dynaForm.set("cfg_showLeftInfoTab", showLeftInfoTab);
-        dynaForm.set("cfg_widthLeftInfoTab", widthLeftInfoTab);
+        dynaForm.set("cfg_showInfoTab", showInfoTab);
     }
 
     @Override
@@ -728,10 +726,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("showServiceUrl", appCode);
         writeBoolean(dynaForm, "cfg_showServiceUrl", c);
         
-        c = configKeeper.getConfiguratie("showLeftInfoTab", appCode);
-        writeBoolean(dynaForm, "cfg_showLeftInfoTab", c);   
-        c = configKeeper.getConfiguratie("widthLeftInfoTab", appCode);
-        writeInteger(dynaForm, "cfg_widthLeftInfoTab", c);
+        c = configKeeper.getConfiguratie("showInfoTab", appCode);
+        writeString(dynaForm, "cfg_showInfoTab", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String appCode) {
