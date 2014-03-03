@@ -381,6 +381,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String tilingResolutions = (String) map.get("tilingResolutions");
         
         String showInfoTab = (String) map.get("showInfoTab");
+        
+        String helpUrl = (String) map.get("helpUrl");
+        Boolean showGoogleMapsIcon = (Boolean) map.get("showGoogleMapsIcon");
+        Boolean showBookmarkIcon = (Boolean) map.get("showBookmarkIcon");
+        String contactUrl = (String) map.get("contactUrl");
 
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
@@ -485,6 +490,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showServiceUrl", showServiceUrl);
         
         dynaForm.set("cfg_showInfoTab", showInfoTab);
+        
+        dynaForm.set("cfg_helpUrl", helpUrl);
+        dynaForm.set("cfg_showGoogleMapsIcon", showGoogleMapsIcon);
+        dynaForm.set("cfg_showBookmarkIcon", showBookmarkIcon);
+        dynaForm.set("cfg_contactUrl", contactUrl);
     }
 
     @Override
@@ -728,6 +738,18 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         
         c = configKeeper.getConfiguratie("showInfoTab", appCode);
         writeString(dynaForm, "cfg_showInfoTab", c);
+        
+        c = configKeeper.getConfiguratie("helpUrl", appCode);
+        writeString(dynaForm, "cfg_helpUrl", c);
+        
+        c = configKeeper.getConfiguratie("showGoogleMapsIcon", appCode);
+        writeBoolean(dynaForm, "cfg_showGoogleMapsIcon", c);
+        
+        c = configKeeper.getConfiguratie("showBookmarkIcon", appCode);
+        writeBoolean(dynaForm, "cfg_showBookmarkIcon", c);
+        
+        c = configKeeper.getConfiguratie("contactUrl", appCode);
+        writeString(dynaForm, "cfg_contactUrl", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String appCode) {
