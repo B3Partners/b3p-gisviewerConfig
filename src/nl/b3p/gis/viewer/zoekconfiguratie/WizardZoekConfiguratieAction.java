@@ -23,6 +23,7 @@
 package nl.b3p.gis.viewer.zoekconfiguratie;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -170,21 +171,21 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
 
                     message += ", wordt de " + zoekConfiguratie.getNaam() + " zoeker nog als input voor een zoekveld gebruikt.";
                 }
-                
+
                 /* Controleer op zoekconfiguratie_thema's */
                 List themas = sess.createQuery("from ZoekconfiguratieThemas where zoekconfiguratie = :zoeker")
                         .setParameter("zoeker", zoekConfiguratie).list();
-                
-                if(themas != null && themas.size() > 0){
+
+                if (themas != null && themas.size() > 0) {
                     message += "In de zoekconfiguratie " + zoekConfiguratie.getNaam() + ", worden de kaartlagen ";
-                    
+
                     Iterator iter = themas.iterator();
                     while (iter.hasNext()) {
                         ZoekconfiguratieThemas zt = (ZoekconfiguratieThemas) iter.next();
 
                         message += " : " + zt.getThema().getNaam();
                     }
-                    
+
                     message += " nog gekoppeld aan de zoekingang.";
                 }
 
@@ -232,6 +233,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         ZoekConfiguratie zc = getAndSetZoekConfiguratie(request);
         Bron bron = null;
         String featureType = null;
+
         if (zc != null) {
             request.setAttribute(ZOEKCONFIGURATIEID, zc.getId());
             bron = zc.getBron();
@@ -246,14 +248,25 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             if (!zc.isResultListDynamic()) {
                 request.setAttribute("usecaching", "1");
             }
-            
+
             request.setAttribute("omschrijving", zc.getOmschrijving());
+            request.setAttribute("selectedUsage", zc.getForUsageIn());
 
             featureType = zc.getFeatureType();
+
         } else {
             bron = getAndSetBron(request);
             featureType = FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
+        
+            request.setAttribute("selectedUsage", ZoekConfiguratie.USE_IN_VIEWER_WEBR);
         }
+
+        Map forUsageMap = new HashMap();
+        forUsageMap.put(ZoekConfiguratie.USE_IN_VIEWER_WEBR, "Viewer en webrichtlijnen");
+        forUsageMap.put(ZoekConfiguratie.USE_IN_VIEWER, "Alleen viewer");
+        forUsageMap.put(ZoekConfiguratie.USE_IN_WEBR, "Alleen webrichtlijnen");
+
+        request.setAttribute("forUsageMap", forUsageMap);
 
         request.setAttribute(FEATURETYPE, featureType);
 
@@ -267,11 +280,11 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         String queryString = "from ZoekConfiguratie z"
                 + " LEFT JOIN FETCH z.parentZoekConfiguratie"
                 + " LEFT JOIN FETCH z.parentBron";
-        
+
         if (zc != null) {
             queryString += " where z.id != " + zc.getId();
         }
-        
+
         List zoekconfiguraties = sess.createQuery(queryString).list();
         request.setAttribute("zoekConfiguraties", zoekconfiguraties);
         return mapping.findForward(STEP3);
@@ -343,43 +356,47 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         } else {
             zc.setResultListDynamic(true);
         }
-        
+
         if (request.getParameter("omschrijving") != null) {
             zc.setOmschrijving(request.getParameter("omschrijving"));
+        }
+
+        if (request.getParameter("forUsageIn") != null) {
+            zc.setForUsageIn(request.getParameter("forUsageIn"));
         }
 
         //sla alles op.
         sess.save(zc);
         sess.flush();
-        
+
         //set the lijsten die nodig zijn voor de volgende pagina.
         request.setAttribute("zoekConfiguratieId", zc.getId());
         request.setAttribute("zoekVelden", zc.getZoekVelden());
         request.setAttribute("resultaatVelden", zc.getResultaatVelden());
         request.setAttribute("tips", createTips(zc));
-        
-        if (zc.getParentZoekConfiguratie() != null) {            
+
+        if (zc.getParentZoekConfiguratie() != null) {
             //Set<ZoekAttribuut> zoekVelden = getParentZoekvelden(zc.getParentZoekConfiguratie());           
             //request.setAttribute("parentZoekVelden", zoekVelden);
         }
-        
+
         return mapping.findForward(STEP4);
     }
-    
+
     private Set<ZoekAttribuut> getParentZoekvelden(ZoekConfiguratie parent) {
         Set<ZoekAttribuut> zoekVelden = new HashSet<ZoekAttribuut>();
-        
+
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         String queryString = "from ZoekConfiguratie z"
                 + " LEFT JOIN FETCH z.zoekVelden"
                 + " LEFT JOIN FETCH z.parentBron";
-        
+
         if (parent != null) {
             queryString += " where z.id != " + parent.getId();
         }
-        
+
         List<ZoekConfiguratie> zoekConfigs = sess.createQuery(queryString).list();
-        
+
         if (zoekConfigs != null && zoekConfigs.size() == 1) {
             zoekVelden = zoekConfigs.get(0).getZoekVelden();
         }
@@ -411,7 +428,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         // Verwijder de oude entries
-        
+
         List<ZoekconfiguratieThemas> zoekconfigThemas = sess.createQuery("from ZoekconfiguratieThemas WHERE zoekconfiguratie = :id").setParameter("id", zc).list();
         for (Iterator<ZoekconfiguratieThemas> it = zoekconfigThemas.iterator(); it.hasNext();) {
             ZoekconfiguratieThemas zoekconfigThema = it.next();
