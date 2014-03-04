@@ -386,6 +386,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showGoogleMapsIcon = (Boolean) map.get("showGoogleMapsIcon");
         Boolean showBookmarkIcon = (Boolean) map.get("showBookmarkIcon");
         String contactUrl = (String) map.get("contactUrl");
+        String logoutUrl = (String) map.get("logoutUrl");
 
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
@@ -495,6 +496,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showGoogleMapsIcon", showGoogleMapsIcon);
         dynaForm.set("cfg_showBookmarkIcon", showBookmarkIcon);
         dynaForm.set("cfg_contactUrl", contactUrl);
+        dynaForm.set("cfg_logoutUrl", logoutUrl);
     }
 
     @Override
@@ -750,6 +752,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         
         c = configKeeper.getConfiguratie("contactUrl", appCode);
         writeString(dynaForm, "cfg_contactUrl", c);
+        
+        c = configKeeper.getConfiguratie("logoutUrl", appCode);
+        writeString(dynaForm, "cfg_logoutUrl", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String appCode) {
