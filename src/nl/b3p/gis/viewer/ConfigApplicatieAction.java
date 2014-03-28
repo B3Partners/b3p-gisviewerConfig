@@ -9,6 +9,11 @@ import nl.b3p.commons.struts.ExtendedMethodProperties;
 import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.utils.KaartSelectieUtil;
 import nl.b3p.gis.viewer.db.Applicatie;
+import nl.b3p.gis.viewer.db.Configuratie;
+import nl.b3p.gis.viewer.db.CyclomediaAccount;
+import nl.b3p.gis.viewer.db.UserKaartgroep;
+import nl.b3p.gis.viewer.db.UserKaartlaag;
+import nl.b3p.gis.viewer.db.UserService;
 import nl.b3p.gis.viewer.services.HibernateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,8 +25,8 @@ import org.hibernate.Session;
 public class ConfigApplicatieAction extends ViewerCrudAction {
 
     private static final Log log = LogFactory.getLog(ConfigApplicatieAction.class);
-
     protected static final String MAPPING_COPY = "copy";
+    protected static final String APPCODE_SPACES_KEY = "error.appcode.space";
 
     @Override
     protected Map getActionMethodPropertiesMap() {
@@ -89,11 +94,28 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         } else {
             populateObject(dynaForm, app, request, true);
         }
+        
+        String formAppcode = FormUtils.nullIfEmpty(dynaForm.getString("appCode"));
+        if (formAppcode != null && !formAppcode.isEmpty()) {
+            if (formAppcode.trim().contains(" ")) {
+                prepareMethod(dynaForm, request, LIST, EDIT);
+                addAlternateMessage(mapping, request, APPCODE_SPACES_KEY);
+
+                return getAlternateForward(mapping, request);
+            }
+
+            /* Beheerder wijzigt bestaande appcode, appcodes updaten in
+             * gisviewer tabellen */
+            if (!app.getCode().equals(formAppcode)) {
+                updateAppCode(app.getCode(), formAppcode);
+                app.setCode(formAppcode);
+            }
+        }
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         sess.saveOrUpdate(app);
         sess.flush();
-        
+
         /* Klaarzetten form */
         populateForm(app, dynaForm, request);
 
@@ -105,7 +127,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
 
     @Override
     public ActionForward edit(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
-                
+
         /* Applicatie ophalen en klaarzetten voor form */
         Applicatie app = getApplicatie(dynaForm, request);
         populateForm(app, dynaForm, request);
@@ -174,10 +196,10 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
 
         return getDefaultForward(mapping, request);
     }
-    
+
     private Applicatie getApplicatie(DynaValidatorForm dynaForm, HttpServletRequest request) {
         Integer id = (Integer) dynaForm.get("applicatieID");
-        
+
         if (id == null || id < 1) {
             return null;
         }
@@ -197,6 +219,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         dynaForm.set("email", app.getEmail());
         dynaForm.set("naam", app.getNaam());
         dynaForm.set("gebruikersCode", app.getGebruikersCode());
+        dynaForm.set("appCode", app.getCode());
 
         if (app.getParent() != null) {
             dynaForm.set("parent", app.getParent().getId());
@@ -222,7 +245,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         app.setParent(null);
 
         Boolean defaultApp = (Boolean) dynaForm.get("defaultApp");
-        if (defaultApp != null) {          
+        if (defaultApp != null) {
             app.setDefault_app(true);
         } else {
             app.setDefault_app(false);
@@ -236,6 +259,57 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
                 app.setRead_only(false);
             }
         }
+    }
+
+    private void updateAppCode(String oldAppcode, String newAppcode) {
+        Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
+
+        List<Configuratie> configs = sess.createQuery("from Configuratie where setting = :old")
+                .setParameter("old", oldAppcode)
+                .list();
+
+        for (Configuratie config : configs) {
+            config.setSetting(newAppcode);
+            sess.save(config);
+        }
+
+        List<CyclomediaAccount> accounts = sess.createQuery("from CyclomediaAccount  where app_code = :old")
+                .setParameter("old", oldAppcode)
+                .list();
+
+        for (CyclomediaAccount account : accounts) {
+            account.setAppCode(newAppcode);
+            sess.save(account);
+        }
+
+        List<UserKaartgroep> groups = sess.createQuery("from UserKaartgroep where code = :old")
+                .setParameter("old", oldAppcode)
+                .list();
+
+        for (UserKaartgroep group : groups) {
+            group.setCode(newAppcode);
+            sess.save(group);
+        }
+
+        List<UserKaartlaag> layers = sess.createQuery("from UserKaartlaag where code = :old")
+                .setParameter("old", oldAppcode)
+                .list();
+
+        for (UserKaartlaag layer : layers) {
+            layer.setCode(newAppcode);
+            sess.save(layer);
+        }
+
+        List<UserService> services = sess.createQuery("from UserService where code = :old")
+                .setParameter("old", oldAppcode)
+                .list();
+
+        for (UserService service : services) {
+            service.setCode(newAppcode);
+            sess.save(service);
+        }
+
+        sess.flush();
     }
 
     private void updateAppsToNonDefault() {
