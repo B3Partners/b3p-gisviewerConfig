@@ -8,14 +8,18 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.b3p.commons.struts.ExtendedMethodProperties;
+import nl.b3p.gis.geotools.DataStoreUtil;
 import nl.b3p.gis.utils.ConfigKeeper;
 import nl.b3p.gis.utils.KaartSelectieUtil;
 import nl.b3p.gis.viewer.db.Applicatie;
 import nl.b3p.gis.viewer.db.Configuratie;
 import nl.b3p.gis.viewer.db.Gegevensbron;
+import nl.b3p.gis.viewer.db.Themas;
 import nl.b3p.gis.viewer.db.UserLayer;
 import nl.b3p.gis.viewer.db.UserService;
+import nl.b3p.gis.viewer.services.GisPrincipal;
 import nl.b3p.gis.viewer.services.HibernateUtil;
+import nl.b3p.gis.viewer.services.SldServlet;
 import nl.b3p.zoeker.configuratie.Bron;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,7 +48,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         "BAG", "WKT", "Transparantie", "Tekenen",
         "Upload tijdelijke punten", "Laag informatie"
     };
-    
+
     private static final String[] CONFIGKEEPER_SLIDER_TABS = {
         "leeg", "themas", "legenda", "zoeken"
     };
@@ -185,10 +189,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             Integer serviceId = new Integer(servicesAan[i]);
             KaartSelectieUtil.removeService(serviceId);
         }
-        
+
         /* Basisboom weer klaarzetten */
         KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
-        
+
         /* Configkeeper instellingen ook klaarzetten voor form */
         ConfigKeeper configKeeper = new ConfigKeeper();
         Map map = null;
@@ -199,7 +203,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         populateForApplicatieHeader(request, appCode);
-        
+
         prepareMethod(dynaForm, request, EDIT, LIST);
         addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
 
@@ -212,7 +216,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String groupName = (String) dynaForm.get("groupName");
         String serviceUrl = (String) dynaForm.get("serviceUrl");
         String sldUrl = (String) dynaForm.get("sldUrl");
-        
+
         boolean error = false;
 
         /* Controleren of User service al voorkomt bij applicatie */
@@ -233,15 +237,15 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             layers = WMSUtils.getNamedLayers(wms.getCapabilities());
         } catch (Exception ex) {
             logger.error("Fout tijdens opslaan WMS. ", ex);
-        
+
             /* Basisboom weer klaarzetten */
             KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
 
             addMessage(request, ERROR_SAVE_WMS, uri.toString());
             error = true;
         }
-        
-        if(!error){
+
+        if (!error) {
 
             /* Nieuwe UserService entity aanmaken en opslaan */
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
@@ -249,8 +253,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             UserService us = new UserService(appCode, serviceUrl, groupName);
 
             /* Eerst parents ophalen. */
-            List<org.geotools.data.ows.Layer> parents =
-                    KaartSelectieUtil.getParentLayers(layers);
+            List<org.geotools.data.ows.Layer> parents
+                    = KaartSelectieUtil.getParentLayers(layers);
 
             for (org.geotools.data.ows.Layer layer : parents) {
                 UserLayer ul = KaartSelectieUtil.createUserLayers(us, layer, null);
@@ -268,10 +272,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
             sess.save(us);
         }
-        
+
         /* Basisboom weer klaarzetten */
         KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
-        
+
         /* Configkeeper instellingen ook klaarzetten voor form */
         ConfigKeeper configKeeper = new ConfigKeeper();
         Map map = null;
@@ -282,13 +286,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         populateForApplicatieHeader(request, appCode);
-        
+
         prepareMethod(dynaForm, request, EDIT, LIST);
-        
-        if(!error){
+
+        if (!error) {
             addDefaultMessage(mapping, request, ACKNOWLEDGE_MESSAGES);
             return mapping.findForward(SUCCESS);
-        } else{
+        } else {
             return getAlternateForward(mapping, request);
         }
     }
@@ -297,7 +301,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
         request.setAttribute("tabValues", CONFIGKEEPER_TABS);
         request.setAttribute("tabLabels", LABELS_VOOR_TABS);
-        
+
         request.setAttribute("tabSliderValues", CONFIGKEEPER_SLIDER_TABS);
         request.setAttribute("tabSliderLabels", LABELS_VOOR_SLIDER_TABS);
 
@@ -310,16 +314,135 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         List redliningKaartlagen = sess.createQuery("from Themas order by naam").list();
         request.setAttribute("redliningKaartlagen", redliningKaartlagen);
-        
+
         List<Gegevensbron> tekenGegevensbronnen = sess.createQuery("from Gegevensbron order by naam").list();
         List<Gegevensbron> tempGb = new ArrayList<Gegevensbron>();
         for (Iterator<Gegevensbron> it = tekenGegevensbronnen.iterator(); it.hasNext();) {
             Gegevensbron gegevensbron = it.next();
-            if(gegevensbron.getBron() != null && gegevensbron.getBron().checkType(Bron.TYPE_JDBC)){
+            if (gegevensbron.getBron() != null && gegevensbron.getBron().checkType(Bron.TYPE_JDBC)) {
                 tempGb.add(gegevensbron);
             }
         }
+
         request.setAttribute("tekenGegevensbronnen", tempGb);
+
+        fillTekenTabFilterKaartlagenDropdown(request, sess);
+
+        fillTekenTabFilterSLD(request, sess, form);
+    }
+
+    private void fillTekenTabFilterKaartlagenDropdown(HttpServletRequest request,
+            Session sess) throws Exception {
+
+        String appCode = (String) request.getParameter("appcode");
+
+        Gegevensbron gekozenGb = getTekenTabGekozenGegevensbron(appCode, sess);
+        if (gekozenGb != null) {
+            List<Themas> lagen = sess.createQuery("from Themas "
+                    + "where gegevensbron = :gb order by naam")
+                    .setParameter("gb", gekozenGb)
+                    .list();
+
+            request.setAttribute("tekenKaartlagen", lagen);
+        }
+    }
+
+    private void fillTekenTabFilterSLD(HttpServletRequest request,
+            Session sess, DynaValidatorForm form) throws Exception {
+
+        // ophalen geom type en default invullen indien sld filter
+        // nog niet is ingevuld
+        String appCode = (String) request.getParameter("appcode");
+
+        Themas laag = getTekenTabGekozenKaartlaag(appCode, sess);
+
+        if (laag != null) {
+            String featureType = laag.getWms_layers_real();
+            if (featureType == null || featureType.length() == 0) {
+                logger.debug("Kaartlaag heeft geen featuretype");
+            }
+
+            featureType = featureType.substring(featureType.indexOf("_") + 1);
+
+            String geometryType = null;
+            try {
+                geometryType = getGeomtryType(laag, request);
+            } catch (Exception e) {
+            }
+
+            String currentSldValue = getTekenTabFilterSLDValue(appCode);
+
+            /* Indien onbekend standaard polygon verbeelding gebruiken */
+            if (geometryType != null && currentSldValue == null || currentSldValue.equals("")) {
+                logger.debug("teken kaartlaag geom type: " + geometryType);
+
+                if (geometryType.toLowerCase().indexOf("polygon") >= 0) {
+                    form.set("cfg_tekenFilterSld", SldServlet.getDefaultPolygonStyle());
+                } else if (geometryType.toLowerCase().indexOf("line") >= 0) {
+                    form.set("cfg_tekenFilterSld", SldServlet.getDefaultLineStyle());
+                } else if (geometryType.toLowerCase().indexOf("point") >= 0) {
+                    form.set("cfg_tekenFilterSld", SldServlet.getDefaultPointStyle());
+                } else {
+                    form.set("cfg_tekenFilterSld", SldServlet.getDefaultPolygonStyle());
+                }
+            }
+        }
+    }
+
+    private String getGeomtryType(Themas t, HttpServletRequest request) throws Exception {
+        GisPrincipal user = GisPrincipal.getGisPrincipal(request);
+        String geometryType = DataStoreUtil.getThemaGeomType(t, user);
+        return geometryType;
+    }
+
+    private String getTekenTabFilterSLDValue(String appCode)
+            throws Exception {
+
+        ConfigKeeper configKeeper = new ConfigKeeper();
+        Map map = configKeeper.getConfigMap(appCode);
+
+        String sldPart = null;
+        if (map != null && map.size() > 0) {
+            sldPart = (String) map.get("tekenFilterSld");
+        }
+
+        return sldPart;
+    }
+
+    private Gegevensbron getTekenTabGekozenGegevensbron(String appCode,
+            Session sess) throws Exception {
+
+        ConfigKeeper configKeeper = new ConfigKeeper();
+        Map map = configKeeper.getConfigMap(appCode);
+
+        Gegevensbron gekozenGegevensbron = null;
+        if (map != null && map.size() > 0) {
+            Integer gbId = (Integer) map.get("tekenGegevensbron");
+
+            if (gbId != null && gbId > 0) {
+                gekozenGegevensbron = (Gegevensbron) sess.get(Gegevensbron.class, gbId);
+            }
+        }
+
+        return gekozenGegevensbron;
+    }
+
+    private Themas getTekenTabGekozenKaartlaag(String appCode,
+            Session sess) throws Exception {
+
+        ConfigKeeper configKeeper = new ConfigKeeper();
+        Map map = configKeeper.getConfigMap(appCode);
+
+        Themas gekozenKaartlaag = null;
+        if (map != null && map.size() > 0) {
+            Integer laagId = (Integer) map.get("tekenKaartlaagId");
+
+            if (laagId != null && laagId > 0) {
+                gekozenKaartlaag = (Themas) sess.get(Themas.class, laagId);
+            }
+        }
+
+        return gekozenKaartlaag;
     }
 
     private void populateForApplicatieHeader(HttpServletRequest request, String appCode) {
@@ -358,10 +481,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showGPSTool = (Boolean) map.get("showGPSTool");
         Boolean edit = (Boolean) map.get("showEditTool");
         String gpsBuffer = (String) map.get("gpsBuffer");
-        Boolean useUserWmsDropdown = (Boolean) map.get("useUserWmsDropdown");        
-        Boolean datasetDownload = (Boolean) map.get("datasetDownload");  
-        Boolean showServiceUrl = (Boolean) map.get("showServiceUrl");        
-        
+        Boolean useUserWmsDropdown = (Boolean) map.get("useUserWmsDropdown");
+        Boolean datasetDownload = (Boolean) map.get("datasetDownload");
+        Boolean showServiceUrl = (Boolean) map.get("showServiceUrl");
+
         String layerGrouping = (String) map.get("layerGrouping");
         String popupWidth = (String) map.get("popupWidth");
         String popupHeight = (String) map.get("popupHeight");
@@ -379,14 +502,17 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String activeTab = (String) map.get("activeTab");
         String transSliderTab = (String) map.get("transSliderTab");
         String tilingResolutions = (String) map.get("tilingResolutions");
-        
+
         String showInfoTab = (String) map.get("showInfoTab");
-        
+
         String helpUrl = (String) map.get("helpUrl");
         Boolean showGoogleMapsIcon = (Boolean) map.get("showGoogleMapsIcon");
         Boolean showBookmarkIcon = (Boolean) map.get("showBookmarkIcon");
         String contactUrl = (String) map.get("contactUrl");
         String logoutUrl = (String) map.get("logoutUrl");
+
+        String tekenFilterColumn = (String) map.get("tekenFilterColumn");
+        String tekenFilterSld = (String) map.get("tekenFilterSld");
 
         /* vullen box voor zoek ingangen */
         fillZoekConfigBox(dynaForm, request, zoekConfigIds);
@@ -435,8 +561,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_tabWidthLeft", tabWidthLeft);
 
         dynaForm.set("cfg_activeTab", activeTab);
-        dynaForm.set("cfg_transSliderTab", transSliderTab);        
-        
+        dynaForm.set("cfg_transSliderTab", transSliderTab);
+
         dynaForm.set("cfg_extent", extent);
         dynaForm.set("cfg_fullextent", fullextent);
 
@@ -455,7 +581,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_tekenTekstOnder", (String) map.get("tekenTekstOnder"));
         dynaForm.set("cfg_tekenTitel", (String) map.get("tekenTitel"));
         dynaForm.set("cfg_tekenPlaatje", (String) map.get("tekenPlaatje"));
-        
+
         /* Bag config items*/
         if (map.get("bagkaartlaagid") != null) {
             dynaForm.set("cfg_bagkaartlaagid", (Integer) map.get("bagkaartlaagid"));
@@ -484,19 +610,23 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         if (map.get("bagGeomAttr") != null) {
             dynaForm.set("cfg_bagGeomAttr", (String) map.get("bagGeomAttr"));
         }
-        
+
         dynaForm.set("cfg_useUserWmsDropdown", useUserWmsDropdown);
         dynaForm.set("cfg_datasetDownload", datasetDownload);
         dynaForm.set("cfg_tilingResolutions", tilingResolutions);
         dynaForm.set("cfg_showServiceUrl", showServiceUrl);
-        
+
         dynaForm.set("cfg_showInfoTab", showInfoTab);
-        
+
         dynaForm.set("cfg_helpUrl", helpUrl);
         dynaForm.set("cfg_showGoogleMapsIcon", showGoogleMapsIcon);
         dynaForm.set("cfg_showBookmarkIcon", showBookmarkIcon);
         dynaForm.set("cfg_contactUrl", contactUrl);
         dynaForm.set("cfg_logoutUrl", logoutUrl);
+
+        dynaForm.set("cfg_tekenKaartlaagId", (Integer) map.get("tekenKaartlaagId"));
+        dynaForm.set("cfg_tekenFilterColumn", tekenFilterColumn);
+        dynaForm.set("cfg_tekenFilterSld", tekenFilterSld);
     }
 
     @Override
@@ -512,11 +642,11 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
 
         saveKaartSelectie(appCode, dynaForm, request);
-        
+
         populateObject(dynaForm, appCode);
-        
+
         KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
-        
+
         populateForApplicatieHeader(request, appCode);
 
         prepareMethod(dynaForm, request, EDIT, LIST);
@@ -537,7 +667,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String[] useLayerStyles = (String[]) dynaForm.get("useLayerStyles");
 
         /* userLayerIds wordt gebruikt om de layerid's te kunnen koppelen
-        aan de textarea's */
+         aan de textarea's */
         String[] userLayerIds = (String[]) dynaForm.get("userLayerIds");
         String[] useLayerSldParts = (String[]) dynaForm.get("useLayerSldParts");
 
@@ -586,7 +716,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("maxResults", appCode);
         writeInteger(dynaForm, "cfg_maxResults", c);
-        
+
         c = configKeeper.getConfiguratie("defaultSearchRadius", appCode);
         writeInteger(dynaForm, "cfg_defaultSearchRadius", c);
 
@@ -625,13 +755,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("showLayerSelectionTool", appCode);
         writeBoolean(dynaForm, "cfg_showLayerSelectionTool", c);
-        
+
         c = configKeeper.getConfiguratie("showGPSTool", appCode);
         writeBoolean(dynaForm, "cfg_showGPSTool", c);
-        
+
         c = configKeeper.getConfiguratie("showEditTool", appCode);
         writeBoolean(dynaForm, "cfg_showEditTool", c);
-        
+
         c = configKeeper.getConfiguratie("gpsBuffer", appCode);
         writeString(dynaForm, "cfg_GPSBuffer", c);
 
@@ -670,16 +800,16 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("tabWidthLeft", appCode);
         writeInteger(dynaForm, "cfg_tabWidthLeft", c);
-        
+
         c = configKeeper.getConfiguratie("activeTab", appCode);
         writeString(dynaForm, "cfg_activeTab", c);
-        
+
         c = configKeeper.getConfiguratie("transSliderTab", appCode);
         writeString(dynaForm, "cfg_transSliderTab", c);
 
         c = configKeeper.getConfiguratie("extent", appCode);
         writeString(dynaForm, "cfg_extent", c);
-        
+
         c = configKeeper.getConfiguratie("fullextent", appCode);
         writeString(dynaForm, "cfg_fullextent", c);
 
@@ -706,7 +836,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         writeString(dynaForm, "cfg_tekenTitel", c);
         c = configKeeper.getConfiguratie("tekenPlaatje", appCode);
         writeString(dynaForm, "cfg_tekenPlaatje", c);
-        
+
         //BAG settings
         c = configKeeper.getConfiguratie("bagkaartlaagid", appCode);
         writeInteger(dynaForm, "cfg_bagkaartlaagid", c);
@@ -727,34 +857,44 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("bagGebruiksfunctieAttr", appCode);
         writeString(dynaForm, "cfg_bagGebruiksfunctieAttr", c);
         c = configKeeper.getConfiguratie("bagGeomAttr", appCode);
-        writeString(dynaForm, "cfg_bagGeomAttr", c);        
+        writeString(dynaForm, "cfg_bagGeomAttr", c);
         c = configKeeper.getConfiguratie("useUserWmsDropdown", appCode);
         writeBoolean(dynaForm, "cfg_useUserWmsDropdown", c);
         c = configKeeper.getConfiguratie("datasetDownload", appCode);
-        writeBoolean(dynaForm, "cfg_datasetDownload", c);        
+        writeBoolean(dynaForm, "cfg_datasetDownload", c);
         c = configKeeper.getConfiguratie("tilingResolutions", appCode);
         writeString(dynaForm, "cfg_tilingResolutions", c);
-        
+
         c = configKeeper.getConfiguratie("showServiceUrl", appCode);
         writeBoolean(dynaForm, "cfg_showServiceUrl", c);
-        
+
         c = configKeeper.getConfiguratie("showInfoTab", appCode);
         writeString(dynaForm, "cfg_showInfoTab", c);
-        
+
         c = configKeeper.getConfiguratie("helpUrl", appCode);
         writeString(dynaForm, "cfg_helpUrl", c);
-        
+
         c = configKeeper.getConfiguratie("showGoogleMapsIcon", appCode);
         writeBoolean(dynaForm, "cfg_showGoogleMapsIcon", c);
-        
+
         c = configKeeper.getConfiguratie("showBookmarkIcon", appCode);
         writeBoolean(dynaForm, "cfg_showBookmarkIcon", c);
-        
+
         c = configKeeper.getConfiguratie("contactUrl", appCode);
         writeString(dynaForm, "cfg_contactUrl", c);
-        
+
         c = configKeeper.getConfiguratie("logoutUrl", appCode);
         writeString(dynaForm, "cfg_logoutUrl", c);
+
+        // opslaan teken tab sld filter settings
+        c = configKeeper.getConfiguratie("tekenKaartlaagId", appCode);
+        writeInteger(dynaForm, "cfg_tekenKaartlaagId", c);
+
+        c = configKeeper.getConfiguratie("tekenFilterColumn", appCode);
+        writeString(dynaForm, "cfg_tekenFilterColumn", c);
+
+        c = configKeeper.getConfiguratie("tekenFilterSld", appCode);
+        writeString(dynaForm, "cfg_tekenFilterSld", c);
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String appCode) {
@@ -877,9 +1017,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         } else {
             configTabs.setPropval(strBeheerTabs);
         }
-        
+
         configTabs.setType("java.lang.String");
-        
+
         sess.merge(configTabs);
         sess.flush();
     }
@@ -922,7 +1062,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         ConfigKeeper configKeeper = new ConfigKeeper();
         int lastComma = -1;
 
-        Configuratie configTabs = configKeeper.getConfiguratie("tabs", appCode);        
+        Configuratie configTabs = configKeeper.getConfiguratie("tabs", appCode);
         String strBeheerTabs = "";
 
         if (!form.get("cfg_tab1").equals("leeg")) {
@@ -957,7 +1097,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             sess.merge(configTabs);
             sess.flush();
         }
-        
+
         Configuratie configTabsLeft = configKeeper.getConfiguratie("tabsLeft", appCode);
         String strBeheerTabsLeft = "";
 
@@ -980,7 +1120,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         if (!form.get("cfg_tab5_left").equals("leeg")) {
             strBeheerTabsLeft += "\"" + form.get("cfg_tab5_left") + "\",";
         }
-        
+
         lastComma = strBeheerTabsLeft.lastIndexOf(",");
 
         if (lastComma > 1) {
@@ -1027,7 +1167,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         }
     }
 
-    private void writeString(DynaValidatorForm form, String field, Configuratie c) {        
+    private void writeString(DynaValidatorForm form, String field, Configuratie c) {
         if (c != null) {
             Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
@@ -1040,7 +1180,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
             sess.merge(c);
             sess.flush();
-        }        
+        }
     }
 
     private void fillTabbladenConfig(DynaValidatorForm dynaForm, Map map) {
@@ -1094,7 +1234,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         } else {
             dynaForm.set("cfg_tab5", CONFIGKEEPER_TABS[0]);
         }
-        
+
         // fill tab settings left
         tabs = (String) map.get("tabsLeft");
         if (tabs == null) {
@@ -1145,7 +1285,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             }
         } else {
             dynaForm.set("cfg_tab5_left", CONFIGKEEPER_TABS[0]);
-        }        
+        }
     }
 
     private void fillZoekConfigBox(DynaValidatorForm dynaForm,
@@ -1244,7 +1384,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             }
         }
     }
-    
+
     private void fillMeldingenBox(DynaValidatorForm dynaForm,
             HttpServletRequest request, Map map) {
 
@@ -1264,5 +1404,5 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_smtpHost", (String) map.get("smtpHost"));
         dynaForm.set("cfg_fromMailAddress", (String) map.get("fromMailAddress"));
         dynaForm.set("cfg_mailSubject", (String) map.get("mailSubject"));
-    }  
+    }
 }
