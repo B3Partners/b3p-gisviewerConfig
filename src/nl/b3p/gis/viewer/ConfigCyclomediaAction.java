@@ -163,35 +163,15 @@ public class ConfigCyclomediaAction extends ViewerCrudAction {
             privateBase64Key = null;
         }
         
-        /* Indien bestand geupload dan key eruit halen */
-        File keyFile = null;
-        if (tempFormFile != null && !tempFormFile.getFileName().equals("")) {            
-            keyFile = new File(tempFormFile.getFileName());
-  
-            OutputStream os = new FileOutputStream(keyFile);  
-            InputStream is = new BufferedInputStream(tempFormFile.getInputStream());  
-            int count;  
-            byte buf[] = new byte[4096];  
-
-            while ((count = is.read(buf)) > -1) {  
-                os.write(buf, 0, count);    
-            }  
-
-            is.close(); 
-        }
-        
         /* Als er geen private key door beheerder is ingevuld dan die uit bestand 
          * gebruiken */
-        if (keyFile != null) {
-            String base64 = null;
-            try {
-                base64 = getBase64EncodedPrivateKeyFromPfxFile(keyFile, wachtwoord);
-            } catch (IOException iox) {
-                logger.error("Fout tijdens openen " + keyFile.getName() + " bestand. Wachtwoord verkeerd ?");
-            }
-            
-            if (base64 != null && !base64.equals("")) {
-                privateBase64Key = base64;
+        if (privateBase64Key == null) {
+            if (tempFormFile != null && !tempFormFile.getFileName().equals("")) {
+                try {
+                    privateBase64Key = getBase64EncodedPrivateKeyFromPfxUpload(tempFormFile, wachtwoord);
+                } catch (IOException iox) {
+                    logger.error("Fout tijdens openen " + tempFormFile.getFileName() + " bestand. Wachtwoord verkeerd ?");
+                }
             }
         }
         
@@ -227,15 +207,16 @@ public class ConfigCyclomediaAction extends ViewerCrudAction {
         }
     }
     
-    private String getBase64EncodedPrivateKeyFromPfxFile(File bestand, String password)
+    private String getBase64EncodedPrivateKeyFromPfxUpload(FormFile formFile, String password)
             throws KeyStoreException, IOException, NoSuchAlgorithmException,
             CertificateException, UnrecoverableKeyException {
         
         String base64 = null;
+        
         PrivateKey privateKey = null;        
         
         KeyStore ks = java.security.KeyStore.getInstance(CERT_TYPE);
-        ks.load(new FileInputStream(bestand), password.toCharArray());            
+        ks.load(new BufferedInputStream(formFile.getInputStream()), password.toCharArray());            
 
         Enumeration<String> aliases = ks.aliases();  
         
