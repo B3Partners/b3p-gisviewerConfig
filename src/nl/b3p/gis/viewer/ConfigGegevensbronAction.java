@@ -470,7 +470,6 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
 
         dynaForm.set("admin_tabel", gb.getAdmin_tabel());
         dynaForm.set("admin_pk", gb.getAdmin_pk());
-        dynaForm.set("admin_pk", gb.getAdmin_pk());
         
         String val = "";
         if (gb.getParent() != null) {
@@ -479,6 +478,7 @@ public class ConfigGegevensbronAction extends ViewerCrudAction {
         dynaForm.set("parentID", val);
         
         dynaForm.set("admin_fk", gb.getAdmin_fk());
+        // TODO dynaForm.set("parent_pk", gb.getParent_pk());
         dynaForm.set("admin_query", gb.getAdmin_query());
         dynaForm.set("admin_tabel_opmerkingen", gb.getAdmin_tabel_opmerkingen());
         dynaForm.set("editable", gb.isEditable());
