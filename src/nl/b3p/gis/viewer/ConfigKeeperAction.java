@@ -162,8 +162,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         ConfigKeeper configKeeper = new ConfigKeeper();
         map = configKeeper.getConfigMap(appCode);
 
-        /* TODO weer uncommenten */
-        if (map.size() < 1) {
+        if (map.isEmpty()) {
             ConfigKeeper.writeDefaultApplicatie(appCode);
             map = configKeeper.getConfigMap(appCode);
         }
@@ -198,7 +197,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Map map = null;
         map = configKeeper.getConfigMap(appCode);
 
-        if (map.size() > 1) {
+        if (!map.isEmpty()) {
             populateForm(dynaForm, request, map, appCode);
         }
 
