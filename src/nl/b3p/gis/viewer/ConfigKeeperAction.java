@@ -460,7 +460,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Integer autoRedirect = (Integer) map.get("autoRedirect");
         Integer tolerance = (Integer) map.get("tolerance");
         Integer refreshDelay = (Integer) map.get("refreshDelay");
-        String zoekConfigIds = (String) map.get("zoekConfigIds");
         String planSelectieIds = (String) map.get("planSelectieIds");
         Integer minBboxZoeken = (Integer) map.get("minBboxZoeken");
         Integer maxResults = (Integer) map.get("maxResults");
@@ -514,7 +513,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String tekenFilterSld = (String) map.get("tekenFilterSld");
 
         /* vullen box voor zoek ingangen */
-        fillZoekConfigBox(dynaForm, request, zoekConfigIds);
+        fillZoekConfigBox(dynaForm, request, map);
         fillPlanSelectieBox(dynaForm, request, planSelectieIds);
 
         fillMeldingenBox(dynaForm, request, map);
@@ -813,7 +812,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         writeString(dynaForm, "cfg_fullextent", c);
 
         /* opslaan zoekinganen */
-        writeZoekenIdConfig(dynaForm, appCode);
+        writeZoekenConfig(dynaForm, appCode);
         writePlanSelectieIdConfig(dynaForm, appCode);
 
         writeMeldingConfig(dynaForm, appCode);
@@ -953,7 +952,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         sess.flush();
     }
 
-    private void writeZoekenIdConfig(DynaValidatorForm form, String appCode) {
+    private void writeZoekenConfig(DynaValidatorForm form, String appCode) {
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
 
@@ -1019,6 +1018,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         configTabs.setType("java.lang.String");
 
+        Configuratie config = configKeeper.getConfiguratie("zoekenAutoIdentify", appCode);
+        writeBoolean(form, "cfg_zoeken_autoidentify", config);
+        
         sess.merge(configTabs);
         sess.flush();
     }
@@ -1288,8 +1290,18 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     }
 
     private void fillZoekConfigBox(DynaValidatorForm dynaForm,
-            HttpServletRequest request, String ids) {
+            HttpServletRequest request, Map map) {
 
+        // Auto identify is true by default
+        Boolean autoIdentify = true;
+        if(map.containsKey("zoekenAutoIdentify")) {
+            // If the auto identify value is set, use this value
+            autoIdentify = (Boolean) map.get("zoekenAutoIdentify");
+        }
+        dynaForm.set("cfg_zoeken_autoidentify", autoIdentify);
+        
+        String ids = (String) map.get("zoekConfigIds");
+        
         if (ids == null) {
             return;
         }
