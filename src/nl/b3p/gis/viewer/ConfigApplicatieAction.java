@@ -90,7 +90,7 @@ public class ConfigApplicatieAction extends ViewerCrudAction {
         if (app == null) {
             app = KaartSelectieUtil.getNewApplicatie();
             populateObject(dynaForm, app, request, false);
-            ConfigKeeper.writeDefaultApplicatie(app.getCode());
+            ConfigKeeper.createStandardApplicationConfiguration(app.getCode());
         } else {
             populateObject(dynaForm, app, request, true);
         }

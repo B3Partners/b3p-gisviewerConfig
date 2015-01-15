@@ -114,14 +114,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* configkeeper instellingen verwijderen en daarna defaults schrijven
          voor deze appcode */
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
-        int query = sess.createQuery("delete from Configuratie where setting = :appcode)").setParameter("appcode", appCode).executeUpdate();
-
+        sess.createQuery("delete from Configuratie where setting = :appcode)").setParameter("appcode", appCode).executeUpdate();
         sess.flush();
-
-        if (query > 0) {
-            ConfigKeeper.writeDefaultApplicatie(appCode);
-            logger.debug("Applicatieinstellingen zijn gereset voor appcode " + appCode);
-        }
 
         /* User kaartgroepen en kaartlagen instellingen verwijderen */
         KaartSelectieUtil.removeExistingUserKaartgroepAndUserKaartlagen(appCode);
@@ -132,12 +126,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         /* Configkeeper instellingen ook klaarzetten voor form */
         ConfigKeeper configKeeper = new ConfigKeeper();
-        Map map = null;
-        map = configKeeper.getConfigMap(appCode);
-
-        if (map.size() > 1) {
-            populateForm(dynaForm, request, map, appCode);
-        }
+        Map map = configKeeper.getConfigMap(appCode, true);
+        populateForm(dynaForm, request, map, appCode);
 
         populateForApplicatieHeader(request, appCode);
 
@@ -158,14 +148,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
 
         /* Applicatieinstellingen ophalen en klaarzetten voor form */
-        Map map = null;
         ConfigKeeper configKeeper = new ConfigKeeper();
-        map = configKeeper.getConfigMap(appCode);
-
-        if (map.isEmpty()) {
-            ConfigKeeper.writeDefaultApplicatie(appCode);
-            map = configKeeper.getConfigMap(appCode);
-        }
+        Map map = configKeeper.getConfigMap(appCode, true);
 
         populateForm(dynaForm, request, map, appCode);
 
@@ -194,12 +178,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         /* Configkeeper instellingen ook klaarzetten voor form */
         ConfigKeeper configKeeper = new ConfigKeeper();
-        Map map = null;
-        map = configKeeper.getConfigMap(appCode);
-
-        if (!map.isEmpty()) {
-            populateForm(dynaForm, request, map, appCode);
-        }
+        Map map = configKeeper.getConfigMap(appCode, true);
+        populateForm(dynaForm, request, map, appCode);
 
         populateForApplicatieHeader(request, appCode);
 
@@ -277,12 +257,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         /* Configkeeper instellingen ook klaarzetten voor form */
         ConfigKeeper configKeeper = new ConfigKeeper();
-        Map map = null;
-        map = configKeeper.getConfigMap(appCode);
-
-        if (map.size() > 1) {
-            populateForm(dynaForm, request, map, appCode);
-        }
+        Map map = configKeeper.getConfigMap(appCode, true);
+        populateForm(dynaForm, request, map, appCode);
 
         populateForApplicatieHeader(request, appCode);
 
@@ -398,12 +374,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             throws Exception {
 
         ConfigKeeper configKeeper = new ConfigKeeper();
-        Map map = configKeeper.getConfigMap(appCode);
+        Map map = configKeeper.getConfigMap(appCode, true);
 
-        String sldPart = null;
-        if (map != null && map.size() > 0) {
-            sldPart = (String) map.get("tekenFilterSld");
-        }
+        String sldPart = (String) map.get("tekenFilterSld");
 
         return sldPart;
     }
@@ -412,15 +385,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             Session sess) throws Exception {
 
         ConfigKeeper configKeeper = new ConfigKeeper();
-        Map map = configKeeper.getConfigMap(appCode);
+        Map map = configKeeper.getConfigMap(appCode, true);
 
         Gegevensbron gekozenGegevensbron = null;
-        if (map != null && map.size() > 0) {
-            Integer gbId = (Integer) map.get("tekenGegevensbron");
-
-            if (gbId != null && gbId > 0) {
-                gekozenGegevensbron = (Gegevensbron) sess.get(Gegevensbron.class, gbId);
-            }
+        Integer gbId = (Integer) map.get("tekenGegevensbron");
+        if (gbId != null && gbId > 0) {
+            gekozenGegevensbron = (Gegevensbron) sess.get(Gegevensbron.class, gbId);
         }
 
         return gekozenGegevensbron;
@@ -430,15 +400,13 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             Session sess) throws Exception {
 
         ConfigKeeper configKeeper = new ConfigKeeper();
-        Map map = configKeeper.getConfigMap(appCode);
+        Map map = configKeeper.getConfigMap(appCode, false);
 
         Themas gekozenKaartlaag = null;
-        if (map != null && map.size() > 0) {
-            Integer laagId = (Integer) map.get("tekenKaartlaagId");
+        Integer laagId = (Integer) map.get("tekenKaartlaagId");
 
-            if (laagId != null && laagId > 0) {
-                gekozenKaartlaag = (Themas) sess.get(Themas.class, laagId);
-            }
+        if (laagId != null && laagId > 0) {
+            gekozenKaartlaag = (Themas) sess.get(Themas.class, laagId);
         }
 
         return gekozenKaartlaag;

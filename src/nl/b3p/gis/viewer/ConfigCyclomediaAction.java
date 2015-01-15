@@ -68,15 +68,8 @@ public class ConfigCyclomediaAction extends ViewerCrudAction {
         String appCode = (String) request.getParameter("appcode");
 
         /* Applicatieinstellingen ophalen en klaarzetten voor form */
-        Map map = null;
         ConfigKeeper configKeeper = new ConfigKeeper();
-        map = configKeeper.getConfigMap(appCode);
-
-        /* TODO weer uncommenten */
-        if (map.size() < 1) {
-            ConfigKeeper.writeDefaultApplicatie(appCode);
-            map = configKeeper.getConfigMap(appCode);
-        }
+        Map map = configKeeper.getConfigMap(appCode, true);
 
         populateForm(dynaForm, request, map, appCode);
 
