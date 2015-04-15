@@ -447,6 +447,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean showGPSTool = (Boolean) map.get("showGPSTool");
         Boolean edit = (Boolean) map.get("showEditTool");
         String gpsBuffer = (String) map.get("gpsBuffer");
+        Boolean showXYTool = (Boolean) map.get("showXYTool");
         Boolean useUserWmsDropdown = (Boolean) map.get("useUserWmsDropdown");
         Boolean datasetDownload = (Boolean) map.get("datasetDownload");
         Boolean showServiceUrl = (Boolean) map.get("showServiceUrl");
@@ -509,6 +510,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showGPSTool", showGPSTool);
         dynaForm.set("cfg_showEditTool", edit);
         dynaForm.set("cfg_GPSBuffer", gpsBuffer);
+        dynaForm.set("cfg_showXYTool", showXYTool);
 
         dynaForm.set("cfg_layerGrouping", layerGrouping);
         dynaForm.set("cfg_popupWidth", popupWidth);
@@ -730,6 +732,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("gpsBuffer", appCode);
         writeString(dynaForm, "cfg_GPSBuffer", c);
+        
+        c = configKeeper.getConfiguratie("showXYTool", appCode);
+        writeBoolean(dynaForm, "cfg_showXYTool", c);
 
         c = configKeeper.getConfiguratie("layerGrouping", appCode);
         writeString(dynaForm, "cfg_layerGrouping", c);
