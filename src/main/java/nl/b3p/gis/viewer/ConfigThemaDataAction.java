@@ -145,18 +145,23 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
 
         Bron b = gb.getBron(request);
 
-        List<String> attributes = new ArrayList();
+        List<QName> attributes = new ArrayList();
         try {
             attributes = DataStoreUtil.getAttributeNames(b, gb);
-            request.setAttribute("listAdminTableColumns", attributes);
         } catch (SocketTimeoutException e) {
             logger.error("Socket time out error while getting attributes.");
         }
-
-        /* Workaround voor ophalen objectdata voor WFS 110 */
-        if (attributes == null || attributes.size() < 1) {
-            attributes = getObjectDataForWFS110(b, gb);
+        
+        List<String> listAdminTableColumns = new ArrayList();
+        for (QName attributeName : attributes) {
+            listAdminTableColumns.add(attributeName.getLocalPart());
         }
+        request.setAttribute("listAdminTableColumns", listAdminTableColumns);
+  
+        /* Workaround voor ophalen objectdata voor WFS 110 */
+//        if (attributes == null || attributes.size() < 1) {
+//            attributes = getObjectDataForWFS110(b, gb);
+//        }
 
         if (gb.getBron() != null) {
             request.setAttribute("connectieType", gb.getBron().getType());
@@ -182,10 +187,9 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
             if (tdi.getKolomnaam() == null) {
                 bestaatNog = true;
             } else {
-                QName dbkolom = DataStoreUtil.convertFullnameToQName(tdi.getKolomnaam());
+                QName dbkolom = DataStoreUtil.convertColumnNameToQName(tdi.getKolomnaam());
 
-                for (String attribute : attributes) {
-                    QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
+                for (QName attributeName : attributes) {
                     if (attributeName.getLocalPart().compareTo(dbkolom.getLocalPart()) == 0) {
                         bestaatNog = true;
                         break;
@@ -200,8 +204,8 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                     commando = tdi.getCommando();
                 }
                 if (commando != null) {
-                    for (String attribute : attributes) {
-                        if (commando.indexOf("[" + attribute + "]") != -1) {
+                    for (QName attribute : attributes) {
+                        if (commando.indexOf("[" + attribute.getLocalPart() + "]") != -1) {
                             commando = commando.replaceAll("\\[" + attribute + "\\]", "");
                         }
                         //als alle commando velden zijn gevonden dan breaken.
@@ -462,7 +466,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
 
         Bron b = gb.getBron(request);
 
-        List<String> attributes = new ArrayList();
+        List<QName> attributes = new ArrayList();
         try {
             attributes = DataStoreUtil.getAttributeNames(b, gb);
         } catch (SocketTimeoutException e) {
@@ -470,16 +474,16 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         }
 
         /* Workaround voor ophalen objectdata voor WFS 110 */
-        if (attributes == null || attributes.size() < 1) {
-            attributes = getObjectDataForWFS110(b, gb);
-        }
+//        if (attributes == null || attributes.size() < 1) {
+//            attributes = getObjectDataForWFS110(b, gb);
+//        }
 
         if (attributes == null || attributes.size() < 1) {
             return unspecified(mapping, dynaForm, request, response);
         }
 
         GisPrincipal user = GisPrincipal.getGisPrincipal(request);
-        Name geomName = null;
+        QName geomName = null;
         try {
             geomName = DataStoreUtil.getThemaGeomName(gb, user);
         } catch (Exception ex) {
@@ -491,8 +495,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         }
 
         List<ThemaData> bestaandeObjecten = SpatialUtil.getThemaData(gb, false);
-        for (String attribute : attributes) {
-            QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
+        for (QName attributeName : attributes) {
             if (attributeName == null || attributeName.getLocalPart().compareTo(geomPropname) == 0) {
                 // geometry column not added
                 continue;
@@ -502,7 +505,7 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                 if (td.getKolomnaam() == null) {
                     continue;
                 }
-                QName dbkolomName = DataStoreUtil.convertFullnameToQName(td.getKolomnaam());
+                QName dbkolomName = DataStoreUtil.convertColumnNameToQName(td.getKolomnaam());
                 if (attributeName.getLocalPart().compareTo(dbkolomName.getLocalPart()) == 0) {
                     bestaatAl = true;
                     break;
@@ -543,10 +546,9 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                 continue;
             }
 
-            QName dbkolom = DataStoreUtil.convertFullnameToQName(td.getKolomnaam());
+            QName dbkolom = DataStoreUtil.convertColumnNameToQName(td.getKolomnaam());
             boolean bestaatNog = false;
-            for (String attribute : attributes) {
-                QName attributeName = DataStoreUtil.convertFullnameToQName(attribute);
+            for (QName attributeName : attributes) {
                 if (attributeName.getLocalPart().compareTo(dbkolom.getLocalPart()) == 0) {
                     bestaatNog = true;
                     break;
@@ -712,22 +714,22 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
         return td;
     }
 
-    private List<String> getObjectDataForWFS110(Bron b, Gegevensbron gb) {
-        List<String> attributes = new ArrayList<String>();
-
-        try {
-            List attrArr = ConfigListsUtil.getPossibleAttributes(b, gb.getAdmin_tabel());
-
-            for (Object obj : attrArr) {
-                if (obj != null && obj instanceof String[]) {
-                    String[] values = (String[]) obj;
-                    attributes.add(values[0]);
-                }
-            }
-        } catch (Exception ex) {
-            logger.error("Fout tijdens ophalen objectdata voor WFS 110: ", ex);
-        }
-
-        return attributes;
-    }
+//    private List<String> getObjectDataForWFS110(Bron b, Gegevensbron gb) {
+//        List<String> attributes = new ArrayList<String>();
+//
+//        try {
+//            List attrArr = ConfigListsUtil.getPossibleAttributes(b, gb.getAdmin_tabel());
+//
+//            for (Object obj : attrArr) {
+//                if (obj != null && obj instanceof String[]) {
+//                    String[] values = (String[]) obj;
+//                    attributes.add(values[0]);
+//                }
+//            }
+//        } catch (Exception ex) {
+//            logger.error("Fout tijdens ophalen objectdata voor WFS 110: ", ex);
+//        }
+//
+//        return attributes;
+//    }
 }
