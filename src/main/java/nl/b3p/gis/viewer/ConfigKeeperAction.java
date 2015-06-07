@@ -604,6 +604,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         String appCode = (String) dynaForm.get("appcode");
 
         if (!isTokenValid(request)) {
+            KaartSelectieUtil.populateKaartSelectieForm(appCode, request);
+            populateForApplicatieHeader(request, appCode);
             prepareMethod(dynaForm, request, EDIT, LIST);
             addAlternateMessage(mapping, request, TOKEN_ERROR_KEY);
             return this.getAlternateForward(mapping, request);
