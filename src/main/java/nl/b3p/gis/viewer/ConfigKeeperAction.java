@@ -400,7 +400,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
             Session sess) throws Exception {
 
         ConfigKeeper configKeeper = new ConfigKeeper();
-        Map map = configKeeper.getConfigMap(appCode, false);
+        Map map = configKeeper.getConfigMap(appCode, true);
 
         Themas gekozenKaartlaag = null;
         Integer laagId = (Integer) map.get("tekenKaartlaagId");
