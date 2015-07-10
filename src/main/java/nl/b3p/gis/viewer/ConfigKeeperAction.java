@@ -39,15 +39,21 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         "leeg", "themas", "legenda", "zoeken", "gebieden",
         "analyse", "planselectie", "meldingen", "redlining",
         "bag", "wkt", "transparantie", "tekenen",
-        "uploadpoints", "layerinfo",
-        "edit", "ziekte"
+        "uploadpoints", "layerinfo"
     };
 
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Gebieden",
         "Analyse", "Plannen", "Meldingen", "Redlining",
         "BAG", "WKT", "Transparantie", "Tekenen",
-        "Upload tijdelijke punten", "Laag informatie",
+        "Upload tijdelijke punten", "Laag informatie"
+    };
+    
+    private static final String[] CONFIGKEEPER_EXTRA_TABS = {
+        "boom", "ziekte"
+    };
+
+    private static final String[] LABELS_VOOR_EXTRA_TABS = {
         "Edit bomen", "Edit ziekte en plagen"
     };
 
@@ -278,6 +284,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
     protected void createLists(DynaValidatorForm form, HttpServletRequest request) throws Exception {
         request.setAttribute("tabValues", CONFIGKEEPER_TABS);
         request.setAttribute("tabLabels", LABELS_VOOR_TABS);
+
+        request.setAttribute("extraTabValues", CONFIGKEEPER_EXTRA_TABS);
+        request.setAttribute("extraTabLabels", LABELS_VOOR_EXTRA_TABS);
 
         request.setAttribute("tabSliderValues", CONFIGKEEPER_SLIDER_TABS);
         request.setAttribute("tabSliderLabels", LABELS_VOOR_SLIDER_TABS);
@@ -545,8 +554,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_redlininggegevensbron", (Integer) map.get("redliningGegevensbron"));
         dynaForm.set("cfg_redliningkaartlaagid", (Integer) map.get("redliningkaartlaagid"));
         
-        /* digitree edit config item */
-        dynaForm.set("cfg_editgegevensbron", (Integer) map.get("editGegevensbron"));
+        /* digitree edit boom config item */
+        dynaForm.set("cfg_editboomgegevensbron", (Integer) map.get("boomGegevensbron"));
         /* digitree edit  ziekte en plagen config item */
         dynaForm.set("cfg_editziektesgegevensbron", (Integer) map.get("ziekteGegevensbron"));
 
@@ -876,9 +885,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("tekenFilterSld", appCode);
         writeString(dynaForm, "cfg_tekenFilterSld", c);
         
-        <!-- digitree -->
-        c = configKeeper.getConfiguratie("editGegevensbron", appCode);
-        writeInteger(dynaForm, "cfg_editgegevensbron", c);
+        /* digitree */
+        c = configKeeper.getConfiguratie("boomGegevensbron", appCode);
+        writeInteger(dynaForm, "cfg_editboomgegevensbron", c);
         
         c = configKeeper.getConfiguratie("ziekteGegevensbron", appCode);
         writeInteger(dynaForm, "cfg_editziektesgegevensbron", c);
