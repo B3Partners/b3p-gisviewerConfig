@@ -410,9 +410,9 @@ public class ConfigThemaDataAction extends ViewerCrudAction {
                 ThemaData td = (ThemaData) sess.get(ThemaData.class, key);
 
                 if (td != null) {
-                    if (volgorde < 1) {
+                    if (volgorde < 0) {
                         td.setDataorder(null);
-                    } else if (volgorde > 0) {
+                    } else if (volgorde >= 0) {
                         td.setDataorder(new Integer(volgorde));
                     }
 
