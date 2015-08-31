@@ -210,8 +210,7 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
 
     public ActionForward step1(ActionMapping mapping, DynaValidatorForm dynaForm, HttpServletRequest request, HttpServletResponse response) throws Exception {
         if (FormUtils.nullIfEmpty(request.getParameter(BRONID)) == null) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "U dient een bron te selecteren.");
-            return unspecified(mapping, dynaForm, request, response);
+            return step2(mapping, dynaForm, request, response);
         }
         if ("new".equalsIgnoreCase(request.getParameter(BRONID))) {
             ActionRedirect redirect = new ActionRedirect(mapping.findForward("wizardCreateBron"));
@@ -256,8 +255,9 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
 
         } else {
             bron = getAndSetBron(request);
-            featureType = FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
-        
+            if (bron!=null) {
+                featureType = FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
+            }
             request.setAttribute("selectedUsage", ZoekConfiguratie.USE_IN_VIEWER_WEBR);
         }
 
@@ -269,11 +269,6 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
         request.setAttribute("forUsageMap", forUsageMap);
 
         request.setAttribute(FEATURETYPE, featureType);
-
-        if (zc != null && bron == null || featureType == null) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De geselecteerde zoekconfiguratie is ongeldig.");
-            return unspecified(mapping, dynaForm, request, response);
-        }
 
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();
         //maak een lijst met mogelijke zoekconfiguraties (om als parent te kiezen)zonder zichzelf
@@ -309,19 +304,13 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
             }
         } else {
             bron = getAndSetBron(request);
-            featureType = FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
+            if (bron!=null) {
+                featureType = FormUtils.nullIfEmpty(request.getParameter(FEATURETYPE));
+            }
             naam = FormUtils.nullIfEmpty(request.getParameter("naam"));
         }
 
-        if (zc != null && (bron == null || featureType == null)) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De zoekingang is ongeldig.");
-            return unspecified(mapping, dynaForm, request, response);
-        }
-
-        if (bron == null) {
-            addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De zoekingang heeft geen bron. Selecteer een bron.");
-            return unspecified(mapping, dynaForm, request, response);
-        } else if (featureType == null) {
+        if (bron!=null && featureType == null) {
             addAlternateMessage(mapping, request, GENERAL_ERROR_KEY, "De zoekingang heeft geen tabel/feature. Selecteer een tabel/feature.");
             return step1(mapping, dynaForm, request, response);
         } else if (naam == null) {
@@ -464,6 +453,9 @@ public class WizardZoekConfiguratieAction extends ViewerCrudAction {
 
     private Bron getBron(HttpServletRequest request) {
         if (FormUtils.nullIfEmpty(request.getParameter(BRONID)) == null) {
+            return null;
+        }
+        if (request.getParameter(BRONID).equalsIgnoreCase("geenbron")) {
             return null;
         }
         Session sess = HibernateUtil.getSessionFactory().getCurrentSession();

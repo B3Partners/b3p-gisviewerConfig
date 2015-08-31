@@ -88,40 +88,42 @@ public class ConfigZoekConfiguratieVeldAction extends ViewerCrudAction {
             zc=getZoekConfiguratie(request);
         }
 
-        DataStore ds = Zoeker.getDataStore(zc.getBron());
-        String ftype = zc.getFeatureType();
-        SimpleFeatureType sft = null;
+        if (zc!=null && zc.getBron()!=null) {
+            DataStore ds = Zoeker.getDataStore(zc.getBron());
+            String ftype = zc.getFeatureType();
+            SimpleFeatureType sft = null;
 
-        try {
-            sft = ds.getSchema(ftype);
-        } catch (NullPointerException ex) {
-            logger.error("NullPointerException bij ophalen schema van datastore: ");
-        } finally {
-            if (ds != null) {
-                ds.dispose();
-            }
-        }
-
-        if (sft != null) {
-            List<AttributeDescriptor> descriptors = sft.getAttributeDescriptors();
-            List attributen = new ArrayList();
-            //maak een lijst met mogelijke attributen en de binding class namen.
-            for (int i = 0; i < descriptors.size(); i++) {
-                String[] attr = new String[2];
-                attr[0] = descriptors.get(i).getName().toString();
-                attr[1]="";
-                if (descriptors.get(i).getType().getBinding()!=null){
-                    String type=descriptors.get(i).getType().getBinding().getName();
-                    type=type.substring(type.lastIndexOf(".")+1);
-                    attr[1]=type;
+            try {
+                sft = ds.getSchema(ftype);
+            } catch (NullPointerException ex) {
+                logger.error("NullPointerException bij ophalen schema van datastore: ");
+            } finally {
+                if (ds != null) {
+                    ds.dispose();
                 }
-                attributen.add(attr);
-
             }
 
-            request.setAttribute("attribuutNamen", attributen);
-        }
+            if (sft != null) {
+                List<AttributeDescriptor> descriptors = sft.getAttributeDescriptors();
+                List attributen = new ArrayList();
+                //maak een lijst met mogelijke attributen en de binding class namen.
+                for (int i = 0; i < descriptors.size(); i++) {
+                    String[] attr = new String[2];
+                    attr[0] = descriptors.get(i).getName().toString();
+                    attr[1] = "";
+                    if (descriptors.get(i).getType().getBinding() != null) {
+                        String type = descriptors.get(i).getType().getBinding().getName();
+                        type = type.substring(type.lastIndexOf(".") + 1);
+                        attr[1] = type;
+                    }
+                    attributen.add(attr);
 
+                }
+
+                request.setAttribute("attribuutNamen", attributen);
+            }
+        }
+        
         Session sess =  HibernateUtil.getSessionFactory().getCurrentSession();
         List zoekConfigs = sess.createQuery("from ZoekConfiguratie").list();
         request.setAttribute("inputZoekConfigList", zoekConfigs);
