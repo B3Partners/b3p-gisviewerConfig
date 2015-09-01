@@ -39,16 +39,14 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         "leeg", "themas", "legenda", "zoeken", "gebieden",
         "analyse", "planselectie", "meldingen", "redlining",
         "bag", "wkt", "transparantie", "tekenen",
-        "uploadpoints", "layerinfo",
-        "edit", "ziekte"
+        "uploadpoints", "layerinfo"
     };
 
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Gebieden",
         "Analyse", "Plannen", "Meldingen", "Redlining",
         "BAG", "WKT", "Transparantie", "Tekenen",
-        "Upload tijdelijke punten", "Laag informatie",
-        "Edit bomen", "Edit ziekte en plagen"
+        "Upload tijdelijke punten", "Laag informatie"
     };
 
     private static final String[] CONFIGKEEPER_SLIDER_TABS = {
@@ -544,11 +542,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         /* redlining config items */
         dynaForm.set("cfg_redlininggegevensbron", (Integer) map.get("redliningGegevensbron"));
         dynaForm.set("cfg_redliningkaartlaagid", (Integer) map.get("redliningkaartlaagid"));
-        
-        /* digitree edit config item */
-        dynaForm.set("cfg_editgegevensbron", (Integer) map.get("editGegevensbron"));
-        /* digitree edit  ziekte en plagen config item */
-        dynaForm.set("cfg_editziektesgegevensbron", (Integer) map.get("ziekteGegevensbron"));
 
         /* Teken config items */
         dynaForm.set("cfg_tekenGegevensbron", (Integer) map.get("tekenGegevensbron"));
@@ -875,14 +868,6 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("tekenFilterSld", appCode);
         writeString(dynaForm, "cfg_tekenFilterSld", c);
-        
-        <!-- digitree -->
-        c = configKeeper.getConfiguratie("editGegevensbron", appCode);
-        writeInteger(dynaForm, "cfg_editgegevensbron", c);
-        
-        c = configKeeper.getConfiguratie("ziekteGegevensbron", appCode);
-        writeInteger(dynaForm, "cfg_editziektesgegevensbron", c);
-
     }
 
     private void writeMeldingConfig(DynaValidatorForm dynaForm, String appCode) {
