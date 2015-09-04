@@ -472,6 +472,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         String showInfoTab = (String) map.get("showInfoTab");
 
+        String homeUrl = (String) map.get("homeUrl");
         String helpUrl = (String) map.get("helpUrl");
         Boolean showGoogleMapsIcon = (Boolean) map.get("showGoogleMapsIcon");
         Boolean showBookmarkIcon = (Boolean) map.get("showBookmarkIcon");
@@ -586,6 +587,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         dynaForm.set("cfg_showInfoTab", showInfoTab);
 
+        dynaForm.set("cfg_homeUrl", homeUrl);
         dynaForm.set("cfg_helpUrl", helpUrl);
         dynaForm.set("cfg_showGoogleMapsIcon", showGoogleMapsIcon);
         dynaForm.set("cfg_showBookmarkIcon", showBookmarkIcon);
@@ -844,6 +846,9 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         c = configKeeper.getConfiguratie("showInfoTab", appCode);
         writeString(dynaForm, "cfg_showInfoTab", c);
 
+        c = configKeeper.getConfiguratie("homeUrl", appCode);
+        writeString(dynaForm, "cfg_homeUrl", c);
+        
         c = configKeeper.getConfiguratie("helpUrl", appCode);
         writeString(dynaForm, "cfg_helpUrl", c);
 
