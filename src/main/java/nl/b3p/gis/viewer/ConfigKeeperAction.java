@@ -39,14 +39,15 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         "leeg", "themas", "legenda", "zoeken", "gebieden",
         "analyse", "planselectie", "meldingen", "redlining",
         "bag", "wkt", "transparantie", "tekenen",
-        "uploadpoints", "layerinfo"
+        "uploadpoints", "layerinfo", "externeinformatie"
     };
 
     private static final String[] LABELS_VOOR_TABS = {
         "-Kies een tabblad-", "Kaarten", "Legenda", "Zoeken", "Gebieden",
         "Analyse", "Plannen", "Meldingen", "Redlining",
         "BAG", "WKT", "Transparantie", "Tekenen",
-        "Upload tijdelijke punten", "Laag informatie"
+        "Upload tijdelijke punten", "Laag informatie",
+        "Externe informatie ophalen"
     };
 
     private static final String[] CONFIGKEEPER_SLIDER_TABS = {
