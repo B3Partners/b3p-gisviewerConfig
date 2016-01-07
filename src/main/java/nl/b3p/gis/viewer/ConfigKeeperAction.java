@@ -452,6 +452,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Boolean useUserWmsDropdown = (Boolean) map.get("useUserWmsDropdown");
         Boolean datasetDownload = (Boolean) map.get("datasetDownload");
         Boolean showServiceUrl = (Boolean) map.get("showServiceUrl");
+        Boolean useOwnCyclomedia = (Boolean) map.get("useOwnCyclomedia");
+        String ownCyclomediaUrl = (String) map.get("ownCyclomediaUrl");
 
         String layerGrouping = (String) map.get("layerGrouping");
         String popupWidth = (String) map.get("popupWidth");
@@ -513,6 +515,8 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_showEditTool", edit);
         dynaForm.set("cfg_GPSBuffer", gpsBuffer);
         dynaForm.set("cfg_showXYTool", showXYTool);
+        dynaForm.set("cfg_useOwnCyclomedia", useOwnCyclomedia);
+        dynaForm.set("cfg_ownCyclomediaUrl", ownCyclomediaUrl);
 
         dynaForm.set("cfg_layerGrouping", layerGrouping);
         dynaForm.set("cfg_popupWidth", popupWidth);
@@ -796,6 +800,12 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("fullextent", appCode);
         writeString(dynaForm, "cfg_fullextent", c);
+        
+        c = configKeeper.getConfiguratie("useOwnCyclomedia", appCode);
+        writeBoolean(dynaForm, "cfg_useOwnCyclomedia", c);
+        
+        c = configKeeper.getConfiguratie("ownCyclomediaUrl", appCode);
+        writeString(dynaForm, "cfg_ownCyclomediaUrl", c);
 
         /* opslaan zoekinganen */
         writeZoekenConfig(dynaForm, appCode);
