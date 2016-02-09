@@ -404,10 +404,14 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         Map map = configKeeper.getConfigMap(appCode, true);
 
         Themas gekozenKaartlaag = null;
-        Integer laagId = (Integer) map.get("tekenKaartlaagId");
+        Integer tekenlaag = (Integer) map.get("tekenKaartlaagId");
 
-        if (laagId != null && laagId > 0) {
-            gekozenKaartlaag = (Themas) sess.get(Themas.class, laagId);
+        Integer externelaag = (Integer) map.get("externelaagid");
+
+        if (tekenlaag != null && tekenlaag > 0) {
+            gekozenKaartlaag = (Themas) sess.get(Themas.class, tekenlaag);
+        }else if(externelaag != null && externelaag > 0){
+            gekozenKaartlaag = (Themas) sess.get(Themas.class, externelaag);
         }
 
         return gekozenKaartlaag;
@@ -602,6 +606,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         dynaForm.set("cfg_tekenKaartlaagId", (Integer) map.get("tekenKaartlaagId"));
         dynaForm.set("cfg_tekenFilterColumn", tekenFilterColumn);
         dynaForm.set("cfg_tekenFilterSld", tekenFilterSld);
+        dynaForm.set("cfg_highlightFilterSld", tekenFilterSld);
 
         // Externe informatie settings
         if (map.get("externelaagid") != null) {
@@ -892,6 +897,10 @@ public class ConfigKeeperAction extends ViewerCrudAction {
 
         c = configKeeper.getConfiguratie("tekenFilterSld", appCode);
         writeString(dynaForm, "cfg_tekenFilterSld", c);
+
+        if(dynaForm.get("cfg_highlightFilterSld") != null){
+            writeString(dynaForm, "cfg_highlightFilterSld", c);
+        }
 
         // Externe informatie configuraties
         c = configKeeper.getConfiguratie("externelaagid", appCode);
