@@ -899,6 +899,7 @@ public class ConfigKeeperAction extends ViewerCrudAction {
         writeString(dynaForm, "cfg_tekenFilterSld", c);
 
         if(dynaForm.get("cfg_highlightFilterSld") != null){
+            c = configKeeper.getConfiguratie("tekenFilterSld", appCode);
             writeString(dynaForm, "cfg_highlightFilterSld", c);
         }
 
