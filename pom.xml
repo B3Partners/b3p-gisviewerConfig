@@ -19,12 +19,12 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>b3p-commons-core</artifactId>
-            <version>4.2.2</version>
+            <version>4.2.3</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>b3p-gisviewer</artifactId>
-            <version>4.2.5</version>
+            <version>4.2.6</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
