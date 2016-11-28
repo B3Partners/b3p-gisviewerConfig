@@ -24,7 +24,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>b3p-gisviewer</artifactId>
-            <version>4.2.8</version>
+            <version>4.2.9</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
